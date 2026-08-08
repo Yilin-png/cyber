@@ -1,12 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Cyber Casters">
-  <!-- 透明底；紫色线框地球 -->
-  <g fill="none" stroke="#9D6BFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-    <!-- 外圆 -->
-    <circle cx="32" cy="32" r="22"/>
-    <!-- 赤道 -->
-    <ellipse cx="32" cy="32" rx="22" ry="8"/>
-    <!-- 经线 -->
-    <ellipse cx="32" cy="32" rx="8" ry="22"/>
-    <ellipse cx="32" cy="32" rx="15" ry="22"/>
+  <!-- 透明底；紫色六芒星（两个等边三角叠加） -->
+  <g fill="none" stroke="#9D6BFF" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">
+    <!-- 朝上三角 -->
+    <path d="M32 10 L52 46 H12 Z"/>
+    <!-- 朝下三角 -->
+    <path d="M32 54 L12 18 H52 Z"/>
   </g>
 </svg>
