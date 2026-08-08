@@ -67,7 +67,7 @@
   <div class="wrap" style="flex:1;display:flex;align-items:flex-start">
     <form class="auth-card" id="applyForm">
       <h1>我想参加</h1>
-      <p class="lead">留下称呼与意向；通过后你会得到<strong style="color:var(--paper)">登录名</strong>和<strong style="color:var(--paper)">通行码</strong>，用来看纪要。</p>
+      <p class="lead">留下称呼与意向，通过后你会得到登录名和通行码。</p>
 
       <div class="field">
         <label>怎么称呼你 *</label>
@@ -131,7 +131,7 @@
           <label class="choice topic"><input type="checkbox" value="会议纪要 / 语音转写">会议纪要 / 语音转写</label>
           <label class="choice topic"><input type="checkbox" value="办公写作与排版">办公写作与排版</label>
         </div>
-        <textarea id="topicExtra" maxlength="400" placeholder="也可手填补充，例如：想聊 RAG 落地、本地模型部署…" style="margin-top:10px"></textarea>
+        <textarea id="topicExtra" maxlength="400" placeholder="也可手填补充，例如：想聊 RAG 落地、本地模型部署…" style="margin-top:10px;min-height:56px;height:56px;resize:vertical"></textarea>
         <input type="hidden" name="message" id="message">
       </div>
 
