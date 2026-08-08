@@ -162,7 +162,7 @@ app.post("/api/apply", applyLimiter, (req, res) => {
 
   const name = safeText(req.body.name, 40);
   const contact = safeText(req.body.contact, 80);
-  const intentDates = safeText(req.body.intentDates, 120);
+  const intentDates = safeText(req.body.intentDates, 200);
   const message = safeText(req.body.message, 800);
 
   if (!name || !intentDates) {

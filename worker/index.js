@@ -247,7 +247,7 @@ app.post("/api/apply", applyLimiter, async (c) => {
 
   const name = safeText(body.name, 40);
   const contact = safeText(body.contact, 80);
-  const intentDates = safeText(body.intentDates, 120);
+  const intentDates = safeText(body.intentDates, 200);
   const message = safeText(body.message, 800);
 
   if (!name || !intentDates) {
