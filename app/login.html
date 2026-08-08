@@ -44,8 +44,14 @@
     </form>
   </div>
 
+<audio id="bgm" src="assets/audio/bgm.m4a" preload="auto"></audio>
+<button id="bgmBtn" type="button" aria-label="背景音乐开关" title="背景音乐" aria-pressed="false">♪</button>
+
+<script src="js/util.js"></script>
 <script src="js/api.js"></script>
+<script src="js/bgm.js"></script>
 <script>
+CC.BGM.init({ mode: "button", toggleId: "bgmBtn", gestureKick: true });
 const params = new URLSearchParams(location.search);
 const msg = document.getElementById("msg");
 const handleInput = document.querySelector('input[name="handle"]');
@@ -81,6 +87,14 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     const data = await CC.api("/api/auth/login", { method: "POST", body: JSON.stringify(body) });
     msg.className = "form-msg ok";
     msg.textContent = `欢迎，${data.user.name}`;
+    const audio = document.getElementById("bgm");
+    if (audio) {
+      try {
+        sessionStorage.setItem("cc-bgm-t", String(audio.currentTime || 0));
+        sessionStorage.setItem("cc-bgm-playing", audio.paused ? "0" : "1");
+        if (!audio.paused) localStorage.setItem("cc-bgm", "on");
+      } catch (_) {}
+    }
     location.href = params.get("next") || "gathering-001.html";
   } catch (err) {
     msg.className = "form-msg err";

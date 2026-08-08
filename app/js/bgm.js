@@ -1,4 +1,4 @@
-/* 背景音乐：跨页续播，首页手印 / 纪要页悬浮钮共用 */
+/* 背景音乐：跨页续播，首页手印 / 纪要页悬浮钮 / 报名登录页共用 */
 window.CC = window.CC || {};
 
 CC.BGM = (function(){
@@ -9,7 +9,7 @@ CC.BGM = (function(){
 
   /**
    * @param {object} opts
-   * @param {"sigil"|"button"} [opts.mode="button"]  首页手印 / 纪要悬浮钮
+   * @param {"sigil"|"button"} [opts.mode="button"]  首页手印 / 悬浮钮
    * @param {string} [opts.audioId="bgm"]
    * @param {string} [opts.toggleId]  切换控件 id（coreJoin 或 bgmBtn）
    * @param {HTMLElement|null} [opts.sigilEl]  手印涟漪目标
@@ -28,6 +28,7 @@ CC.BGM = (function(){
 
     audio.volume = 0.45;
     audio.loop = false;
+    audio.preload = "auto";
 
     const trackSrc = i => new URL(PLAYLIST[i], location.href).href;
     const getI = () => {
@@ -61,6 +62,17 @@ CC.BGM = (function(){
       }catch(_){ return 0; }
     };
 
+    const shouldPlay = () => {
+      try{
+        if (localStorage.getItem(KEY.on) === "off") return false;
+        /* 显式关过才停；未设 on 时，若上一页在播也续上 */
+        if (localStorage.getItem(KEY.on) === "on") return true;
+        return sessionStorage.getItem(KEY.playing) === "1";
+      }catch(_){
+        return true;
+      }
+    };
+
     const save = () => {
       try{
         sessionStorage.setItem(KEY.t, String(audio.currentTime || 0));
@@ -73,7 +85,7 @@ CC.BGM = (function(){
       if (mode === "sigil" && hint){
         hint.style.display = audio.paused ? "" : "none";
       }
-      if (mode === "button" && toggle){
+      if (toggle){
         toggle.classList.toggle("on", !audio.paused);
         toggle.setAttribute("aria-pressed", String(!audio.paused));
       }
@@ -81,28 +93,32 @@ CC.BGM = (function(){
 
     const resume = () => {
       const t = getT();
-      const seek = () => { try{ if (t > 0) audio.currentTime = t; }catch(_){} };
+      const seek = () => { try{ if (t > 0 && Math.abs((audio.currentTime || 0) - t) > 0.35) audio.currentTime = t; }catch(_){} };
       if (audio.readyState >= 1) seek();
       else audio.addEventListener("loadedmetadata", seek, { once:true });
-      return audio.play().then(syncUi).catch(syncUi);
+      return audio.play().then(() => {
+        try{ localStorage.setItem(KEY.on, "on"); }catch(_){}
+        syncUi();
+      }).catch(syncUi);
     };
 
     const turnOn = () => {
-      localStorage.setItem(KEY.on, "on");
+      try{ localStorage.setItem(KEY.on, "on"); }catch(_){}
       return resume();
     };
     const turnOff = () => {
-      localStorage.setItem(KEY.on, "off");
+      try{ localStorage.setItem(KEY.on, "off"); }catch(_){}
       audio.pause();
+      save();
       syncUi();
     };
     const togglePlay = () => audio.paused ? turnOn() : turnOff();
 
-    audio.addEventListener("play", syncUi);
+    audio.addEventListener("play", () => { syncUi(); save(); });
     audio.addEventListener("pause", syncUi);
     syncUi();
 
-    if (localStorage.getItem(KEY.on) !== "off") resume();
+    if (shouldPlay()) resume();
 
     if (mode === "sigil" && toggle){
       let lastUserAction = 0;
@@ -111,7 +127,7 @@ CC.BGM = (function(){
         if (localStorage.getItem(KEY.on) === "off") return;
         if (performance.now() - lastUserAction < 1200) return;
         setTimeout(() => {
-          if (audio.paused && localStorage.getItem(KEY.on) !== "off") resume();
+          if (audio.paused && shouldPlay()) resume();
         }, 300);
       });
       toggle.addEventListener("click", () => {
@@ -132,27 +148,43 @@ CC.BGM = (function(){
       });
     }
 
-    if (opts.gestureKick){
+    /* 跨页跳转前尽量写入进度；软拦同站 html 链接以同步落盘 */
+    const bindSaveOnNav = () => {
+      document.querySelectorAll("a[href]").forEach(a => {
+        if (a.dataset.bgmBound) return;
+        const href = a.getAttribute("href") || "";
+        if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) return;
+        if (/^https?:\/\//i.test(href) && !href.startsWith(location.origin)) return;
+        a.dataset.bgmBound = "1";
+        a.addEventListener("click", save, { capture:true });
+        a.addEventListener("touchend", save, { capture:true, passive:true });
+      });
+    };
+    bindSaveOnNav();
+    const mo = new MutationObserver(bindSaveOnNav);
+    mo.observe(document.documentElement, { childList:true, subtree:true });
+
+    window.addEventListener("pagehide", save);
+    window.addEventListener("beforeunload", save);
+    window.addEventListener("pageshow", () => {
+      if (shouldPlay() && audio.paused) resume();
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") save();
+      else if (shouldPlay() && audio.paused) resume();
+    });
+    setInterval(() => { if (!audio.paused) save(); }, 800);
+
+    if (opts.gestureKick || shouldPlay()){
       const kick = () => {
-        if (localStorage.getItem(KEY.on) === "off") return;
+        if (!shouldPlay()) return;
         if (audio.paused) resume();
       };
-      const KICKS = ["pointerdown","touchstart","touchend","click"];
+      const KICKS = ["pointerdown","touchstart","touchend","click","keydown"];
       KICKS.forEach(ev => document.addEventListener(ev, kick, { passive:true, capture:true }));
       audio.addEventListener("play", () =>
         KICKS.forEach(ev => document.removeEventListener(ev, kick, { capture:true })));
     }
-
-    document.querySelectorAll('a[href$=".html"], a[href*=".html#"]').forEach(a => {
-      a.addEventListener("click", save, { capture:true });
-      a.addEventListener("touchend", save, { capture:true, passive:true });
-    });
-    window.addEventListener("pagehide", save);
-    window.addEventListener("beforeunload", save);
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") save();
-    });
-    setInterval(() => { if (!audio.paused) save(); }, 1500);
 
     return { audio, resume, togglePlay, save };
   }

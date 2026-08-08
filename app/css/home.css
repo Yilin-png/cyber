@@ -650,6 +650,61 @@ main.wrap{display:block;min-height:100svh}
   .channel + .channel{border-left:0;border-top:1px solid var(--line)}
 }
 
+.wechat-community{
+  max-width:760px;
+  margin-top:22px;
+}
+.wechat-card{
+  border:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(16,12,33,.55), rgba(16,12,33,.18));
+  padding:26px 28px;
+}
+.wechat-kicker{
+  font-family:var(--font-mono);
+  font-size:var(--text-xs);
+  letter-spacing:var(--track-label);
+  color:var(--gold);
+  margin-bottom:10px;
+}
+.wechat-top{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.wechat-top h3{
+  font-family:var(--font-display);
+  font-size:var(--text-xl);
+  font-weight:700;
+  letter-spacing:var(--track-title);
+  margin:0;
+}
+.wechat-badge{
+  font-family:var(--font-mono);
+  font-size:var(--text-xs);
+  letter-spacing:var(--track-label);
+  color:var(--ash);
+  border:1px solid var(--line);
+  padding:3px 8px;
+}
+.wechat-card p{
+  font-size:var(--text-base);
+  color:var(--body);
+  line-height:var(--leading-body);
+  max-width:36em;
+}
+.wechat-slot{
+  margin-top:18px;
+  width:min(180px,100%);
+  aspect-ratio:1;
+  border:1px dashed var(--line);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);
+  font-size:var(--text-xs);
+  letter-spacing:var(--track-label);
+  color:var(--ash);
+  background:
+    repeating-linear-gradient(45deg,rgba(157,107,255,.04) 0 6px,transparent 6px 12px);
+}
+
 /* ── 法阵新增小符号：自转 / 缓慢漂移 ── */
 .orbit-slow{animation:spin 90s linear infinite;transform-box:view-box;transform-origin:240px 240px}
 .orbit-rev{animation:spin 70s linear infinite reverse;transform-box:view-box;transform-origin:240px 240px}

@@ -187,5 +187,12 @@ const DATA = {
       kicker: "LOGIN",
       note: "用登录名和通行码进入，查阅参会纪要与留言。",
       cta: "去登录", variant: "ghost" }
-  ]
+  ],
+
+  wechatCommunity: {
+    title: "微信社群",
+    kicker: "COMMUNITY",
+    status: "pending",
+    note: "群二维码与入群指引待维护。需要加群可先通过报名留下联系方式，组织者会私下联系。"
+  }
 };
