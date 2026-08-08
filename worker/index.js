@@ -201,6 +201,9 @@ app.get("/api/health", (c) =>
   c.json({ ok: true, service: "cybercasters", runtime: "cloudflare-workers", time: new Date().toISOString() })
 );
 
+/* Assets html_handling=none 时 / 不会自动落到 index.html */
+app.get("/", (c) => c.redirect("/index.html", 302));
+
 app.get("/api/gatherings", (c) => c.json({ gatherings: GATHERINGS.map(publicGathering) }));
 
 app.get("/api/gatherings/:id", async (c) => {

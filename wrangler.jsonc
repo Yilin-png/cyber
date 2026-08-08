@@ -32,6 +32,7 @@
     "DISABLE_DEMO": "0"
   },
   "routes": [
+    { "pattern": "cyber-casters.com", "custom_domain": true },
     { "pattern": "www.cyber-casters.com", "custom_domain": true }
   ],
   "rules": [
