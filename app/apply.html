@@ -27,9 +27,9 @@
     color:var(--cyan);margin:6px 0 8px;user-select:all;word-break:break-all;
   }
   .field-row{
-    display:grid;grid-template-columns:1fr 1fr;gap:10px;
+    display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:10px;
   }
-  @media (max-width:640px){
+  @media (max-width:720px){
     .field-row{grid-template-columns:1fr}
   }
   .field select{
@@ -48,6 +48,9 @@
     border:1px solid var(--line);background:var(--panel-2);
     color:var(--paper);font-family:var(--font-sans);font-size:var(--text-sm);
     padding:11px 12px;cursor:pointer;user-select:none;
+  }
+  .choice.topic{
+    flex:0 1 auto;min-width:0;padding:9px 12px;font-size:var(--text-xs);
   }
   .choice:has(input:checked){
     border-color:var(--cyan);color:var(--cyan);background:rgba(63,224,208,.08);
@@ -72,20 +75,23 @@
       </div>
 
       <div class="field">
-        <label>是否参加最近一期（<span id="nextLabel">近期线下</span>）*</label>
+        <label>是否参加最近一期（<span id="nextLabel">2026年8月20日 19:00</span>）*</label>
         <div class="choice-row" role="radiogroup" aria-label="是否参加最近一期">
           <label class="choice"><input type="radio" name="joinNext" value="参加" required>参加</label>
           <label class="choice"><input type="radio" name="joinNext" value="不参加">不参加</label>
-          <label class="choice"><input type="radio" name="joinNext" value="看情况">看情况</label>
         </div>
       </div>
 
       <div class="field">
-        <label>意向时段 / 片区 *</label>
+        <label>下一期意向时段 / 片区 *</label>
         <div class="field-row">
+          <select id="intentPeriod" required>
+            <option value="" disabled selected>日期区间</option>
+          </select>
           <select id="intentSlot" required>
-            <option value="" disabled selected>意向时段</option>
+            <option value="" disabled selected>时段</option>
             <option value="工作日晚上">工作日晚上</option>
+            <option value="周末上午">周末上午</option>
             <option value="周末下午">周末下午</option>
             <option value="周末晚上">周末晚上</option>
             <option value="周末全天">周末全天</option>
@@ -104,24 +110,34 @@
             <option value="不限片区">不限片区</option>
           </select>
         </div>
-        <div class="hint">选一个大致方便的时段和片区即可，不必精确到某一天</div>
+        <div class="hint">日期区间会随最近一期滚动更新；选大概方便的区间、时段和片区即可</div>
       </div>
 
       <input type="hidden" name="intentDates" id="intentDates">
-
-      <div class="field">
-        <label>补充说明（选填）</label>
-        <input id="intentNote" maxlength="80" placeholder="如：只能周四后 / 更想听纪要整理">
-      </div>
 
       <div class="field">
         <label>联系方式（选填）</label>
         <input name="contact" maxlength="80" placeholder="手机、邮箱或微信等联系方式，方便通知">
         <div class="hint">建议填写，方便组织者联系</div>
       </div>
+
       <div class="field">
         <label>想交流的方向（选填）</label>
-        <textarea name="message" maxlength="800" placeholder="一句话就好，比如日常写材料、做纪要、折腾本地知识库…"></textarea>
+        <div class="choice-row" id="topicChips">
+          <label class="choice topic"><input type="checkbox" value="信息获取与整理">信息获取与整理</label>
+          <label class="choice topic"><input type="checkbox" value="Skill 封装与管理">Skill 封装与管理</label>
+          <label class="choice topic"><input type="checkbox" value="本地知识库 / Obsidian">本地知识库 / Obsidian</label>
+          <label class="choice topic"><input type="checkbox" value="编程与多 Agent">编程与多 Agent</label>
+          <label class="choice topic"><input type="checkbox" value="会议纪要 / 语音转写">会议纪要 / 语音转写</label>
+          <label class="choice topic"><input type="checkbox" value="办公写作与排版">办公写作与排版</label>
+        </div>
+        <textarea id="topicExtra" maxlength="400" placeholder="也可手填补充，例如：想聊 RAG 落地、本地模型部署…" style="margin-top:10px"></textarea>
+        <input type="hidden" name="message" id="message">
+      </div>
+
+      <div class="field">
+        <label>补充说明（选填）</label>
+        <input id="intentNote" maxlength="80" placeholder="如：可推荐场地 / 指定某某咖啡厅附近">
       </div>
 
       <div class="hp-field" aria-hidden="true">
@@ -151,43 +167,102 @@ const msg = document.getElementById("msg");
 const submitBtn = document.getElementById("submitBtn");
 const handleCard = document.getElementById("handleCard");
 const handleValue = document.getElementById("handleValue");
+const intentPeriod = document.getElementById("intentPeriod");
 const intentSlot = document.getElementById("intentSlot");
 const intentArea = document.getElementById("intentArea");
 const intentNote = document.getElementById("intentNote");
 const intentDates = document.getElementById("intentDates");
+const topicExtra = document.getElementById("topicExtra");
+const messageField = document.getElementById("message");
 const nextLabel = document.getElementById("nextLabel");
 
-/** 把 DATA.nextGathering（如 2026.08.20 19:00）收成「8月20日晚」 */
-function formatNextLabel(raw) {
+/** DATA.nextGathering（如 2026.08.20 19:00）→ 2026年8月20日 19:00 */
+function formatNextFull(raw) {
   const m = String(raw || "").match(/(\d{4})\.(\d{2})\.(\d{2})(?:\s+(\d{2}):(\d{2}))?/);
   if (!m) return raw || "近期线下";
+  const year = m[1];
   const month = Number(m[2]);
   const day = Number(m[3]);
-  let slot = "";
-  if (m[4] != null) {
-    const hour = Number(m[4]);
-    slot = hour < 12 ? "上午" : hour < 18 ? "下午" : "晚";
+  const time = m[4] != null ? ` ${m[4]}:${m[5]}` : "";
+  return `${year}年${month}月${day}日${time}`;
+}
+
+function parseNextDate(raw) {
+  const m = String(raw || "").match(/(\d{4})\.(\d{2})\.(\d{2})/);
+  if (!m) return new Date();
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+}
+
+/** 从基准日起滚动生成「X月上旬/中旬/下旬」 */
+function buildPeriodOptions(fromDate, count = 6) {
+  const bands = ["上旬", "中旬", "下旬"];
+  let y = fromDate.getFullYear();
+  let m = fromDate.getMonth();
+  const day = fromDate.getDate();
+  let band = day <= 10 ? 0 : day <= 20 ? 1 : 2;
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    out.push(`${y}年${m + 1}月${bands[band]}`);
+    band += 1;
+    if (band > 2) {
+      band = 0;
+      m += 1;
+      if (m > 11) {
+        m = 0;
+        y += 1;
+      }
+    }
   }
-  return `${month}月${day}日${slot}`;
+  return out;
+}
+
+function fillPeriodOptions(keepValue) {
+  const opts = buildPeriodOptions(parseNextDate(nextRaw), 6);
+  const prev = keepValue || intentPeriod.value;
+  intentPeriod.innerHTML = '<option value="" disabled selected>日期区间</option>';
+  for (const label of opts) {
+    const o = document.createElement("option");
+    o.value = label;
+    o.textContent = label;
+    intentPeriod.appendChild(o);
+  }
+  const flex = document.createElement("option");
+  flex.value = "时间灵活";
+  flex.textContent = "时间灵活";
+  intentPeriod.appendChild(flex);
+  if (prev && [...intentPeriod.options].some((o) => o.value === prev)) {
+    intentPeriod.value = prev;
+  }
 }
 
 const nextRaw = (typeof DATA !== "undefined" && DATA.nextGathering) || "2026.08.20 19:00";
-const nextShort = formatNextLabel(nextRaw);
-nextLabel.textContent = nextShort;
+const nextFull = formatNextFull(nextRaw);
+nextLabel.textContent = nextFull;
+fillPeriodOptions();
 
 function selectedJoinNext() {
   const el = form.querySelector('input[name="joinNext"]:checked');
   return el ? el.value : "";
 }
 
+function composeTopics() {
+  const picked = [...form.querySelectorAll('#topicChips input:checked')].map((el) => el.value);
+  const extra = topicExtra.value.trim();
+  if (!picked.length && !extra) return "";
+  if (!picked.length) return extra;
+  if (!extra) return picked.join("、");
+  return `${picked.join("、")}｜${extra}`;
+}
+
 function composeIntent() {
   const join = selectedJoinNext();
+  const period = intentPeriod.value;
   const slot = intentSlot.value;
   const area = intentArea.value;
   const note = intentNote.value.trim();
-  if (!join || !slot || !area) return "";
-  const base = `最近一期（${nextShort}）：${join}｜时段：${slot}｜片区：${area}`;
-  return note ? `${base}｜${note}` : base;
+  if (!join || !period || !slot || !area) return "";
+  const base = `最近一期（${nextFull}）：${join}｜区间：${period}｜时段：${slot}｜片区：${area}`;
+  return note ? `${base}｜补充：${note}` : base;
 }
 
 form.addEventListener("submit", async (e) => {
@@ -199,16 +274,14 @@ form.addEventListener("submit", async (e) => {
   const composed = composeIntent();
   if (!composed) {
     msg.className = "form-msg err";
-    msg.textContent = "请选择是否参加最近一期，以及意向时段和片区";
+    msg.textContent = "请选择是否参加最近一期，以及日期区间、时段和片区";
     submitBtn.disabled = false;
     return;
   }
-  /* 拼好的文案可能略超默认 120，截断前先写入 */
   intentDates.value = composed.slice(0, 200);
-  intentDates.setAttribute("maxlength", "200");
+  messageField.value = composeTopics().slice(0, 800);
 
   const body = Object.fromEntries(new FormData(form).entries());
-  /* joinNext 只用于拼 intentDates，不必单独入库 */
   delete body.joinNext;
 
   try {
@@ -221,7 +294,8 @@ form.addEventListener("submit", async (e) => {
       try { sessionStorage.setItem("cc-apply-handle", data.handle); } catch (_) {}
     }
     form.reset();
-    nextLabel.textContent = nextShort;
+    nextLabel.textContent = nextFull;
+    fillPeriodOptions();
   } catch (err) {
     msg.className = "form-msg err";
     msg.textContent = err.message;
