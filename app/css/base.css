@@ -64,6 +64,10 @@ footer{
   color:var(--ash);
   display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
 }
+/* .wrap 的 padding:0 24px 会盖掉 footer 上下内边距，单独补回并加大底距 */
+footer.wrap{
+  padding:26px 24px 56px;
+}
 
 footer a{
   color:var(--cyan);
