@@ -10,12 +10,7 @@ const $ = CC.$;
 const esc = CC.esc;
 
 function fmtTime(iso) {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleString("zh-CN", { hour12: false });
-  } catch (_) {
-    return iso;
-  }
+  return CC.fmtChinaTime(iso);
 }
 
 function renderUserChip(me) {

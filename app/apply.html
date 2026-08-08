@@ -26,6 +26,20 @@
     font-family:var(--font-mono);font-size:var(--text-lg);
     color:var(--cyan);margin:6px 0 8px;user-select:all;word-break:break-all;
   }
+  .field-row{
+    display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:10px;
+  }
+  @media (max-width:640px){
+    .field-row{grid-template-columns:1fr}
+  }
+  .field input[type="date"]{color-scheme:dark}
+  .field select{
+    appearance:none;
+    background-image:linear-gradient(45deg,transparent 50%,var(--ash) 50%),linear-gradient(135deg,var(--ash) 50%,transparent 50%);
+    background-position:calc(100% - 16px) calc(50% - 2px),calc(100% - 11px) calc(50% - 2px);
+    background-size:5px 5px,5px 5px;background-repeat:no-repeat;
+    padding-right:28px;
+  }
 </style>
 </head>
 <body class="auth-page">
@@ -41,12 +55,38 @@
 
       <div class="field">
         <label>怎么称呼你 *</label>
-        <input name="name" required maxlength="40" placeholder="昵称即可">
+        <input name="name" required maxlength="40" placeholder="昵称即可" autocomplete="nickname">
       </div>
+
       <div class="field">
         <label>意向参与时间 *</label>
-        <input name="intentDates" required maxlength="120" placeholder="如：下期线上 / 8 月深圳线下均可">
+        <div class="field-row">
+          <input id="intentDate" type="date" required>
+          <select id="intentSlot" required>
+            <option value="" disabled selected>选择时段</option>
+            <option value="上午">上午</option>
+            <option value="下午">下午</option>
+            <option value="晚上">晚上</option>
+            <option value="全天">全天</option>
+            <option value="时间灵活">时间灵活</option>
+          </select>
+          <select id="intentMode" required>
+            <option value="" disabled selected>参与形式</option>
+            <option value="线上">线上</option>
+            <option value="深圳线下">深圳线下</option>
+            <option value="线上或线下均可">线上或线下均可</option>
+          </select>
+        </div>
+        <div class="hint">先选日期、时段和形式；有特殊说明可写在下面</div>
       </div>
+
+      <input type="hidden" name="intentDates" id="intentDates">
+
+      <div class="field">
+        <label>补充说明（选填）</label>
+        <input id="intentNote" maxlength="80" placeholder="如：只能周末 / 更想听纪要整理">
+      </div>
+
       <div class="field">
         <label>联系方式（选填）</label>
         <input name="contact" maxlength="80" placeholder="手机、邮箱或微信等联系方式，方便通知">
@@ -75,6 +115,7 @@
     </form>
   </div>
 
+<script src="js/util.js"></script>
 <script src="js/api.js"></script>
 <script>
 const form = document.getElementById("applyForm");
@@ -82,12 +123,41 @@ const msg = document.getElementById("msg");
 const submitBtn = document.getElementById("submitBtn");
 const handleCard = document.getElementById("handleCard");
 const handleValue = document.getElementById("handleValue");
+const intentDate = document.getElementById("intentDate");
+const intentSlot = document.getElementById("intentSlot");
+const intentMode = document.getElementById("intentMode");
+const intentNote = document.getElementById("intentNote");
+const intentDates = document.getElementById("intentDates");
+
+const today = CC.todayChina();
+intentDate.min = today;
+intentDate.value = today;
+
+function composeIntent() {
+  const date = intentDate.value;
+  const slot = intentSlot.value;
+  const mode = intentMode.value;
+  const note = intentNote.value.trim();
+  if (!date || !slot || !mode) return "";
+  const base = `${date} · ${slot} · ${mode}`;
+  return note ? `${base}｜${note}` : base;
+}
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   msg.className = "form-msg";
   msg.textContent = "提交中…";
   submitBtn.disabled = true;
+
+  const composed = composeIntent();
+  if (!composed) {
+    msg.className = "form-msg err";
+    msg.textContent = "请选择日期、时段和参与形式";
+    submitBtn.disabled = false;
+    return;
+  }
+  intentDates.value = composed;
+
   const body = Object.fromEntries(new FormData(form).entries());
   try {
     const data = await CC.api("/api/apply", { method: "POST", body: JSON.stringify(body) });
@@ -99,6 +169,8 @@ form.addEventListener("submit", async (e) => {
       try { sessionStorage.setItem("cc-apply-handle", data.handle); } catch (_) {}
     }
     form.reset();
+    intentDate.min = today;
+    intentDate.value = today;
   } catch (err) {
     msg.className = "form-msg err";
     msg.textContent = err.message;

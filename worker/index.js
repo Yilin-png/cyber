@@ -21,6 +21,7 @@ import {
   cookieSecure
 } from "./session.js";
 import { GATHERINGS, gatheringBodyHtml } from "./gatherings.js";
+import { formatChinaTime } from "./time.js";
 
 export { CyberStore };
 
@@ -527,14 +528,14 @@ app.get("/api/admin/applications.csv", async (c) => {
   for (const a of db.applications) {
     lines.push(
       [
-        a.createdAt,
+        formatChinaTime(a.createdAt),
         a.name,
         handleOf(a),
         a.contact || "",
         a.intentDates || "",
         a.message || "",
         a.status,
-        a.approvedAt || "",
+        formatChinaTime(a.approvedAt),
         (a.issuedGatherings || []).join(" ")
       ]
         .map(cell)

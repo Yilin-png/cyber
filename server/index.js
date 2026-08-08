@@ -7,6 +7,7 @@ const cookieSession = require("cookie-session");
 /* 本地可选：有 .env 就加载；线上用平台环境变量 */
 try { require("dotenv").config(); } catch (_) {}
 
+const { formatChinaTime } = require("./time");
 const {
   load, save, uid, hashPass, verifyPass, genPasscode, genHandle, handleOf, DATA_DIR
 } = require("./db");
@@ -415,8 +416,8 @@ app.get("/api/admin/applications.csv", (req, res) => {
   const lines = [header.map(cell).join(",")];
   for (const a of db.applications) {
     lines.push([
-      a.createdAt, a.name, handleOf(a), a.contact || "", a.intentDates || "",
-      a.message || "", a.status, a.approvedAt || "", (a.issuedGatherings || []).join(" ")
+      formatChinaTime(a.createdAt), a.name, handleOf(a), a.contact || "", a.intentDates || "",
+      a.message || "", a.status, formatChinaTime(a.approvedAt), (a.issuedGatherings || []).join(" ")
     ].map(cell).join(","));
   }
   res.set("Content-Type", "text/csv; charset=utf-8");
