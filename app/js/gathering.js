@@ -17,7 +17,7 @@ function renderUserChip(me) {
   const el = $("#userChip");
   if (!me || !me.auth) {
     el.innerHTML = `
-      <span class="who">MEETING NOTES · ${GATHERING_ID}</span>
+      <span class="who">NOTES · ${GATHERING_ID}</span>
       <a href="login.html?next=gathering-001.html">登录</a>
       <a href="apply.html">申请</a>`;
     return;
@@ -151,7 +151,7 @@ async function main() {
   $("#gMeta").textContent = `${data.date} · ${data.place} · ${data.mode}`;
   $("#gSummary").textContent = data.summary;
 
-  /* 公开纪要：议题目录 + 一句摘要 */
+  /* 公开纪要：只展示要点文案，不展示议题目录标题 */
   const digest = $("#publicDigest");
   const topics = data.topics || [];
   if (topics.length) {
@@ -159,10 +159,7 @@ async function main() {
     $("#topicList").innerHTML = topics.map(t => `
       <li>
         <i>${esc(t.no)}</i>
-        <div>
-          <div class="t-title">${esc(t.title)}</div>
-          ${t.blurb ? `<div class="t-blurb">${esc(t.blurb)}</div>` : ""}
-        </div>
+        <div class="t-blurb">${esc(t.blurb || t.title)}</div>
       </li>`).join("");
   }
 

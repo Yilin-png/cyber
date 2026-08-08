@@ -379,22 +379,18 @@ $("#chanList").innerHTML = DATA.channels.map(c => {
     <div class="note">${esc(c.note||"")}</div>
     ${body}
   </div>`;
-}).join("");
-
-(function renderWechat() {
+}).join("") + (() => {
   const w = DATA.wechatCommunity;
-  const el = $("#wechatBlock");
-  if (!el || !w) return;
-  el.innerHTML = `
-    <div class="wechat-card">
-      <div class="wechat-kicker">${esc(w.kicker || "COMMUNITY")}</div>
-      <div class="wechat-top">
-        <h3>${esc(w.title || "微信社群")}</h3>
-        ${w.status === "pending" ? `<span class="wechat-badge">待维护</span>` : ""}
-      </div>
-      <p>${esc(w.note || "")}</p>
-      <div class="wechat-slot" aria-hidden="true">二维码待维护</div>
-    </div>`;
+  if (!w) return "";
+  return `<div class="wechat-card">
+    <div class="wechat-kicker">${esc(w.kicker || "COMMUNITY")}</div>
+    <div class="wechat-top">
+      <h3>${esc(w.title || "微信社群")}</h3>
+      ${w.status === "pending" ? `<span class="wechat-badge">待维护</span>` : ""}
+    </div>
+    <p>${esc(w.note || "")}</p>
+    <div class="wechat-slot" aria-hidden="true">二维码待维护</div>
+  </div>`;
 })();
 
 /* 登录态：公开工具目录始终展示；集会摘录按成员解锁 */
