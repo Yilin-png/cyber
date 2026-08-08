@@ -1,0 +1,24 @@
+{
+  "applications": [],
+  "users": [
+    {
+      "id": "u_955680bd0ef11f15",
+      "name": "演示参会者",
+      "handle": "demo_caster",
+      "passcodeHash": "97a6a834cca92ef5:9a400a53c8caacc01b79dab901999d63b55b4f759bfd1a9f70e8e52e11305a08",
+      "gatherings": [
+        "001"
+      ],
+      "wechatOpenId": "",
+      "createdAt": "2026-08-08T04:29:13.423Z",
+      "note": "seed demo account"
+    }
+  ],
+  "comments": [],
+  "sessions": {},
+  "_seedInfo": {
+    "handle": "demo_caster",
+    "passcode": "CAST-DEMO",
+    "tip": "登录页可用 登录名 demo_caster + 通行码 CAST-DEMO 试用"
+  }
+}

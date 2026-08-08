@@ -1,0 +1,22 @@
+# Render 一键部署：https://render.com
+# 连接 Git 仓库后选择此蓝图，或 Dashboard → New → Web Service
+services:
+  - type: web
+    name: cybercasters
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ADMIN_TOKEN
+        generateValue: true
+      - key: PUBLIC_BASE
+        sync: false
+      # 部署完成后把 PUBLIC_BASE 改成 https://你的服务.onrender.com
+      - key: DATA_DIR
+        value: /opt/render/project/src/server/data

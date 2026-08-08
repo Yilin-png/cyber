@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="赛博法师第一期集会纪要摘要：用 AI 做文字处理。完整内容仅对参会成员开放。">
+<meta name="theme-color" content="#07060E">
+<title>赛博法师 • 第一期AI交流会 | 赛博法师 • CYBER CASTERS</title>
+<link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/gathering.css">
+<link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <a class="back" href="index.html">← 返回 CYBER CASTERS</a>
+    <div class="userchip" id="userChip">
+      <span class="who">MEETING NOTES · 001</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <header class="head">
+    <span class="issue">GATHERING 001</span>
+    <h1 id="gTitle">赛博法师 • 第一期AI交流会</h1>
+    <div class="meta" id="gMeta">2026.07.24 · 深圳 · 线下</div>
+    <div class="abstract" id="gSummary">加载中…</div>
+  </header>
+
+  <!-- 公开纪要：议题目录 + 一句摘要（无需登录） -->
+  <section class="public-digest" id="publicDigest" hidden>
+    <h2 class="digest-title">议题目录</h2>
+    <ol class="topic-list" id="topicList"></ol>
+    <p class="digest-note">逐步实操、对照表、现场照片与留言板，仅对当期参会成员开放。</p>
+  </section>
+
+  <!-- 未解锁：登录/申请门 -->
+  <div id="lockPanel" class="lock-box" hidden>
+    <h2>完整纪要需参会权限</h2>
+    <p id="lockReason">完整纪要仅对当期参会成员开放。</p>
+    <p>若你参加了本期，登录后可查看全文、现场照片，并在文末留言。</p>
+    <div class="lock-actions">
+      <a class="btn btn-primary" href="login.html?next=gathering-001.html">成员登录</a>
+      <a class="btn btn-ghost" href="apply.html">申请加入 / 报意向</a>
+    </div>
+  </div>
+
+  <!-- 已解锁：目录 + 正文 + 评论 -->
+  <div id="fullPanel" hidden>
+    <div class="cols">
+      <nav class="toc" id="toc">
+        <h2>CONTENTS</h2>
+        <div class="toc-list" id="tocList"></div>
+      </nav>
+      <main class="doc">
+        <div id="docBody"></div>
+
+        <section class="comments" id="comments">
+          <h2>留言板</h2>
+          <p class="sub">仅本期参会成员可见。友善交流，勿传播敏感操作细节到场外。</p>
+          <div class="comment-list" id="commentList"></div>
+          <form class="comment-form" id="commentForm">
+            <textarea name="body" maxlength="1000" required placeholder="写下一句想法、补充或感谢…"></textarea>
+            <button class="btn btn-primary" type="submit">发布留言</button>
+            <div class="form-msg" id="commentMsg" aria-live="polite"></div>
+          </form>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <footer>
+    <span>© 2026 赛博法师 • CYBER CASTERS</span>
+    <span>GATHERING 001 • MEMBERS ONLY</span>
+  </footer>
+</div>
+
+<audio id="bgm" src="assets/audio/bgm.m4a" preload="auto"></audio>
+<button id="bgmBtn" aria-label="背景音乐开关" title="背景音乐" aria-pressed="false">♪</button>
+
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="照片查看">
+  <button class="x" id="lbX" aria-label="关闭">✕</button>
+  <button class="prev" id="lbP" aria-label="上一张">‹</button>
+  <img id="lbImg" alt="现场照片">
+  <button class="next" id="lbN" aria-label="下一张">›</button>
+  <span class="idx" id="lbIdx"></span>
+</div>
+
+<script src="js/util.js"></script>
+<script src="js/api.js"></script>
+<script src="js/gathering-data.js"></script>
+<script src="js/bgm.js"></script>
+<script src="js/gathering.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "cybercasters",
+  "private": true,
+  "version": "1.2.0",
+  "description": "赛博法师 CYBER CASTERS · AI技巧交流会（申请/登录/纪要权限/评论）",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "seed": "node server/seed.js",
+    "static": "npx --yes serve app -l 3080"
+  },
+  "dependencies": {
+    "cookie-session": "^2.1.0",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2"
+  }
+}

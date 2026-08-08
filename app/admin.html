@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>审批台 • 赛博法师</title>
+<link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/auth.css">
+<style>
+  .admin-wrap{max-width:1020px;margin:0 auto;padding:28px 24px 60px}
+  table{width:100%;border-collapse:collapse;font-size:var(--text-sm);margin-top:18px}
+  th,td{border:1px solid var(--line);padding:10px;text-align:left;vertical-align:top;color:var(--body)}
+  th{color:var(--gold);font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);font-weight:400}
+  .token-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:18px 0 10px}
+  .token-bar .field{flex:1;min-width:180px;margin:0}
+  code,.mono{font-family:var(--font-mono);color:var(--cyan)}
+  .filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0 4px}
+  .chip{
+    font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);
+    padding:7px 13px;border:1px solid var(--line);background:transparent;color:var(--ash);cursor:pointer;
+    transition:border-color .18s,color .18s,background .18s;
+  }
+  .chip:hover{border-color:rgba(63,224,208,.45);color:var(--paper)}
+  .chip[aria-pressed="true"]{border-color:var(--cyan);color:var(--cyan);background:rgba(63,224,208,.08)}
+  .filter-bar .spacer{flex:1}
+  .row-actions{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+  .row-actions .btn{clip-path:none;padding:7px 11px;font-size:var(--text-xs);white-space:nowrap}
+  .status-pill{
+    font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);
+    padding:3px 8px;border:1px solid var(--line);display:inline-block;
+  }
+  .st-pending{color:var(--gold);border-color:rgba(214,178,102,.5)}
+  .st-approved{color:var(--cyan);border-color:rgba(63,224,208,.5)}
+  .st-rejected{color:var(--ash)}
+  .credential{
+    margin-top:14px;padding:16px 18px;
+    border:1px solid rgba(63,224,208,.4);
+    background:linear-gradient(135deg,rgba(16,12,33,.75),rgba(16,12,33,.25));
+  }
+  .credential .k{font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);color:var(--gold)}
+  .credential .v{font-family:var(--font-mono);font-size:var(--text-lg);color:var(--cyan);user-select:all}
+  .credential .grid{display:flex;gap:36px;flex-wrap:wrap;margin:8px 0 10px}
+  .muted{color:var(--ash)}
+</style>
+</head>
+<body>
+<div class="admin-wrap">
+  <a class="auth-nav" href="index.html" style="display:inline-block;border:0;padding:0;color:var(--cyan)">← 首页</a>
+  <h1 style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;margin:16px 0 8px;letter-spacing:var(--track-title)">报名审批</h1>
+  <p class="muted" style="font-size:var(--text-base);line-height:var(--leading-body)">使用服务端 <code>ADMIN_TOKEN</code>（默认见启动日志）拉取报名表。批准后会生成一次性通行码，请立刻私下发给申请人——页面刷新后无法再次查看，只能「重发通行码」换一个新的。</p>
+
+  <div class="token-bar">
+    <div class="field">
+      <label>管理员令牌</label>
+      <input id="token" placeholder="x-admin-token" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>搜索</label>
+      <input id="q" placeholder="称呼 / 登录名 / 联系方式" autocomplete="off">
+    </div>
+    <button class="btn btn-primary" id="loadBtn" type="button">刷新列表</button>
+  </div>
+
+  <div class="filter-bar" id="filterBar">
+    <button class="chip" type="button" data-status="pending" aria-pressed="true">待审核</button>
+    <button class="chip" type="button" data-status="approved" aria-pressed="false">已通过</button>
+    <button class="chip" type="button" data-status="rejected" aria-pressed="false">已驳回</button>
+    <button class="chip" type="button" data-status="" aria-pressed="false">全部</button>
+    <span class="spacer"></span>
+    <button class="chip" type="button" id="csvBtn">导出 CSV</button>
+  </div>
+
+  <div class="form-msg" id="msg" aria-live="polite"></div>
+  <div id="credential"></div>
+  <div id="tableWrap"></div>
+</div>
+<script src="js/api.js"></script>
+<script>
+const msg = document.getElementById("msg");
+const tokenInput = document.getElementById("token");
+const qInput = document.getElementById("q");
+const tableWrap = document.getElementById("tableWrap");
+const credentialBox = document.getElementById("credential");
+const filterBar = document.getElementById("filterBar");
+
+let status = "pending";
+tokenInput.value = localStorage.getItem("cc-admin-token") || "";
+
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmtTime = s => (s ? String(s).replace("T", " ").slice(0, 16) : "—");
+const token = () => tokenInput.value.trim();
+const authHeaders = () => ({ "x-admin-token": token() });
+
+function setMsg(text, kind) {
+  msg.className = "form-msg" + (kind ? " " + kind : "");
+  msg.textContent = text;
+}
+
+function showCredential(data, label) {
+  credentialBox.innerHTML = `
+    <div class="credential">
+      <div class="k">${esc(label)} · ${esc(data.name)}</div>
+      <div class="grid">
+        <div><div class="k">登录名</div><div class="v">${esc(data.handle)}</div></div>
+        <div><div class="k">通行码</div><div class="v">${esc(data.passcode)}</div></div>
+      </div>
+      <div class="muted" style="font-size:var(--text-sm)">
+        可见期次：${esc((data.gatherings || []).join("、") || "暂未绑定")}　·　通行码仅此一次可见，请立即私下发送。
+      </div>
+    </div>`;
+}
+
+async function load() {
+  localStorage.setItem("cc-admin-token", token());
+  setMsg("加载中…");
+  const params = new URLSearchParams();
+  if (status) params.set("status", status);
+  if (qInput.value.trim()) params.set("q", qInput.value.trim());
+
+  try {
+    const data = await CC.api("/api/admin/applications?" + params, { headers: authHeaders() });
+    const c = data.counts || {};
+    setMsg(`共 ${c.all || 0} 条报名　·　待审核 ${c.pending || 0}　已通过 ${c.approved || 0}　已驳回 ${c.rejected || 0}`);
+    render(data.applications);
+  } catch (err) {
+    setMsg(err.message, "err");
+    tableWrap.innerHTML = "";
+  }
+}
+
+function render(rows) {
+  if (!rows.length) {
+    tableWrap.innerHTML = "<p class='muted' style='margin-top:18px'>该筛选下暂无报名记录</p>";
+    return;
+  }
+  tableWrap.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>提交时间</th><th>申请人</th><th>意向时间 / 留言</th><th>状态</th><th>操作</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(a => `
+          <tr>
+            <td class="muted">${esc(fmtTime(a.createdAt))}</td>
+            <td>
+              <strong style="color:var(--paper)">${esc(a.name)}</strong><br>
+              <span class="mono">${esc(a.handle)}</span>
+              ${a.contact ? `<br><span class="muted">${esc(a.contact)}</span>` : ""}
+            </td>
+            <td>
+              ${esc(a.intentDates)}
+              ${a.message ? `<br><span class="muted">${esc(a.message)}</span>` : ""}
+            </td>
+            <td>
+              <span class="status-pill st-${esc(a.status)}">${esc(a.status)}</span>
+              ${a.issuedGatherings && a.issuedGatherings.length
+                ? `<br><span class="muted">期次 ${esc(a.issuedGatherings.join(","))}</span>` : ""}
+              ${a.rejectReason ? `<br><span class="muted">${esc(a.rejectReason)}</span>` : ""}
+            </td>
+            <td>
+              <div class="row-actions">
+                ${a.status === "pending" ? `
+                  <button class="btn btn-primary" data-act="approve" data-id="${esc(a.id)}">批准 + 绑定 001</button>
+                  <button class="btn btn-ghost" data-act="reject" data-id="${esc(a.id)}">驳回</button>` : ""}
+                ${a.status === "approved"
+                  ? `<button class="btn btn-ghost" data-act="reissue" data-id="${esc(a.id)}">重发通行码</button>` : ""}
+                ${a.status === "rejected" ? `<span class="muted">—</span>` : ""}
+              </div>
+            </td>
+          </tr>`).join("")}
+      </tbody>
+    </table>`;
+}
+
+const actions = {
+  async approve(id) {
+    const data = await CC.api(`/api/admin/applications/${id}/approve`, {
+      method: "POST", headers: authHeaders(), body: JSON.stringify({ gatherings: ["001"] })
+    });
+    showCredential(data, "已批准");
+  },
+  async reissue(id) {
+    if (!confirm("重发会作废旧通行码，确定？")) return;
+    const data = await CC.api(`/api/admin/applications/${id}/reissue`, {
+      method: "POST", headers: authHeaders(), body: "{}"
+    });
+    showCredential(data, "已重发通行码");
+  },
+  async reject(id) {
+    const reason = prompt("驳回理由（可留空，仅自己可见）") ;
+    if (reason === null) return;
+    await CC.api(`/api/admin/applications/${id}/reject`, {
+      method: "POST", headers: authHeaders(), body: JSON.stringify({ reason })
+    });
+    setMsg("已驳回", "ok");
+  }
+};
+
+tableWrap.addEventListener("click", async (e) => {
+  const btn = e.target.closest("button[data-act]");
+  if (!btn) return;
+  btn.disabled = true;
+  try {
+    await actions[btn.dataset.act](btn.dataset.id);
+    await load();
+  } catch (err) {
+    setMsg(err.message, "err");
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+filterBar.addEventListener("click", (e) => {
+  const chip = e.target.closest(".chip[data-status]");
+  if (!chip) return;
+  status = chip.dataset.status;
+  filterBar.querySelectorAll(".chip[data-status]").forEach(c => {
+    c.setAttribute("aria-pressed", String(c === chip));
+  });
+  load();
+});
+
+document.getElementById("csvBtn").addEventListener("click", async () => {
+  try {
+    const res = await fetch("/api/admin/applications.csv", { headers: authHeaders() });
+    if (!res.ok) throw new Error("导出失败，请检查管理员令牌");
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `报名表-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    setMsg(err.message, "err");
+  }
+});
+
+document.getElementById("loadBtn").addEventListener("click", load);
+qInput.addEventListener("keydown", e => { if (e.key === "Enter") load(); });
+if (tokenInput.value) load();
+</script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="申请加入赛博法师 · 填写意向">
+<meta name="theme-color" content="#07060E">
+<title>申请加入 · 赛博法师</title>
+<link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/auth.css">
+<style>
+  /* 蜜罐：仅机器人会看到并填写 */
+  .hp-field{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  .handle-card{
+    margin-top:18px;padding:16px 18px;
+    border:1px solid rgba(63,224,208,.35);
+    background:linear-gradient(135deg,rgba(16,12,33,.72),rgba(16,12,33,.24));
+  }
+  .handle-label{
+    font-family:var(--font-mono);font-size:var(--text-xs);
+    letter-spacing:var(--track-label);color:var(--gold);
+  }
+  .handle-value{
+    font-family:var(--font-mono);font-size:var(--text-lg);
+    color:var(--cyan);margin:6px 0 8px;user-select:all;word-break:break-all;
+  }
+</style>
+</head>
+<body class="auth-page">
+  <div class="auth-nav wrap">
+    <a href="index.html">← 返回首页</a>
+    <a href="login.html">已有通行码？登录</a>
+  </div>
+
+  <div class="wrap" style="flex:1;display:flex;align-items:flex-start">
+    <form class="auth-card" id="applyForm">
+      <h1>我想参加</h1>
+      <p class="lead">留下称呼和意向时间；通过后你会得到<strong style="color:var(--paper)">登录名</strong>和<strong style="color:var(--paper)">通行码</strong>，用来看纪要。</p>
+
+      <div class="field">
+        <label>怎么称呼你 *</label>
+        <input name="name" required maxlength="40" placeholder="昵称即可">
+      </div>
+      <div class="field">
+        <label>意向参与时间 *</label>
+        <input name="intentDates" required maxlength="120" placeholder="如：下期线上 / 8 月深圳线下均可">
+      </div>
+      <div class="field">
+        <label>联系方式（选填）</label>
+        <input name="contact" maxlength="80" placeholder="手机、邮箱或微信等联系方式，方便通知">
+        <div class="hint">建议填写，方便组织者联系</div>
+      </div>
+      <div class="field">
+        <label>想交流的方向（选填）</label>
+        <textarea name="message" maxlength="800" placeholder="一句话就好，比如日常写材料、做纪要、折腾本地知识库…"></textarea>
+      </div>
+
+      <div class="hp-field" aria-hidden="true">
+        <label>Website</label>
+        <input name="website" tabindex="-1" autocomplete="off">
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" type="submit" id="submitBtn">提交意向</button>
+        <a class="btn btn-ghost" href="login.html">去登录</a>
+      </div>
+      <div class="form-msg" id="msg" aria-live="polite"></div>
+      <div class="handle-card" id="handleCard" hidden>
+        <div class="handle-label">你的登录名</div>
+        <div class="handle-value" id="handleValue"></div>
+        <div class="hint">请先记下它。审核通过后组织者会私下发通行码，两者搭配登录。</div>
+      </div>
+    </form>
+  </div>
+
+<script src="js/api.js"></script>
+<script>
+const form = document.getElementById("applyForm");
+const msg = document.getElementById("msg");
+const submitBtn = document.getElementById("submitBtn");
+const handleCard = document.getElementById("handleCard");
+const handleValue = document.getElementById("handleValue");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  msg.className = "form-msg";
+  msg.textContent = "提交中…";
+  submitBtn.disabled = true;
+  const body = Object.fromEntries(new FormData(form).entries());
+  try {
+    const data = await CC.api("/api/apply", { method: "POST", body: JSON.stringify(body) });
+    msg.className = "form-msg ok";
+    msg.textContent = data.message || "已提交";
+    if (data.handle) {
+      handleValue.textContent = data.handle;
+      handleCard.hidden = false;
+      try { sessionStorage.setItem("cc-apply-handle", data.handle); } catch (_) {}
+    }
+    form.reset();
+  } catch (err) {
+    msg.className = "form-msg err";
+    msg.textContent = err.message;
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

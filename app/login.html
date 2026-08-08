@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="参会成员登录 · 查阅当期完整纪要">
+<meta name="theme-color" content="#07060E">
+<title>成员登录 · 赛博法师</title>
+<link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/auth.css">
+</head>
+<body class="auth-page">
+  <div class="auth-nav wrap">
+    <a href="index.html">← 返回首页</a>
+    <a href="apply.html">还没有通行码？去申请</a>
+  </div>
+
+  <div class="wrap" style="flex:1">
+    <form class="auth-card" id="loginForm">
+      <h1>成员登录</h1>
+      <p class="lead">用申请时得到的<strong style="color:var(--paper)">登录名</strong>和组织者发放的<strong style="color:var(--paper)">通行码</strong>进入，即可查看自己参加过的期次完整纪要并留言。</p>
+
+      <div class="field">
+        <label>登录名 *</label>
+        <input name="handle" required maxlength="40" placeholder="申请成功后显示的登录名" autocomplete="username">
+      </div>
+      <div class="field">
+        <label>通行码 *</label>
+        <input name="passcode" required maxlength="32" placeholder="组织者私下告知" autocomplete="current-password">
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" type="submit">登录</button>
+        <a class="btn btn-ghost" href="apply.html">先去申请</a>
+      </div>
+      <div class="form-msg" id="msg" aria-live="polite"></div>
+      <p class="lead" style="margin-top:18px;margin-bottom:0;font-size:12px">
+        本地演示：登录名 <code style="color:var(--cyan)">demo_caster</code> /
+        通行码 <code style="color:var(--cyan)">CAST-DEMO</code>
+        · <button type="button" id="fillDemo" class="btn btn-ghost" style="padding:4px 10px;font-size:12px;margin-left:6px">一键填入</button>
+      </p>
+    </form>
+  </div>
+
+<script src="js/api.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const msg = document.getElementById("msg");
+const handleInput = document.querySelector('input[name="handle"]');
+const passInput = document.querySelector('input[name="passcode"]');
+
+document.getElementById("fillDemo").addEventListener("click", () => {
+  handleInput.value = "demo_caster";
+  passInput.value = "CAST-DEMO";
+  msg.className = "form-msg";
+  msg.textContent = "已填入演示账号，点「登录」即可";
+});
+
+if (params.get("err")) {
+  msg.className = "form-msg err";
+  msg.textContent = "登录暂不可用，请稍后重试，或确认通行码是否正确。";
+}
+
+CC.authMe().then(me => {
+  if (me.auth) {
+    msg.className = "form-msg ok";
+    msg.textContent = `已登录为 ${me.user.name}，正在跳转…`;
+    location.href = params.get("next") || "gathering-001.html";
+  }
+}).catch(() => {});
+
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  msg.className = "form-msg";
+  msg.textContent = "登录中…";
+  const fd = new FormData(e.target);
+  const body = Object.fromEntries(fd.entries());
+  try {
+    const data = await CC.api("/api/auth/login", { method: "POST", body: JSON.stringify(body) });
+    msg.className = "form-msg ok";
+    msg.textContent = `欢迎，${data.user.name}`;
+    location.href = params.get("next") || "gathering-001.html";
+  } catch (err) {
+    msg.className = "form-msg err";
+    msg.textContent = err.message || "登录失败。请确认通过 http://localhost:3000 打开本页（不要直接双击 HTML）。";
+  }
+});
+</script>
+</body>
+</html>

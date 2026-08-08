@@ -1,0 +1,50 @@
+/* 设计令牌：颜色 / 字体 / 字阶 —— 全站共用 */
+:root{
+  --void:#07060E;
+  --panel:#100C21;
+  --panel-2:#171132;
+  --line:#2A2150;
+  --cyan:#3FE0D0;
+  --arcane:#9D6BFF;
+  --gold:#F0C070;
+  --ash:#8E88AE;
+  --paper:#ECE8FA;
+  --body:#B9B3D4;
+
+  /* 中文与英文同一无衬线族；等宽栈末尾必须挂中文无衬线，
+     否则 Windows 对汉字会回落到宋体（SimSun） */
+  --font-sans:"PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei UI","Microsoft YaHei",
+              -apple-system,BlinkMacSystemFont,sans-serif;
+  --font-mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Mono",Menlo,Consolas,
+              "PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei UI","Microsoft YaHei",
+              sans-serif;
+  --font-display:var(--font-sans);
+
+  /* 兼容旧变量名 */
+  --sans:var(--font-sans);
+  --display:var(--font-display);
+  --mono:var(--font-mono);
+  --ink:var(--font-sans);
+
+  /* 字阶：少档位、等比，避免 9/10/11/12.5/13.5 混用 */
+  --text-xs:0.75rem;     /* 12  标签、脚注 */
+  --text-sm:0.8125rem;   /* 13  次要说明 */
+  --text-base:0.9375rem; /* 15  正文 */
+  --text-md:1rem;        /* 16  条目标题 */
+  --text-lg:1.125rem;    /* 18  卡片/频道标题 */
+  --text-xl:1.375rem;    /* 22  分区大标题 */
+  --text-2xl:1.625rem;   /* 26  面板标题 */
+  --text-hero:clamp(1.25rem, 3.2vw, 1.5rem);
+  --text-page:clamp(1.625rem, 4vw, 2.125rem);
+
+  --leading-tight:1.35;
+  --leading-snug:1.5;
+  --leading-body:1.75;
+
+  /* 中文少加字距；英文/等宽标签可略疏 */
+  --track-none:0;
+  --track-tight:0.02em;
+  --track-title:0.06em;
+  --track-label:0.12em;
+  --track-wide:0.18em;
+}
