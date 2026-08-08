@@ -151,7 +151,7 @@ async function main() {
   $("#gMeta").textContent = `${data.date} · ${data.place} · ${data.mode}`;
   $("#gSummary").textContent = data.summary;
 
-  /* 公开纪要：要点卡片网格，桌面端多列 */
+  /* 公开纪要：要点卡片网格，桌面端多列 */ /* digest-cards-v2 */
   const digest = $("#publicDigest");
   const topics = data.topics || [];
   if (topics.length) {
