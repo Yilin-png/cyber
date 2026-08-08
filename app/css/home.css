@@ -510,7 +510,7 @@ main.wrap{display:block;min-height:100svh}
   content:"";flex:1;height:1px;
   background:linear-gradient(90deg,var(--arcane),transparent);opacity:.5;
 }
-/* 关于我们 · 初心与理念 */
+/* 关于我们 · 初心 */
 .about{max-width:960px;margin-bottom:40px}
 .about-lead{
   background:var(--panel);border:1px solid var(--line);
