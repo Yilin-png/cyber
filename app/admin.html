@@ -10,7 +10,6 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/auth.css">
 <style>
-  /* clip 由 base.css 统一设置；这里只禁止横向惯性回弹拖出黑边 */
   html,body{max-width:100%;overscroll-behavior-x:none}
   .admin-wrap{
     max-width:1020px;width:100%;margin:0 auto;
@@ -18,7 +17,6 @@
     box-sizing:border-box;
   }
   .admin-wrap > *{min-width:0;max-width:100%}
-  /* 表格自身横滚，不要把页面撑宽 */
   #tableWrap{
     width:100%;max-width:100%;overflow-x:auto;
     -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;
@@ -26,10 +24,28 @@
   table{width:100%;min-width:720px;border-collapse:collapse;font-size:var(--text-sm);margin-top:18px}
   th,td{border:1px solid var(--line);padding:10px;text-align:left;vertical-align:top;color:var(--body);overflow-wrap:anywhere}
   th{color:var(--gold);font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);font-weight:400}
-  .token-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:18px 0 10px;max-width:100%}
-  .token-bar .field{flex:1 1 200px;min-width:0;margin:0}
-  .token-bar input{width:100%;box-sizing:border-box}
-  .token-bar .btn{flex:0 0 auto}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:18px 0 10px;max-width:100%}
+  .toolbar .field{flex:1 1 200px;min-width:0;margin:0}
+  .toolbar input{width:100%;box-sizing:border-box}
+  .toolbar .btn{flex:0 0 auto}
+  .login-card{
+    max-width:420px;margin:28px 0 0;
+    padding:22px 20px 24px;
+    border:1px solid var(--line);
+    background:linear-gradient(160deg,rgba(16,12,33,.78),rgba(16,12,33,.28));
+  }
+  .login-card h2{
+    font-family:var(--font-display);font-size:var(--text-lg);font-weight:700;
+    letter-spacing:var(--track-title);margin:0 0 14px;
+  }
+  .who-bar{
+    display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;
+    margin:14px 0 4px;
+  }
+  .who-bar .who{
+    font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);color:var(--ash);
+  }
+  .who-bar .who b{color:var(--cyan);font-weight:600}
   code,.mono{font-family:var(--font-mono);color:var(--cyan)}
   .filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0 4px}
   .chip{
@@ -76,8 +92,6 @@
       padding:22px max(16px, env(safe-area-inset-right)) 56px max(16px, env(safe-area-inset-left));
     }
     .filter-bar .spacer{display:none}
-
-    /* 移动端不再横滚：表格转为纵向卡片 */
     #tableWrap{overflow-x:visible}
     table{min-width:0;display:block;margin-top:14px}
     thead{display:none}
@@ -108,55 +122,89 @@
 <div class="admin-wrap">
   <a class="auth-nav" href="index.html" style="display:inline-block;border:0;padding:0;color:var(--cyan)">← 首页</a>
   <h1 style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;margin:16px 0 8px;letter-spacing:var(--track-title)">报名审批</h1>
-  <p class="muted" style="font-size:var(--text-base);line-height:var(--leading-body)">使用服务端 <code>ADMIN_TOKEN</code>（默认见启动日志）拉取报名表。批准后会生成一次性通行码，请立刻私下发给申请人——页面刷新后无法再次查看，只能「重发通行码」换一个新的。</p>
+  <p class="muted" style="font-size:var(--text-base);line-height:var(--leading-body)">使用管理员账号登录后审批报名。批准后会生成一次性通行码，请立刻私下发给申请人——页面刷新后无法再次查看，只能「重发通行码」换一个新的。</p>
 
-  <div class="token-bar">
-    <div class="field">
-      <label>管理员令牌</label>
-      <input id="token" placeholder="x-admin-token" autocomplete="off">
-    </div>
-    <div class="field">
-      <label>搜索</label>
-      <input id="q" placeholder="称呼 / 登录名 / 片区 / 方向" autocomplete="off">
-    </div>
-    <button class="btn btn-primary" id="loadBtn" type="button">刷新列表</button>
+  <div id="loginPanel" class="login-card" hidden>
+    <h2>管理员登录</h2>
+    <form id="loginForm">
+      <div class="field">
+        <label for="adminUser">账号</label>
+        <input id="adminUser" name="username" required autocomplete="username" maxlength="40">
+      </div>
+      <div class="field">
+        <label for="adminPass">密码</label>
+        <input id="adminPass" name="password" type="password" required autocomplete="current-password" maxlength="64">
+      </div>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn btn-primary" type="submit" id="loginBtn">登录</button>
+      </div>
+    </form>
   </div>
 
-  <div class="filter-bar" id="filterBar">
-    <button class="chip" type="button" data-status="pending" aria-pressed="true">待审核</button>
-    <button class="chip" type="button" data-status="approved" aria-pressed="false">已通过</button>
-    <button class="chip" type="button" data-status="rejected" aria-pressed="false">已驳回</button>
-    <button class="chip" type="button" data-status="" aria-pressed="false">全部</button>
-    <span class="spacer"></span>
-    <button class="chip" type="button" id="csvBtn">导出 CSV</button>
+  <div id="deskPanel" hidden>
+    <div class="who-bar">
+      <span class="who">已登录 · <b id="adminName">—</b></span>
+      <button class="btn btn-ghost" type="button" id="logoutBtn" style="padding:8px 14px;font-size:var(--text-xs)">退出</button>
+    </div>
+
+    <div class="toolbar">
+      <div class="field">
+        <label>搜索</label>
+        <input id="q" placeholder="称呼 / 登录名 / 片区 / 方向" autocomplete="off">
+      </div>
+      <button class="btn btn-primary" id="loadBtn" type="button">刷新列表</button>
+    </div>
+
+    <div class="filter-bar" id="filterBar">
+      <button class="chip" type="button" data-status="pending" aria-pressed="true">待审核</button>
+      <button class="chip" type="button" data-status="approved" aria-pressed="false">已通过</button>
+      <button class="chip" type="button" data-status="rejected" aria-pressed="false">已驳回</button>
+      <button class="chip" type="button" data-status="" aria-pressed="false">全部</button>
+      <span class="spacer"></span>
+      <button class="chip" type="button" id="csvBtn">导出 CSV</button>
+    </div>
+
+    <div id="credential"></div>
+    <div id="tableWrap"></div>
   </div>
 
   <div class="form-msg" id="msg" aria-live="polite"></div>
-  <div id="credential"></div>
-  <div id="tableWrap"></div>
 </div>
 <script src="js/util.js"></script>
 <script src="js/api.js"></script>
 <script>
 const msg = document.getElementById("msg");
-const tokenInput = document.getElementById("token");
 const qInput = document.getElementById("q");
 const tableWrap = document.getElementById("tableWrap");
 const credentialBox = document.getElementById("credential");
 const filterBar = document.getElementById("filterBar");
+const loginPanel = document.getElementById("loginPanel");
+const deskPanel = document.getElementById("deskPanel");
+const adminName = document.getElementById("adminName");
+const loginForm = document.getElementById("loginForm");
+const loginBtn = document.getElementById("loginBtn");
 
 let status = "pending";
-tokenInput.value = localStorage.getItem("cc-admin-token") || "";
+let authed = false;
 
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmtTime = s => CC.fmtChinaTime(s);
-const token = () => tokenInput.value.trim();
-const authHeaders = () => ({ "x-admin-token": token() });
 
 function setMsg(text, kind) {
   msg.className = "form-msg" + (kind ? " " + kind : "");
   msg.textContent = text;
+}
+
+function showGate(loggedIn, username) {
+  authed = !!loggedIn;
+  loginPanel.hidden = !!loggedIn;
+  deskPanel.hidden = !loggedIn;
+  adminName.textContent = username || "—";
+  if (!loggedIn) {
+    tableWrap.innerHTML = "";
+    credentialBox.innerHTML = "";
+  }
 }
 
 function showCredential(data, label) {
@@ -173,19 +221,36 @@ function showCredential(data, label) {
     </div>`;
 }
 
+async function refreshAuth() {
+  try {
+    const me = await CC.api("/api/admin/me");
+    showGate(me.auth, me.admin && me.admin.username);
+    if (me.auth) await load();
+    else setMsg("");
+  } catch (err) {
+    showGate(false);
+    setMsg(err.message, "err");
+  }
+}
+
 async function load() {
-  localStorage.setItem("cc-admin-token", token());
+  if (!authed) return;
   setMsg("加载中…");
   const params = new URLSearchParams();
   if (status) params.set("status", status);
   if (qInput.value.trim()) params.set("q", qInput.value.trim());
 
   try {
-    const data = await CC.api("/api/admin/applications?" + params, { headers: authHeaders() });
+    const data = await CC.api("/api/admin/applications?" + params);
     const c = data.counts || {};
     setMsg(`共 ${c.all || 0} 条报名　·　待审核 ${c.pending || 0}　已通过 ${c.approved || 0}　已驳回 ${c.rejected || 0}`);
     render(data.applications);
   } catch (err) {
+    if (err.status === 403) {
+      showGate(false);
+      setMsg("登录已失效，请重新登录", "err");
+      return;
+    }
     setMsg(err.message, "err");
     tableWrap.innerHTML = "";
   }
@@ -259,26 +324,57 @@ function render(rows) {
 const actions = {
   async approve(id) {
     const data = await CC.api(`/api/admin/applications/${id}/approve`, {
-      method: "POST", headers: authHeaders(), body: JSON.stringify({ gatherings: ["001"] })
+      method: "POST", body: JSON.stringify({ gatherings: ["001"] })
     });
     showCredential(data, "已批准");
   },
   async reissue(id) {
     if (!confirm("重发会作废旧通行码，确定？")) return;
     const data = await CC.api(`/api/admin/applications/${id}/reissue`, {
-      method: "POST", headers: authHeaders(), body: "{}"
+      method: "POST", body: "{}"
     });
     showCredential(data, "已重发通行码");
   },
   async reject(id) {
-    const reason = prompt("驳回理由（可留空，仅自己可见）") ;
+    const reason = prompt("驳回理由（可留空，仅自己可见）");
     if (reason === null) return;
     await CC.api(`/api/admin/applications/${id}/reject`, {
-      method: "POST", headers: authHeaders(), body: JSON.stringify({ reason })
+      method: "POST", body: JSON.stringify({ reason })
     });
     setMsg("已驳回", "ok");
   }
 };
+
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  loginBtn.disabled = true;
+  setMsg("登录中…");
+  try {
+    const data = await CC.api("/api/admin/login", {
+      method: "POST",
+      body: JSON.stringify({
+        username: document.getElementById("adminUser").value.trim(),
+        password: document.getElementById("adminPass").value
+      })
+    });
+    document.getElementById("adminPass").value = "";
+    showGate(true, data.admin && data.admin.username);
+    setMsg("登录成功", "ok");
+    await load();
+  } catch (err) {
+    setMsg(err.message, "err");
+  } finally {
+    loginBtn.disabled = false;
+  }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+  try {
+    await CC.api("/api/admin/logout", { method: "POST", body: "{}" });
+  } catch (_) {}
+  showGate(false);
+  setMsg("已退出");
+});
 
 tableWrap.addEventListener("click", async (e) => {
   const btn = e.target.closest("button[data-act]");
@@ -306,8 +402,8 @@ filterBar.addEventListener("click", (e) => {
 
 document.getElementById("csvBtn").addEventListener("click", async () => {
   try {
-    const res = await fetch("/api/admin/applications.csv", { headers: authHeaders() });
-    if (!res.ok) throw new Error("导出失败，请检查管理员令牌");
+    const res = await fetch("/api/admin/applications.csv", { credentials: "same-origin" });
+    if (!res.ok) throw new Error("导出失败，请确认已登录");
     const url = URL.createObjectURL(await res.blob());
     const a = document.createElement("a");
     a.href = url;
@@ -321,7 +417,7 @@ document.getElementById("csvBtn").addEventListener("click", async () => {
 
 document.getElementById("loadBtn").addEventListener("click", load);
 qInput.addEventListener("keydown", e => { if (e.key === "Enter") load(); });
-if (tokenInput.value) load();
+refreshAuth();
 </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
  * 静态页由 Workers Assets 托管（app/）；本 Worker 处理 /api/*
  */
 import { Hono } from "hono";
-import { randomBytes } from "node:crypto";
+import { randomBytes, timingSafeEqual } from "node:crypto";
 import { CyberStore, getStore } from "./store.js";
 import {
   uid,
@@ -69,13 +69,36 @@ function canAccessGathering(user, gatheringId) {
 
 function secrets(env) {
   return {
-    adminToken: env.ADMIN_TOKEN || "cc-admin-change-me",
     sessionSecret: env.SESSION_SECRET || "cyber-casters-dev-secret",
     wechatAppId: env.WECHAT_APP_ID || "",
     wechatAppSecret: env.WECHAT_APP_SECRET || "",
     publicBase: (env.PUBLIC_BASE || "").replace(/\/$/, ""),
-    disableDemo: ["1", "true", "yes"].includes(String(env.DISABLE_DEMO || "").toLowerCase())
+    disableDemo: ["1", "true", "yes"].includes(String(env.DISABLE_DEMO || "").toLowerCase()),
+    admins: [
+      {
+        username: String(env.ADMIN1_USER || "yilin").trim().toLowerCase(),
+        password: String(env.ADMIN1_PASS || "vo04HMlq1DhP2v")
+      },
+      {
+        username: String(env.ADMIN2_USER || "caster").trim().toLowerCase(),
+        password: String(env.ADMIN2_PASS || "ZeYF2Bu9PN7emm")
+      }
+    ].filter((a) => a.username && a.password)
   };
+}
+
+function safeEqualStr(a, b) {
+  const x = Buffer.from(String(a));
+  const y = Buffer.from(String(b));
+  if (x.length !== y.length) return false;
+  return timingSafeEqual(x, y);
+}
+
+function findAdmin(env, username, password) {
+  const u = String(username || "").trim().toLowerCase();
+  const p = String(password || "");
+  if (!u || !p) return null;
+  return secrets(env).admins.find((a) => a.username === u && safeEqualStr(a.password, p)) || null;
 }
 
 /** DO RPC 不能传函数：在 Worker 侧 load → 修改 → save */
@@ -190,11 +213,7 @@ async function currentUser(c) {
 }
 
 function requireAdmin(c) {
-  const token = c.req.header("x-admin-token") || "";
-  if (token !== c.get("secrets").adminToken) {
-    return false;
-  }
-  return true;
+  return !!c.get("session")?.adminUser;
 }
 
 app.get("/api/health", (c) =>
@@ -493,10 +512,61 @@ app.post("/api/gatherings/:id/comments", async (c) => {
 
 const APPLY_STATUSES = ["pending", "approved", "rejected"];
 const adminLimiter = limiter({ scope: "admin", windowMs: 10 * 60 * 1000, max: 200 });
+const ADMIN_LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const ADMIN_LOGIN_MAX_FAILS = 8;
+
+app.post("/api/admin/login", async (c) => {
+  let body;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "无效请求" }, 400);
+  }
+  const username = safeText(body.username || body.user || body.handle, 40);
+  const password = safeText(body.password || body.pass, 64);
+  if (!username || !password) {
+    return c.json({ error: "请填写账号与密码" }, 400);
+  }
+
+  const failKey = `admin-login-fail:${clientIp(c)}`;
+  const probe = hit(failKey, { windowMs: ADMIN_LOGIN_WINDOW_MS, max: ADMIN_LOGIN_MAX_FAILS });
+  if (!probe.allowed) {
+    c.header("Retry-After", String(probe.retryAfterSec));
+    return c.json(
+      {
+        error: `尝试次数过多，请 ${Math.ceil(probe.retryAfterSec / 60)} 分钟后再试`,
+        retryAfterSec: probe.retryAfterSec
+      },
+      429
+    );
+  }
+
+  const admin = findAdmin(c.env, username, password);
+  if (!admin) {
+    return c.json({ error: "账号或密码不正确" }, 401);
+  }
+
+  reset(failKey);
+  setSession(c, { ...c.get("session"), adminUser: admin.username });
+  return c.json({ ok: true, admin: { username: admin.username } });
+});
+
+app.post("/api/admin/logout", async (c) => {
+  const sess = { ...c.get("session") };
+  delete sess.adminUser;
+  setSession(c, sess);
+  return c.json({ ok: true });
+});
+
+app.get("/api/admin/me", async (c) => {
+  const username = c.get("session")?.adminUser || null;
+  return c.json({ auth: !!username, admin: username ? { username } : null });
+});
+
 app.use("/api/admin/*", adminLimiter);
 
 app.get("/api/admin/applications", async (c) => {
-  if (!requireAdmin(c)) return c.json({ error: "管理员令牌无效" }, 403);
+  if (!requireAdmin(c)) return c.json({ error: "请先登录管理账号" }, 403);
   const db = await c.get("store").load();
   const status = safeText(c.req.query("status"), 20);
   const q = safeText(c.req.query("q"), 40).toLowerCase();
@@ -520,7 +590,7 @@ app.get("/api/admin/applications", async (c) => {
 });
 
 app.get("/api/admin/applications.csv", async (c) => {
-  if (!requireAdmin(c)) return c.json({ error: "管理员令牌无效" }, 403);
+  if (!requireAdmin(c)) return c.json({ error: "请先登录管理账号" }, 403);
   const db = await c.get("store").load();
   const cell = (v) => {
     let s = String(v == null ? "" : v);
@@ -565,7 +635,7 @@ app.get("/api/admin/applications.csv", async (c) => {
 });
 
 app.post("/api/admin/applications/:id/approve", async (c) => {
-  if (!requireAdmin(c)) return c.json({ error: "管理员令牌无效" }, 403);
+  if (!requireAdmin(c)) return c.json({ error: "请先登录管理账号" }, 403);
   let body = {};
   try {
     body = await c.req.json();
@@ -609,7 +679,7 @@ app.post("/api/admin/applications/:id/approve", async (c) => {
 });
 
 app.post("/api/admin/applications/:id/reissue", async (c) => {
-  if (!requireAdmin(c)) return c.json({ error: "管理员令牌无效" }, 403);
+  if (!requireAdmin(c)) return c.json({ error: "请先登录管理账号" }, 403);
   let result;
   try {
     await mutate(c.get("store"), (db) => {
@@ -643,7 +713,7 @@ app.post("/api/admin/applications/:id/reissue", async (c) => {
 });
 
 app.post("/api/admin/applications/:id/reject", async (c) => {
-  if (!requireAdmin(c)) return c.json({ error: "管理员令牌无效" }, 403);
+  if (!requireAdmin(c)) return c.json({ error: "请先登录管理账号" }, 403);
   let body = {};
   try {
     body = await c.req.json();
@@ -678,7 +748,7 @@ app.post("/api/admin/applications/:id/reject", async (c) => {
 });
 
 app.get("/api/admin/users", async (c) => {
-  if (!requireAdmin(c)) return c.json({ error: "管理员令牌无效" }, 403);
+  if (!requireAdmin(c)) return c.json({ error: "请先登录管理账号" }, 403);
   const db = await c.get("store").load();
   return c.json({
     users: db.users.map((u) => ({
@@ -693,7 +763,7 @@ app.get("/api/admin/users", async (c) => {
 });
 
 app.post("/api/admin/users/:id/gatherings", async (c) => {
-  if (!requireAdmin(c)) return c.json({ error: "管理员令牌无效" }, 403);
+  if (!requireAdmin(c)) return c.json({ error: "请先登录管理账号" }, 403);
   let body;
   try {
     body = await c.req.json();
