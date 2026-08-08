@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#07060E">
 <title>成员登录 · 赛博法师</title>
 <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="assets/audio/bgm.m4a" as="audio" type="audio/mp4">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/auth.css">
@@ -44,7 +45,7 @@
     </form>
   </div>
 
-<audio id="bgm" src="assets/audio/bgm.m4a" preload="auto"></audio>
+<audio id="bgm" src="assets/audio/bgm.m4a" preload="auto" playsinline webkit-playsinline></audio>
 <button id="bgmBtn" type="button" aria-label="背景音乐开关" title="背景音乐" aria-pressed="false">♪</button>
 
 <script src="js/util.js"></script>
@@ -87,14 +88,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     const data = await CC.api("/api/auth/login", { method: "POST", body: JSON.stringify(body) });
     msg.className = "form-msg ok";
     msg.textContent = `欢迎，${data.user.name}`;
-    const audio = document.getElementById("bgm");
-    if (audio) {
-      try {
-        sessionStorage.setItem("cc-bgm-t", String(audio.currentTime || 0));
-        sessionStorage.setItem("cc-bgm-playing", audio.paused ? "0" : "1");
-        if (!audio.paused) localStorage.setItem("cc-bgm", "on");
-      } catch (_) {}
-    }
+    CC.BGM.persist?.(document.getElementById("bgm"));
     location.href = params.get("next") || "gathering-001.html";
   } catch (err) {
     msg.className = "form-msg err";
