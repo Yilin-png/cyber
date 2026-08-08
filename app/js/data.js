@@ -193,6 +193,6 @@ const DATA = {
     title: "微信社群",
     kicker: "COMMUNITY",
     status: "pending",
-    note: "群二维码与入群指引待维护。需要加群可先通过报名留下联系方式，组织者会私下联系。"
+    note: "群二维码待维护。需要加群可先报名留下联系方式。"
   }
 };
