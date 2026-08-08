@@ -151,15 +151,16 @@ async function main() {
   $("#gMeta").textContent = `${data.date} · ${data.place} · ${data.mode}`;
   $("#gSummary").textContent = data.summary;
 
-  /* 公开纪要：只展示要点文案，不展示议题目录标题 */
+  /* 公开纪要：要点卡片网格，桌面端多列 */
   const digest = $("#publicDigest");
   const topics = data.topics || [];
   if (topics.length) {
     digest.hidden = false;
+    $("#digestCount").textContent = String(topics.length).padStart(2, "0");
     $("#topicList").innerHTML = topics.map(t => `
-      <li>
-        <i>${esc(t.no)}</i>
-        <div class="t-blurb">${esc(t.blurb || t.title)}</div>
+      <li class="topic-card">
+        <span class="t-no">${esc(t.no)}</span>
+        <p class="t-blurb">${esc(t.blurb || t.title)}</p>
       </li>`).join("");
   }
 

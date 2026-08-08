@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>审批台 • 赛博法师</title>
 <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
@@ -10,12 +10,21 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/auth.css">
 <style>
-  .admin-wrap{max-width:1020px;margin:0 auto;padding:28px 24px 60px}
-  table{width:100%;border-collapse:collapse;font-size:var(--text-sm);margin-top:18px}
-  th,td{border:1px solid var(--line);padding:10px;text-align:left;vertical-align:top;color:var(--body)}
+  html,body{max-width:100%;overflow-x:hidden}
+  .admin-wrap{
+    max-width:1020px;width:100%;margin:0 auto;padding:28px 24px 60px;
+    box-sizing:border-box;
+  }
+  .admin-wrap > *{min-width:0;max-width:100%}
+  /* 表格自身横滚，不要把页面撑宽 */
+  #tableWrap{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{width:100%;min-width:720px;border-collapse:collapse;font-size:var(--text-sm);margin-top:18px}
+  th,td{border:1px solid var(--line);padding:10px;text-align:left;vertical-align:top;color:var(--body);overflow-wrap:anywhere}
   th{color:var(--gold);font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);font-weight:400}
-  .token-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:18px 0 10px}
-  .token-bar .field{flex:1;min-width:180px;margin:0}
+  .token-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:18px 0 10px;max-width:100%}
+  .token-bar .field{flex:1 1 200px;min-width:0;margin:0}
+  .token-bar input{width:100%;box-sizing:border-box}
+  .token-bar .btn{flex:0 0 auto}
   code,.mono{font-family:var(--font-mono);color:var(--cyan)}
   .filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0 4px}
   .chip{
@@ -52,6 +61,11 @@
   }
   .intent-join.yes{color:var(--cyan);border-color:rgba(63,224,208,.5)}
   .intent-join.no{color:var(--ash)}
+
+  @media (max-width:640px){
+    .admin-wrap{padding:22px 16px 56px}
+    .filter-bar .spacer{display:none}
+  }
 </style>
 </head>
 <body>
