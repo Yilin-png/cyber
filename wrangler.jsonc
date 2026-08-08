@@ -10,6 +10,7 @@
   "assets": {
     "directory": "./app",
     "binding": "ASSETS",
+    "html_handling": "none",
     "not_found_handling": "404-page"
   },
   "durable_objects": {
@@ -27,7 +28,7 @@
     }
   ],
   "vars": {
-    "PUBLIC_BASE": "",
+    "PUBLIC_BASE": "https://cybercasters.lylzxz.workers.dev",
     "DISABLE_DEMO": "0"
   },
   "rules": [
