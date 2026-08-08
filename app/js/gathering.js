@@ -160,7 +160,8 @@ async function main() {
     $("#topicList").innerHTML = topics.map(t => `
       <li class="topic-card">
         <span class="t-no">${esc(t.no)}</span>
-        <p class="t-blurb">${esc(t.blurb || t.title)}</p>
+        <h3 class="t-title">${esc(t.title)}</h3>
+        <p class="t-blurb">${esc(t.blurb || "")}</p>
       </li>`).join("");
   }
 
