@@ -10,14 +10,19 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/auth.css">
 <style>
-  html,body{max-width:100%;overflow-x:hidden}
+  /* clip 由 base.css 统一设置；这里只禁止横向惯性回弹拖出黑边 */
+  html,body{max-width:100%;overscroll-behavior-x:none}
   .admin-wrap{
-    max-width:1020px;width:100%;margin:0 auto;padding:28px 24px 60px;
+    max-width:1020px;width:100%;margin:0 auto;
+    padding:28px max(24px, env(safe-area-inset-right)) 60px max(24px, env(safe-area-inset-left));
     box-sizing:border-box;
   }
   .admin-wrap > *{min-width:0;max-width:100%}
   /* 表格自身横滚，不要把页面撑宽 */
-  #tableWrap{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  #tableWrap{
+    width:100%;max-width:100%;overflow-x:auto;
+    -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;
+  }
   table{width:100%;min-width:720px;border-collapse:collapse;font-size:var(--text-sm);margin-top:18px}
   th,td{border:1px solid var(--line);padding:10px;text-align:left;vertical-align:top;color:var(--body);overflow-wrap:anywhere}
   th{color:var(--gold);font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);font-weight:400}
@@ -50,8 +55,12 @@
     background:linear-gradient(135deg,rgba(16,12,33,.75),rgba(16,12,33,.25));
   }
   .credential .k{font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);color:var(--gold)}
-  .credential .v{font-family:var(--font-mono);font-size:var(--text-lg);color:var(--cyan);user-select:all}
-  .credential .grid{display:flex;gap:36px;flex-wrap:wrap;margin:8px 0 10px}
+  .credential .v{
+    font-family:var(--font-mono);font-size:var(--text-lg);color:var(--cyan);
+    user-select:all;overflow-wrap:anywhere;
+  }
+  .credential .grid{display:flex;gap:36px;flex-wrap:wrap;margin:8px 0 10px;min-width:0}
+  .credential .grid > div{min-width:0}
   .muted{color:var(--ash)}
   .intent-block{display:flex;flex-direction:column;gap:4px;line-height:1.45}
   .intent-block .line strong{color:var(--paper);font-weight:600}
@@ -63,8 +72,35 @@
   .intent-join.no{color:var(--ash)}
 
   @media (max-width:640px){
-    .admin-wrap{padding:22px 16px 56px}
+    .admin-wrap{
+      padding:22px max(16px, env(safe-area-inset-right)) 56px max(16px, env(safe-area-inset-left));
+    }
     .filter-bar .spacer{display:none}
+
+    /* 移动端不再横滚：表格转为纵向卡片 */
+    #tableWrap{overflow-x:visible}
+    table{min-width:0;display:block;margin-top:14px}
+    thead{display:none}
+    tbody{display:block}
+    tr{
+      display:block;margin-bottom:12px;
+      border:1px solid var(--line);
+      background:linear-gradient(160deg,rgba(16,12,33,.7),rgba(16,12,33,.25));
+    }
+    td{
+      display:block;border:0;padding:10px 14px;
+      border-bottom:1px solid rgba(42,33,80,.6);
+    }
+    tr td:last-child{border-bottom:0}
+    td::before{
+      content:attr(data-label);
+      display:block;margin-bottom:5px;
+      font-family:var(--font-mono);font-size:var(--text-xs);
+      letter-spacing:var(--track-label);color:var(--gold);
+    }
+    .row-actions{flex-direction:row;flex-wrap:wrap}
+    .row-actions .btn{flex:1 1 auto}
+    .credential .grid{gap:16px}
   }
 </style>
 </head>
@@ -192,20 +228,20 @@ function render(rows) {
       <tbody>
         ${rows.map(a => `
           <tr>
-            <td class="muted">${esc(fmtTime(a.createdAt))}</td>
-            <td>
+            <td class="muted" data-label="提交时间">${esc(fmtTime(a.createdAt))}</td>
+            <td data-label="申请人">
               <strong style="color:var(--paper)">${esc(a.name)}</strong><br>
               <span class="mono">${esc(a.handle)}</span>
               ${a.contact ? `<br><span class="muted">${esc(a.contact)}</span>` : ""}
             </td>
-            <td>${renderIntent(a)}</td>
-            <td>
+            <td data-label="报名意向">${renderIntent(a)}</td>
+            <td data-label="状态">
               <span class="status-pill st-${esc(a.status)}">${esc(a.status)}</span>
               ${a.issuedGatherings && a.issuedGatherings.length
                 ? `<br><span class="muted">期次 ${esc(a.issuedGatherings.join(","))}</span>` : ""}
               ${a.rejectReason ? `<br><span class="muted">${esc(a.rejectReason)}</span>` : ""}
             </td>
-            <td>
+            <td data-label="操作">
               <div class="row-actions">
                 ${a.status === "pending" ? `
                   <button class="btn btn-primary" data-act="approve" data-id="${esc(a.id)}">批准 + 绑定 001</button>

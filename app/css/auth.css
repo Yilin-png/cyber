@@ -23,10 +23,12 @@
 .auth-card h1{
   font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;letter-spacing:var(--track-title);
   line-height:var(--leading-tight);
+  margin-bottom:22px;
 }
 .auth-card .lead{
-  margin:10px 0 22px;font-size:var(--text-base);color:var(--ash);line-height:var(--leading-body);
+  margin:0 0 22px;font-size:var(--text-base);color:var(--ash);line-height:var(--leading-body);
 }
+.auth-card h1 + .lead{margin-top:-10px}
 .field{margin-bottom:14px}
 .field label{
   display:block;
