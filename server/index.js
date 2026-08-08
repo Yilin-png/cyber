@@ -30,7 +30,7 @@ const ADMIN_ACCOUNTS = [
     password: String(process.env.ADMIN1_PASS || "vo04HMlq1DhP2v")
   },
   {
-    username: String(process.env.ADMIN2_USER || "caster").trim().toLowerCase(),
+    username: String(process.env.ADMIN2_USER || "jiawen").trim().toLowerCase(),
     password: String(process.env.ADMIN2_PASS || "ZeYF2Bu9PN7emm")
   }
 ].filter((a) => a.username && a.password);

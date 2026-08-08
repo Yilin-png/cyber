@@ -80,7 +80,7 @@ function secrets(env) {
         password: String(env.ADMIN1_PASS || "vo04HMlq1DhP2v")
       },
       {
-        username: String(env.ADMIN2_USER || "caster").trim().toLowerCase(),
+        username: String(env.ADMIN2_USER || "jiawen").trim().toLowerCase(),
         password: String(env.ADMIN2_PASS || "ZeYF2Bu9PN7emm")
       }
     ].filter((a) => a.username && a.password)
