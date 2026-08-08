@@ -8,6 +8,7 @@ const cookieSession = require("cookie-session");
 try { require("dotenv").config(); } catch (_) {}
 
 const { formatChinaTime } = require("./time");
+const { parseIntent } = require("./intent");
 const {
   load, save, uid, hashPass, verifyPass, genPasscode, genHandle, handleOf, DATA_DIR
 } = require("./db");
@@ -412,12 +413,29 @@ app.get("/api/admin/applications.csv", (req, res) => {
     if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
     return `"${s.replace(/"/g, '""')}"`;
   };
-  const header = ["提交时间", "称呼", "登录名", "联系方式", "意向时间", "留言", "状态", "审批时间", "可见期次"];
+  const header = [
+    "提交时间", "称呼", "登录名", "联系方式",
+    "最近一期", "是否参加", "日期区间", "时段", "片区", "补充说明", "交流方向",
+    "状态", "审批时间", "可见期次"
+  ];
   const lines = [header.map(cell).join(",")];
   for (const a of db.applications) {
+    const p = parseIntent(a.intentDates);
     lines.push([
-      formatChinaTime(a.createdAt), a.name, handleOf(a), a.contact || "", a.intentDates || "",
-      a.message || "", a.status, formatChinaTime(a.approvedAt), (a.issuedGatherings || []).join(" ")
+      formatChinaTime(a.createdAt),
+      a.name,
+      handleOf(a),
+      a.contact || "",
+      p.nextLabel || "",
+      p.joinNext || "",
+      p.period || "",
+      p.slot || "",
+      p.area || "",
+      p.note || p.legacy || "",
+      a.message || "",
+      a.status,
+      formatChinaTime(a.approvedAt),
+      (a.issuedGatherings || []).join(" ")
     ].map(cell).join(","));
   }
   res.set("Content-Type", "text/csv; charset=utf-8");

@@ -44,6 +44,14 @@
   .credential .v{font-family:var(--font-mono);font-size:var(--text-lg);color:var(--cyan);user-select:all}
   .credential .grid{display:flex;gap:36px;flex-wrap:wrap;margin:8px 0 10px}
   .muted{color:var(--ash)}
+  .intent-block{display:flex;flex-direction:column;gap:4px;line-height:1.45}
+  .intent-block .line strong{color:var(--paper);font-weight:600}
+  .intent-join{
+    font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);
+    display:inline-block;padding:2px 7px;border:1px solid var(--line);margin-right:6px;
+  }
+  .intent-join.yes{color:var(--cyan);border-color:rgba(63,224,208,.5)}
+  .intent-join.no{color:var(--ash)}
 </style>
 </head>
 <body>
@@ -59,7 +67,7 @@
     </div>
     <div class="field">
       <label>搜索</label>
-      <input id="q" placeholder="称呼 / 登录名 / 联系方式" autocomplete="off">
+      <input id="q" placeholder="称呼 / 登录名 / 片区 / 方向" autocomplete="off">
     </div>
     <button class="btn btn-primary" id="loadBtn" type="button">刷新列表</button>
   </div>
@@ -133,6 +141,30 @@ async function load() {
   }
 }
 
+function renderIntent(a) {
+  const p = CC.parseIntent(a.intentDates);
+  if (p.legacy && !p.joinNext) {
+    return `
+      <div class="intent-block">
+        <div class="line">${esc(p.legacy)}</div>
+        ${a.message ? `<div class="line muted">方向：${esc(a.message)}</div>` : ""}
+      </div>`;
+  }
+
+  const joinClass = p.joinNext === "参加" ? "yes" : "no";
+  const when = [p.period, p.slot].filter(Boolean).join(" · ");
+  return `
+    <div class="intent-block">
+      <div class="line">
+        <span class="intent-join ${joinClass}">${esc(p.joinNext || "—")}</span>
+        <span class="muted">${esc(p.nextLabel || "最近一期")}</span>
+      </div>
+      ${when || p.area ? `<div class="line"><strong>${esc(when || "—")}</strong>${p.area ? ` · ${esc(p.area)}` : ""}</div>` : ""}
+      ${a.message ? `<div class="line muted">方向：${esc(a.message)}</div>` : ""}
+      ${p.note ? `<div class="line muted">补充：${esc(p.note)}</div>` : ""}
+    </div>`;
+}
+
 function render(rows) {
   if (!rows.length) {
     tableWrap.innerHTML = "<p class='muted' style='margin-top:18px'>该筛选下暂无报名记录</p>";
@@ -141,7 +173,7 @@ function render(rows) {
   tableWrap.innerHTML = `
     <table>
       <thead><tr>
-        <th>提交时间</th><th>申请人</th><th>意向时间 / 留言</th><th>状态</th><th>操作</th>
+        <th>提交时间</th><th>申请人</th><th>报名意向</th><th>状态</th><th>操作</th>
       </tr></thead>
       <tbody>
         ${rows.map(a => `
@@ -152,10 +184,7 @@ function render(rows) {
               <span class="mono">${esc(a.handle)}</span>
               ${a.contact ? `<br><span class="muted">${esc(a.contact)}</span>` : ""}
             </td>
-            <td>
-              ${esc(a.intentDates)}
-              ${a.message ? `<br><span class="muted">${esc(a.message)}</span>` : ""}
-            </td>
+            <td>${renderIntent(a)}</td>
             <td>
               <span class="status-pill st-${esc(a.status)}">${esc(a.status)}</span>
               ${a.issuedGatherings && a.issuedGatherings.length
