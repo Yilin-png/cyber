@@ -1,9 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Cyber Casters">
-  <!-- 透明底；紫色六芒星（两个等边三角叠加） -->
-  <g fill="none" stroke="#9D6BFF" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">
-    <!-- 朝上三角 -->
-    <path d="M32 10 L52 46 H12 Z"/>
-    <!-- 朝下三角 -->
-    <path d="M32 54 L12 18 H52 Z"/>
-  </g>
+  <!-- 透明底；实心紫色六芒星（两三角 evenodd，中空六边形） -->
+  <path
+    fill="#9D6BFF"
+    fill-rule="evenodd"
+    d="M32 6 L54 46 H10 Z M32 58 L10 18 H54 Z"
+  />
 </svg>
