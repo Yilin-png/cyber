@@ -220,8 +220,19 @@ app.get("/api/health", (c) =>
   c.json({ ok: true, service: "cybercasters", runtime: "cloudflare-workers", time: new Date().toISOString() })
 );
 
-/* Assets html_handling=none 时 / 不会自动落到 index.html */
-app.get("/", (c) => c.redirect("/index.html", 302));
+/* Assets html_handling=none 时 / 不会自动落到 index.html；直接回传首页，便于微信抓取 OG */
+app.get("/", async (c) => {
+  if (!c.env.ASSETS) return c.redirect("/index.html", 302);
+  const res = await c.env.ASSETS.fetch(new URL("/index.html", c.req.url));
+  if (!res.ok) return c.redirect("/index.html", 302);
+  return new Response(res.body, {
+    status: 200,
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": res.headers.get("cache-control") || "public, max-age=0, must-revalidate"
+    }
+  });
+});
 
 app.get("/api/gatherings", (c) => c.json({ gatherings: GATHERINGS.map(publicGathering) }));
 
