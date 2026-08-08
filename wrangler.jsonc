@@ -28,9 +28,13 @@
     }
   ],
   "vars": {
-    "PUBLIC_BASE": "https://cybercasters.lylzxz.workers.dev",
+    "PUBLIC_BASE": "https://cyber-casters.com",
     "DISABLE_DEMO": "0"
   },
+  "routes": [
+    { "pattern": "cyber-casters.com", "custom_domain": true },
+    { "pattern": "www.cyber-casters.com", "custom_domain": true }
+  ],
   "rules": [
     { "type": "Text", "globs": ["**/*.html"], "fallthrough": true }
   ]
