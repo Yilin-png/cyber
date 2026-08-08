@@ -555,31 +555,58 @@ main.wrap{display:block;min-height:100svh}
 
 .channels{
   display:grid;
-  grid-template-columns:1.35fr 1fr;
-  max-width:680px;
+  grid-template-columns:1fr 1fr;
+  max-width:760px;
   width:100%;
-  gap:20px;
+  gap:0;
   justify-content:start;
-  margin:0;
+  margin:8px 0 0;
   align-items:stretch;
+  border:1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(16,12,33,.55), rgba(16,12,33,.18));
 }
 .channel{
-  border:1px solid transparent;border-radius:0;
-  padding:26px 28px;text-align:left;
-  display:flex;flex-direction:column;align-items:flex-start;min-height:168px;
+  border:0;
+  border-radius:0;
+  padding:28px 30px 26px;
+  text-align:left;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  min-height:0;
+  position:relative;
+  transition:background .22s ease;
+}
+.channel + .channel{
+  border-left:1px solid var(--line);
 }
 .channel-primary{
-  background:linear-gradient(135deg,rgba(16,12,33,.72),rgba(16,12,33,.28));
-  border-color:rgba(63,224,208,.35);
-  border-left:2px solid var(--cyan);
-  padding-left:26px;
+  background:transparent;
 }
 .channel-ghost{
   background:transparent;
-  border-color:rgba(42,33,80,.55);
 }
-.channel h3{font-family:var(--font-display);font-size:var(--text-lg);letter-spacing:var(--track-title)}
-.channel-ghost h3{color:var(--body);font-weight:600}
+.channel:hover{
+  background:rgba(63,224,208,.04);
+}
+.channel-kicker{
+  font-family:var(--font-mono);
+  font-size:var(--text-xs);
+  letter-spacing:var(--track-label);
+  color:var(--gold);
+  margin-bottom:10px;
+}
+.channel h3{
+  font-family:var(--font-display);
+  font-size:var(--text-xl);
+  font-weight:700;
+  letter-spacing:var(--track-title);
+  color:var(--paper);
+  margin:0 0 10px;
+  line-height:var(--leading-tight);
+}
+.channel-ghost h3{color:var(--paper);font-weight:700}
 .qr-slot{
   width:150px;height:150px;margin:16px 0 12px;
   border:1px dashed var(--line);border-radius:0;
@@ -591,30 +618,37 @@ main.wrap{display:block;min-height:100svh}
 }
 .qr-slot img{width:100%;height:100%;object-fit:contain}
 .channel .note{
-  font-family:var(--font-sans);font-size:var(--text-sm);color:var(--ash);
-  letter-spacing:var(--track-tight);margin-top:10px;line-height:var(--leading-snug);
-  max-width:28em;
+  font-family:var(--font-sans);font-size:var(--text-base);color:var(--body);
+  letter-spacing:var(--track-tight);margin:0;line-height:var(--leading-body);
+  max-width:22em;flex:1;
 }
 .channel .go{
-  display:inline-flex;align-items:center;justify-content:center;gap:0.35em;
-  margin-top:auto;padding-top:18px;
+  display:inline-flex;align-items:center;justify-content:center;gap:0.4em;
+  margin-top:22px;
   font-family:var(--font-sans);font-size:var(--text-sm);font-weight:600;letter-spacing:var(--track-tight);
   padding:12px 20px;text-decoration:none;
   clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px);
-  transition:box-shadow .2s,filter .2s,border-color .2s,color .2s,background .2s;
+  transition:box-shadow .2s,filter .2s,border-color .2s,color .2s,background .2s,transform .2s;
 }
-.channel .go-primary{
-  align-self:stretch;
-  color:var(--void);background:var(--cyan);border:1px solid var(--cyan);
-}
-.channel .go-primary:hover{box-shadow:0 0 24px -6px var(--cyan);filter:brightness(1.06)}
+.channel .go-primary,
 .channel .go-ghost{
   align-self:flex-start;
-  color:var(--cyan);background:transparent;border:1px solid rgba(63,224,208,.45);
-  clip-path:none;padding:10px 16px;
 }
-.channel .go-ghost:hover{border-color:var(--cyan);color:var(--paper);background:rgba(63,224,208,.06)}
+.channel .go-primary{
+  color:var(--void);background:var(--cyan);border:1px solid var(--cyan);
+}
+.channel .go-primary:hover{box-shadow:0 0 24px -6px var(--cyan);filter:brightness(1.06);transform:translateY(-1px)}
+.channel .go-ghost{
+  color:var(--cyan);background:transparent;border:1px solid rgba(63,224,208,.45);
+  clip-path:none;padding:11px 18px;
+}
+.channel .go-ghost:hover{border-color:var(--cyan);color:var(--paper);background:rgba(63,224,208,.06);transform:translateY(-1px)}
 .channel .go .arrow{font-family:var(--font-mono);font-weight:400;opacity:.8}
+
+@media (max-width:720px){
+  .channels{grid-template-columns:1fr}
+  .channel + .channel{border-left:0;border-top:1px solid var(--line)}
+}
 
 /* ── 法阵新增小符号：自转 / 缓慢漂移 ── */
 .orbit-slow{animation:spin 90s linear infinite;transform-box:view-box;transform-origin:240px 240px}

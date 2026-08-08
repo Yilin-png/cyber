@@ -39,9 +39,7 @@ const DATA = {
       label: "即将开放",
       role: "成员作品位",
       desc: "用于展示成员的项目、工具或个人网页。做好了就可以申请挂上来。",
-      tags: ["项目", "网页"],
-      link: "apply.html",
-      linkText: "申请展示"
+      tags: ["项目", "网页"]
     }
   ],
 
@@ -181,9 +179,13 @@ const DATA = {
   },
 
   channels: [
-    { name: "我想参加", type: "link", url: "apply.html", note: "留个称呼和意向时间即可 · 审核后发登录名与通行码",
+    { name: "我想参加", type: "link", url: "apply.html",
+      kicker: "JOIN",
+      note: "留下称呼与意向，审核通过后会收到登录名和通行码。",
       cta: "填写申请", variant: "primary" },
-    { name: "成员登录", type: "link", url: "login.html", note: "登录名 + 通行码 · 查阅参会纪要",
+    { name: "成员登录", type: "link", url: "login.html",
+      kicker: "LOGIN",
+      note: "用登录名和通行码进入，查阅参会纪要与留言。",
       cta: "去登录", variant: "ghost" }
   ]
 };

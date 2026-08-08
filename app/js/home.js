@@ -374,6 +374,7 @@ $("#chanList").innerHTML = DATA.channels.map(c => {
     ? `<div class="qr-slot">${c.img ? `<img src="${esc(c.img)}" alt="${esc(c.name)}二维码">` : esc(c.alt||"").replace(/\n/g,"<br>")}</div>`
     : `<a class="go go-${variant}" href="${esc(c.url)}">${esc(c.cta||"前往")}<span class="arrow" aria-hidden="true">→</span></a>`;
   return `<div class="channel channel-${variant}">
+    ${c.kicker ? `<div class="channel-kicker">${esc(c.kicker)}</div>` : ""}
     <h3>${esc(c.name)}</h3>
     <div class="note">${esc(c.note||"")}</div>
     ${body}
