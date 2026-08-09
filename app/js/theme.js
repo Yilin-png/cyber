@@ -1,13 +1,11 @@
-/* 主题：默认按当地日出/日落；用户只在 light / dark 间切换 */
+/* 主题：默认按北京时间日出/日落；用户只在 light / dark 间切换 */
 window.CC = window.CC || {};
 
 CC.Theme = (function () {
   const KEY = "cc-theme";
-  const LAT_KEY = "cc-lat";
-  const LNG_KEY = "cc-lng";
-  /* 站点社群默认：深圳；有定位后再覆盖 */
-  const DEFAULT_LAT = 22.5431;
-  const DEFAULT_LNG = 114.0579;
+  /* 固定北京坐标，不搜集用户位置 */
+  const LAT = 39.9042;
+  const LNG = 116.4074;
   const LABELS = { light: "浅色", dark: "深色" };
   const ICONS = { light: "☀", dark: "☾" };
 
@@ -29,24 +27,10 @@ CC.Theme = (function () {
     } catch (_) {}
   }
 
-  function readCoords() {
-    try {
-      const lat = parseFloat(localStorage.getItem(LAT_KEY));
-      const lng = parseFloat(localStorage.getItem(LNG_KEY));
-      if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng };
-    } catch (_) {}
-    return { lat: DEFAULT_LAT, lng: DEFAULT_LNG };
-  }
-
-  function writeCoords(lat, lng) {
-    try {
-      localStorage.setItem(LAT_KEY, String(lat));
-      localStorage.setItem(LNG_KEY, String(lng));
-    } catch (_) {}
-  }
-
-  /** NOAA / SunCalc 简化：当地日出日落（Date） */
-  function sunTimes(lat, lng, date) {
+  /** NOAA / SunCalc 简化：北京日出日落（Date，绝对时间） */
+  function sunTimes(date) {
+    const lat = LAT;
+    const lng = LNG;
     const rad = Math.PI / 180;
     const dayMs = 86400000;
     const J1970 = 2440588;
@@ -93,10 +77,18 @@ CC.Theme = (function () {
   }
 
   function isDaylight(now = new Date()) {
-    const { lat, lng } = readCoords();
-    const times = sunTimes(lat, lng, now);
+    const times = sunTimes(now);
     if (!times) {
-      const h = now.getHours() + now.getMinutes() / 60;
+      /* 兜底：按北京时间粗分昼夜 */
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Shanghai",
+        hour: "numeric",
+        minute: "numeric",
+        hourCycle: "h23"
+      }).formatToParts(now);
+      const hour = Number(parts.find((p) => p.type === "hour")?.value || 12);
+      const minute = Number(parts.find((p) => p.type === "minute")?.value || 0);
+      const h = hour + minute / 60;
       return h >= 6 && h < 18.5;
     }
     return now >= times.sunrise && now < times.sunset;
@@ -160,14 +152,13 @@ CC.Theme = (function () {
       switchTimer = 0;
     }
     if (pref != null) return;
-    const { lat, lng } = readCoords();
     const now = new Date();
-    const today = sunTimes(lat, lng, now);
+    const today = sunTimes(now);
     if (!today) return;
     let nextAt = now < today.sunrise ? today.sunrise : now < today.sunset ? today.sunset : null;
     if (!nextAt) {
-      const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 12);
-      const t2 = sunTimes(lat, lng, tomorrow);
+      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      const t2 = sunTimes(tomorrow);
       if (t2) nextAt = t2.sunrise;
     }
     if (!nextAt) return;
@@ -185,18 +176,6 @@ CC.Theme = (function () {
     btn.dataset.themeToggle = "";
     btn.innerHTML = '<span data-theme-icon aria-hidden="true">☾</span>';
     document.body.appendChild(btn);
-  }
-
-  function requestLocation() {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        writeCoords(pos.coords.latitude, pos.coords.longitude);
-        if (readPref() == null) apply(null);
-      },
-      () => {},
-      { maximumAge: 24 * 60 * 60 * 1000, timeout: 8000 }
-    );
   }
 
   function bind() {
@@ -217,7 +196,6 @@ CC.Theme = (function () {
     ensureToggle();
     apply(readPref());
     bind();
-    requestLocation();
   }
 
   return {
