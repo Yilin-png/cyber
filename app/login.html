@@ -4,7 +4,14 @@
 <script>
 (function(){
   try{
-    var k="cc-theme", p=localStorage.getItem(k);
+    var k="cc-theme", purge="cc-theme-purged-v3";
+    if(!localStorage.getItem(purge)){
+      localStorage.removeItem(k);
+      localStorage.removeItem("cc-lat");
+      localStorage.removeItem("cc-lng");
+      localStorage.setItem(purge,"1");
+    }
+    var p=localStorage.getItem(k);
     if(p!=="light"&&p!=="dark") p=null;
     function day(){
       var lat=39.9042, lng=116.4074;

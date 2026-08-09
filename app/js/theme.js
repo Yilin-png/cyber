@@ -3,6 +3,7 @@ window.CC = window.CC || {};
 
 CC.Theme = (function () {
   const KEY = "cc-theme";
+  const PURGE_KEY = "cc-theme-purged-v3";
   /* 固定北京坐标，不搜集用户位置 */
   const LAT = 39.9042;
   const LNG = 116.4074;
@@ -10,6 +11,16 @@ CC.Theme = (function () {
   const ICONS = { light: "☀", dark: "☾" };
 
   let switchTimer = 0;
+
+  function purgeLegacyPref() {
+    try {
+      if (localStorage.getItem(PURGE_KEY)) return;
+      localStorage.removeItem(KEY);
+      localStorage.removeItem("cc-lat");
+      localStorage.removeItem("cc-lng");
+      localStorage.setItem(PURGE_KEY, "1");
+    } catch (_) {}
+  }
 
   function readPref() {
     try {
