@@ -213,19 +213,30 @@ function renderCards(list) {
 }
 
 function renderActivity(items) {
-  $("#logList").innerHTML = (items || []).map((a, i) => {
-    const href = localPage(a.link || "");
-    const title = href
-      ? `<h3><a class="log-title" href="${esc(href)}">${esc(a.title)}</a></h3>`
-      : `<h3>${esc(a.title)}</h3>`;
+  const sorted = [...(items || [])].sort((a, b) =>
+    String(b.date || "").localeCompare(String(a.date || ""))
+  );
+  $("#logList").innerHTML = sorted.map((a, i) => {
+    const upcoming = a.status === "upcoming" || a.label === "待举办";
+    const href = upcoming ? "" : localPage(a.link || "");
+    const statusLabel = a.label || (upcoming ? "待举办" : "");
+    const statusHtml = statusLabel
+      ? `<span class="status ${esc(a.status || (upcoming ? "upcoming" : ""))}">${esc(statusLabel)}</span>`
+      : "";
+    const titleInner = href
+      ? `<a class="log-title" href="${esc(href)}">${esc(a.title)}</a>`
+      : esc(a.title);
+    const metaBits = [a.mode, a.place, a.time].filter(Boolean);
     const cta = href
       ? `<a class="log-link" href="${esc(href)}">${esc(a.linkText || "阅读公开纪要")}<span class="arrow" aria-hidden="true">→</span></a>`
-      : "";
+      : (upcoming
+        ? `<a class="log-link" href="apply.html">申请参加<span class="arrow" aria-hidden="true">→</span></a>`
+        : "");
     return `
-    <article class="log-item" ${i === 0 ? "data-latest" : ""} ${href ? `data-href="${esc(href)}"` : ""}>
+    <article class="log-item${upcoming ? " is-upcoming" : ""}" ${i === 0 ? "data-latest" : ""} ${href ? `data-href="${esc(href)}"` : ""}>
       <div class="log-date">${esc(a.date)}</div>
-      ${title}
-      <div class="log-meta">${esc(a.mode)} · ${esc(a.place)}</div>
+      <h3 class="log-heading">${titleInner}${statusHtml}</h3>
+      <div class="log-meta">${esc(metaBits.join(" · "))}</div>
       <p>${esc(a.desc)}</p>
       ${cta}
     </article>`;
@@ -252,15 +263,21 @@ $("#artList").innerHTML = renderCards(DATA.artifacts);
 (async function syncActivity() {
   try {
     const data = await CC.api("/api/gatherings");
-    const list = (data.gatherings || []).map(g => ({
-      date: g.date,
-      title: g.title,
-      mode: g.mode,
-      place: g.place,
-      desc: g.summary,
-      link: localPage(g.link || (`gathering-${g.id}.html`)),
-      linkText: "阅读公开纪要"
-    }));
+    const list = (data.gatherings || []).map(g => {
+      const upcoming = g.status === "upcoming";
+      return {
+        date: g.date,
+        time: g.time || "",
+        title: g.title,
+        mode: g.mode,
+        place: g.place,
+        status: g.status || (g.link ? "past" : "upcoming"),
+        label: upcoming ? "待举办" : "",
+        desc: g.summary,
+        link: upcoming ? "" : localPage(g.link || ""),
+        linkText: upcoming ? "" : "阅读公开纪要"
+      };
+    });
     if (list.length) renderActivity(list);
   } catch (_) {}
 })();

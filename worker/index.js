@@ -37,12 +37,14 @@ function publicGathering(g) {
   return {
     id: g.id,
     date: g.date,
+    time: g.time || "",
     title: g.title,
     mode: g.mode,
     place: g.place,
+    status: g.status || "past",
     summary: g.summary,
     topics: g.topics || [],
-    link: g.link
+    link: g.link || ""
   };
 }
 
