@@ -6,15 +6,40 @@
   try{
     var k="cc-theme", p=localStorage.getItem(k);
     if(p!=="light"&&p!=="dark") p=null;
-    var light=p==="light"||(!p&&window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches);
+    function day(){
+      var lat=parseFloat(localStorage.getItem("cc-lat")), lng=parseFloat(localStorage.getItem("cc-lng"));
+      if(!isFinite(lat)||!isFinite(lng)){lat=22.5431;lng=114.0579;}
+      var rad=Math.PI/180, dayMs=8.64e7, J1970=2440588, J2000=2451545, e=rad*23.4397;
+      var now=new Date();
+      var toJ=function(d){return d/dayMs-0.5+J1970;};
+      var fromJ=function(j){return new Date((j+0.5-J1970)*dayMs);};
+      var d=toJ(now)-J2000;
+      var lw=-lng*rad, phi=lat*rad;
+      var n=Math.round(d-0.0009-lw/(2*Math.PI));
+      var ds=0.0009+lw/(2*Math.PI)+n;
+      var M=rad*(357.5291+0.98560028*ds);
+      var C=rad*(1.9148*Math.sin(M)+0.02*Math.sin(2*M)+0.0003*Math.sin(3*M));
+      var L=M+C+rad*102.9372+Math.PI;
+      var dec=Math.asin(Math.sin(L)*Math.sin(e));
+      var Jnoon=J2000+ds+0.0053*Math.sin(M)-0.0069*Math.sin(2*L);
+      var h0=-0.833*rad;
+      var cosH=(Math.sin(h0)-Math.sin(phi)*Math.sin(dec))/(Math.cos(phi)*Math.cos(dec));
+      if(cosH>1) return false; if(cosH<-1) return true;
+      var w=Math.acos(cosH);
+      var a=0.0009+(w+lw)/(2*Math.PI)+n;
+      var Jset=J2000+a+0.0053*Math.sin(M)-0.0069*Math.sin(2*L);
+      var Jrise=Jnoon-(Jset-Jnoon);
+      return now>=fromJ(Jrise)&&now<fromJ(Jset);
+    }
+    var light=p==="light"||(p!=="dark"&&day());
     var t=light?"light":"dark";
     var root=document.documentElement;
     root.dataset.theme=t;
-    root.dataset.themePref=p||"system";
+    root.dataset.themePref=p||"auto";
     root.style.colorScheme=t;
   }catch(e){
     document.documentElement.dataset.theme="dark";
-    document.documentElement.dataset.themePref="system";
+    document.documentElement.dataset.themePref="auto";
   }
 })();
 </script>
