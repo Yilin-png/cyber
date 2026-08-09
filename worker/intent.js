@@ -23,9 +23,9 @@ export function parseIntent(raw) {
     const m = text.match(new RegExp(`${key}：\\s*([^｜]+)`));
     return m ? m[1].trim() : "";
   };
-  out.period = grab("区间");
+  out.period = grab("日期") || grab("区间");
   out.slot = grab("时段");
-  out.area = grab("片区");
+  out.area = grab("地点") || grab("片区");
   out.note = grab("补充");
 
   if (!out.joinNext && !out.period && !out.slot && !out.area) {
