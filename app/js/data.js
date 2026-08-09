@@ -46,6 +46,7 @@ const DATA = {
   /* 咒语手册筛选分类：cat 与下方 tools 的 cat 字段对应 */
   toolCats: [
     { k: "all",       name: "全部" },
+    { k: "desktop",   name: "桌面" },
     { k: "coding",    name: "编程" },
     { k: "capture",   name: "采集" },
     { k: "document",  name: "文档" },
@@ -60,10 +61,32 @@ const DATA = {
       cat: "coding",
       status: "tool",
       label: "编程",
-      role: "终端 Agent",
-      desc: "Anthropic 的命令行编程助手：读仓库、改文件、跑命令，适合在终端里把任务交给模型闭环完成。",
+      role: "终端编程 Agent",
+      desc: "Anthropic 的命令行编程助手：读仓库、改文件、跑命令，适合在终端里把开发任务闭环完成。",
       tags: ["编程", "Agent", "CLI"],
       link: "https://docs.anthropic.com/en/docs/claude-code",
+      linkText: "打开"
+    },
+    {
+      name: "Claude Desktop",
+      cat: "desktop",
+      status: "tool",
+      label: "桌面",
+      role: "综合桌面 Agent",
+      desc: "Anthropic 桌面端：聊天、Cowork 与本地协作集于一处，可接文件与应用，适合跨场景把事做完。",
+      tags: ["桌面", "Agent", "综合"],
+      link: "https://claude.com/download",
+      linkText: "打开"
+    },
+    {
+      name: "Codex",
+      cat: "desktop",
+      status: "tool",
+      label: "桌面",
+      role: "综合桌面 Agent",
+      desc: "OpenAI 的 Codex 应用 / ChatGPT 入口：并行调度多 Agent、审 diff、跨项目推进，不只是写几行补丁。",
+      tags: ["桌面", "Agent", "综合"],
+      link: "https://chatgpt.com/codex/",
       linkText: "打开"
     },
     {
@@ -156,12 +179,12 @@ const DATA = {
     },
     {
       name: "Workbuddy",
-      cat: "coding",
+      cat: "desktop",
       status: "tool",
-      label: "编程",
-      role: "办公 + 编程 Agent",
-      desc: "腾讯的全场景 AI 工作台：办公交付之外也有 Coding Mode，可读本地文件、执行任务并给出可验收结果。",
-      tags: ["编程", "Agent", "办公"],
+      label: "桌面",
+      role: "综合桌面 Agent",
+      desc: "腾讯全场景 AI 工作台：研究、文档、表格到本地文件操作一条龙；Coding Mode 只是其中一环。",
+      tags: ["桌面", "Agent", "综合"],
       link: "https://www.workbuddy.ai/",
       linkText: "打开"
     },
