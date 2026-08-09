@@ -26,6 +26,7 @@
   --logo-glow-near:rgba(236,232,250,.30);
   --logo-glow-far:rgba(157,107,255,.26);
   --theme-meta:#07060E;
+  --tabbar-bg:rgba(7,6,14,.88);
 }
 
 [data-theme="light"]{
@@ -52,6 +53,7 @@
   --logo-glow-near:rgba(22,18,38,.12);
   --logo-glow-far:rgba(123,79,224,.18);
   --theme-meta:#F5F3FB;
+  --tabbar-bg:rgba(245,243,251,.92);
 }
 
 :root{

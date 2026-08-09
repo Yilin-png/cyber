@@ -1,35 +1,29 @@
-/* 主题：light / dark / system（跟随系统） */
+/* 主题：默认跟随系统；用户只在 light / dark 间切换 */
 window.CC = window.CC || {};
 
 CC.Theme = (function () {
   const KEY = "cc-theme";
-  const PREFS = ["system", "light", "dark"];
-  const LABELS = {
-    system: "跟随系统",
-    light: "浅色",
-    dark: "深色"
-  };
-  const ICONS = {
-    system: "◐",
-    light: "☀",
-    dark: "☾"
-  };
+  const LABELS = { light: "浅色", dark: "深色" };
+  const ICONS = { light: "☀", dark: "☾" };
 
   const mq = window.matchMedia
     ? window.matchMedia("(prefers-color-scheme: light)")
     : { matches: false, addEventListener() {}, addListener() {} };
 
+  /** @returns {"light"|"dark"|null} null = 跟随系统 */
   function readPref() {
     try {
       const v = localStorage.getItem(KEY);
-      if (PREFS.includes(v)) return v;
+      if (v === "light" || v === "dark") return v;
+      if (v === "system") localStorage.removeItem(KEY);
     } catch (_) {}
-    return "system";
+    return null;
   }
 
   function writePref(pref) {
     try {
-      localStorage.setItem(KEY, pref);
+      if (pref === "light" || pref === "dark") localStorage.setItem(KEY, pref);
+      else localStorage.removeItem(KEY);
     } catch (_) {}
   }
 
@@ -43,7 +37,7 @@ CC.Theme = (function () {
     const mode = resolve(pref);
     const root = document.documentElement;
     root.dataset.theme = mode;
-    root.dataset.themePref = pref;
+    root.dataset.themePref = pref || "system";
     root.style.colorScheme = mode;
 
     const meta = document.querySelector('meta[name="theme-color"]');
@@ -56,33 +50,31 @@ CC.Theme = (function () {
     }
 
     document.dispatchEvent(
-      new CustomEvent("cc:theme", { detail: { pref, theme: mode } })
+      new CustomEvent("cc:theme", { detail: { pref: pref || "system", theme: mode } })
     );
-    syncControls(pref, mode);
+    syncControls(mode);
     return mode;
   }
 
   function setPref(pref) {
-    const next = PREFS.includes(pref) ? pref : "system";
+    const next = pref === "light" || pref === "dark" ? pref : null;
     writePref(next);
     return apply(next);
   }
 
   function cycle() {
-    const cur = readPref();
-    const i = PREFS.indexOf(cur);
-    return setPref(PREFS[(i + 1) % PREFS.length]);
+    const mode = resolve(readPref());
+    return setPref(mode === "light" ? "dark" : "light");
   }
 
-  function syncControls(pref, mode) {
+  function syncControls(mode) {
     document.querySelectorAll("[data-theme-toggle]").forEach((btn) => {
-      btn.setAttribute("aria-label", `主题：${LABELS[pref]}`);
-      btn.title = `主题：${LABELS[pref]}（点击切换）`;
-      btn.dataset.themePref = pref;
+      btn.setAttribute("aria-label", `切换为${mode === "light" ? "深色" : "浅色"}`);
+      btn.title = `当前：${LABELS[mode]}（点击切换）`;
       btn.dataset.theme = mode;
       btn.setAttribute("aria-pressed", mode === "light" ? "true" : "false");
       const icon = btn.querySelector("[data-theme-icon]");
-      if (icon) icon.textContent = ICONS[pref];
+      if (icon) icon.textContent = ICONS[mode];
     });
   }
 
@@ -92,7 +84,7 @@ CC.Theme = (function () {
     btn.type = "button";
     btn.id = "themeBtn";
     btn.dataset.themeToggle = "";
-    btn.innerHTML = '<span data-theme-icon aria-hidden="true">◐</span>';
+    btn.innerHTML = '<span data-theme-icon aria-hidden="true">☾</span>';
     document.body.appendChild(btn);
   }
 
@@ -107,7 +99,7 @@ CC.Theme = (function () {
     });
 
     const onChange = () => {
-      if (readPref() === "system") apply("system");
+      if (readPref() == null) apply(null);
     };
     if (mq.addEventListener) mq.addEventListener("change", onChange);
     else if (mq.addListener) mq.addListener(onChange);
@@ -121,7 +113,6 @@ CC.Theme = (function () {
 
   return {
     KEY,
-    PREFS,
     LABELS,
     readPref,
     resolve,
