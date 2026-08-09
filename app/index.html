@@ -1,6 +1,23 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
+<script>
+(function(){
+  try{
+    var k="cc-theme", p=localStorage.getItem(k)||"system";
+    if(p!=="light"&&p!=="dark"&&p!=="system") p="system";
+    var light=p==="light"||(p==="system"&&window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches);
+    var t=light?"light":"dark";
+    var root=document.documentElement;
+    root.dataset.theme=t;
+    root.dataset.themePref=p;
+    root.style.colorScheme=t;
+  }catch(e){
+    document.documentElement.dataset.theme="dark";
+    document.documentElement.dataset.themePref="system";
+  }
+})();
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="赛博法师 CYBER CASTERS • AI技巧交流会。集会纪要、法器长廊、咒语手册。">
@@ -77,9 +94,9 @@
       <circle cx="240" cy="240" r="176" fill="none" stroke="#9D6BFF" stroke-width="1" opacity=".45"/>
       <circle cx="240" cy="240" r="150" fill="none" stroke="#2A2150" stroke-width="1"
               stroke-dasharray="3 9"/>
-      <circle cx="240" cy="240" r="106" fill="#07060E" opacity=".55"/>
+      <circle cx="240" cy="240" r="106" fill="var(--void)" opacity=".55"/>
       <circle cx="240" cy="240" r="106" fill="none" stroke="#3FE0D0" stroke-width="1" opacity=".42"/>
-      <circle cx="240" cy="240" r="70" fill="#07060E" opacity=".7"/>
+      <circle cx="240" cy="240" r="70" fill="var(--void)" opacity=".7"/>
       <circle class="pad-ring" cx="240" cy="240" r="70"/>
       <circle class="ripple ripple-a" cx="240" cy="240" r="70" stroke="#3FE0D0"/>
       <circle class="ripple ripple-b" cx="240" cy="240" r="70" stroke="#9D6BFF"/>
@@ -316,6 +333,7 @@
 <audio id="bgm" src="assets/audio/bgm.m4a" preload="auto" playsinline webkit-playsinline></audio>
 
 <script src="js/util.js"></script>
+<script src="js/theme.js"></script>
 <script src="js/api.js"></script>
 <script src="js/data.js"></script>
 <script src="js/bgm.js"></script>

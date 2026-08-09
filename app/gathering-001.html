@@ -1,6 +1,23 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
+<script>
+(function(){
+  try{
+    var k="cc-theme", p=localStorage.getItem(k)||"system";
+    if(p!=="light"&&p!=="dark"&&p!=="system") p="system";
+    var light=p==="light"||(p==="system"&&window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches);
+    var t=light?"light":"dark";
+    var root=document.documentElement;
+    root.dataset.theme=t;
+    root.dataset.themePref=p;
+    root.style.colorScheme=t;
+  }catch(e){
+    document.documentElement.dataset.theme="dark";
+    document.documentElement.dataset.themePref="system";
+  }
+})();
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="赛博法师第一期集会纪要摘要：用 AI 做文字处理。完整内容仅对参会成员开放。">
@@ -112,6 +129,7 @@
 </div>
 
 <script src="js/util.js"></script>
+<script src="js/theme.js"></script>
 <script src="js/api.js"></script>
 <script src="js/gathering-data.js"></script>
 <script src="js/bgm.js"></script>

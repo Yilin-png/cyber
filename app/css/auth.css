@@ -55,7 +55,7 @@
   padding:12px 20px;
   clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px);
 }
-.btn-primary{background:var(--cyan);color:var(--void)}
+.btn-primary{background:var(--cyan);color:var(--on-accent)}
 .btn-ghost{background:transparent;color:var(--cyan);border:1px solid var(--line);clip-path:none;padding:11px 18px}
 .btn:hover{filter:brightness(1.08)}
 .form-msg{
@@ -82,7 +82,7 @@
   position:relative;
   margin:28px 0;
   border:none;
-  background:linear-gradient(105deg,rgba(16,12,33,.5) 0%,rgba(16,12,33,.12) 62%,transparent 100%);
+  background:linear-gradient(105deg,var(--panel-wash) 0%,var(--panel-wash-soft) 62%,transparent 100%);
   padding:22px 22px 22px 24px;
 }
 .lock-box::before{
@@ -177,11 +177,11 @@ body.auth-page{
   bottom:max(18px, env(safe-area-inset-bottom));
   z-index:40;
   width:42px;height:42px;border-radius:0;
-  border:1px solid var(--line);background:rgba(16,12,33,.82);
+  border:1px solid var(--line);background:var(--panel-glass);
   color:var(--ash);font-size:16px;cursor:pointer;
   backdrop-filter:blur(8px);
 }
 #bgmBtn:hover{border-color:var(--cyan);color:var(--cyan)}
 #bgmBtn.on{
-  color:var(--cyan);border-color:rgba(63,224,208,.55);
+  color:var(--cyan);border-color:color-mix(in srgb, var(--cyan) 55%, transparent);
 }

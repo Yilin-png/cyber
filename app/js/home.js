@@ -37,10 +37,22 @@ document.addEventListener("visibilitychange", () => {
 (function(){
   const box = $("#credits");
   const items = [...box.querySelectorAll("li")];
-  /* 颜色插值：两端 #6E6790(暗紫) → 中间 #3FE0D0(亮青)
-     用 ul 的 transform 推算位置，避免每帧 getBoundingClientRect
-     强制整页重排——那会让右侧终端读数跟着抖。 */
-  const edge = [110,103,144], mid = [63,224,208];
+  /* 颜色插值：两端暗紫灰 → 中间主题青；随主题切换重读 */
+  let edge = [110,103,144], mid = [63,224,208];
+  const readThemeColors = () => {
+    const cs = getComputedStyle(document.documentElement);
+    const parse = (v, fb) => {
+      const s = (cs.getPropertyValue(v) || "").trim();
+      const m = s.match(/^#([0-9a-f]{6})$/i);
+      if (!m) return fb;
+      const n = parseInt(m[1], 16);
+      return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    };
+    edge = parse("--ash", edge);
+    mid = parse("--cyan", mid);
+  };
+  readThemeColors();
+  document.addEventListener("cc:theme", readThemeColors);
   const lerp = (a,b,t) => Math.round(a + (b-a)*t);
   const ul = box.querySelector("ul");
   const rowH = items[0] ? (items[0].offsetHeight || 22) : 22;

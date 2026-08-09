@@ -14,9 +14,9 @@ html{scroll-behavior:smooth}
   /* 第三层：品牌区上方补一片很淡的环境辉光。
      原来辉光只集中在 40% 高度的法阵处，顶部几乎是纯 --void，
      logo 自带的紫色光晕便无处可融，浮成一块紫斑。 */
-  background:radial-gradient(circle at 50% 40%,rgba(157,107,255,.20),transparent 58%),
-             radial-gradient(circle at 50% 40%,rgba(63,224,208,.10),transparent 42%),
-             radial-gradient(ellipse 60% 26% at 50% 12%,rgba(157,107,255,.10),transparent 70%);
+  background:radial-gradient(circle at 50% 40%,var(--glow-arcane),transparent 58%),
+             radial-gradient(circle at 50% 40%,var(--glow-cyan),transparent 42%),
+             radial-gradient(ellipse 60% 26% at 50% 12%,var(--glow-brand),transparent 70%);
   pointer-events:none;
 }
 
@@ -26,8 +26,8 @@ html{scroll-behavior:smooth}
   color:var(--paper);
   /* 两层光晕代替单层重紫：贴边一层近白提亮字形边缘，外面一层淡紫铺开。
      单层 28px/.45 的纯紫在近黑底上会糊成一块紫斑，字也被染出色差。 */
-  filter:drop-shadow(0 0 6px rgba(236,232,250,.30))
-         drop-shadow(0 0 34px rgba(157,107,255,.26));
+  filter:drop-shadow(0 0 6px var(--logo-glow-near))
+         drop-shadow(0 0 34px var(--logo-glow-far));
   animation:brandIn 1s .1s cubic-bezier(.2,.7,.3,1) both;
 }
 @keyframes brandIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
@@ -67,9 +67,9 @@ html{scroll-behavior:smooth}
   content:"";position:absolute;top:12%;bottom:12%;right:0;width:1px;
   background:linear-gradient(to bottom,
     transparent,
-    rgba(157,107,255,.35) 28%,
-    rgba(63,224,208,.28) 50%,
-    rgba(157,107,255,.35) 72%,
+    color-mix(in srgb, var(--arcane) 35%, transparent) 28%,
+    color-mix(in srgb, var(--cyan) 28%, transparent) 50%,
+    color-mix(in srgb, var(--arcane) 35%, transparent) 72%,
     transparent);
   pointer-events:none;
 }
@@ -83,7 +83,7 @@ html{scroll-behavior:smooth}
 .credits ul{list-style:none;animation:roll linear infinite}
 .credits li{
   font-family:var(--font-mono);font-size:var(--text-xs);line-height:2;letter-spacing:var(--track-tight);
-  color:#EDE9FB;text-align:right;white-space:nowrap;
+  color:var(--paper);text-align:right;white-space:nowrap;
   transition:color .1s linear;
 }
 @keyframes roll{from{transform:translateY(0)}to{transform:translateY(-50%)}}
@@ -102,9 +102,9 @@ html{scroll-behavior:smooth}
   content:"";position:absolute;top:8%;bottom:8%;left:0;width:1px;
   background:linear-gradient(to bottom,
     transparent,
-    rgba(157,107,255,.35) 28%,
-    rgba(63,224,208,.28) 50%,
-    rgba(157,107,255,.35) 72%,
+    color-mix(in srgb, var(--arcane) 35%, transparent) 28%,
+    color-mix(in srgb, var(--cyan) 28%, transparent) 50%,
+    color-mix(in srgb, var(--arcane) 35%, transparent) 72%,
     transparent);
   pointer-events:none;
 }
@@ -217,7 +217,7 @@ html{scroll-behavior:smooth}
 .hand-fill{fill:#0A0817;fill-opacity:.93;stroke:currentColor;stroke-width:1.6;
   stroke-linejoin:round;stroke-linecap:round}
 .hand-line{fill:none;stroke:currentColor;stroke-width:.9;opacity:.4;stroke-linecap:round}
-.eye-shell{fill:#07060E;stroke:currentColor;stroke-width:1.3}
+.eye-shell{fill:var(--void);stroke:currentColor;stroke-width:1.3}
 .iris{fill:none;stroke:currentColor;stroke-width:1.6;opacity:.9}
 .pupil{fill:currentColor;transform-box:view-box;transform-origin:62px 110px;
   animation:dilate 7.5s ease-in-out infinite}
@@ -324,7 +324,7 @@ html{scroll-behavior:smooth}
   padding:11px 28px;
   font-family:var(--font-sans);font-size:var(--text-sm);font-weight:600;
   letter-spacing:var(--track-wide);
-  color:var(--void);text-decoration:none;
+  color:var(--on-accent);text-decoration:none;
   background:var(--cyan);
   clip-path:polygon(9px 0,100% 0,100% calc(100% - 9px),calc(100% - 9px) 100%,0 100%,0 9px);
   animation:joinIn .8s .55s cubic-bezier(.2,.7,.3,1) both, joinGlow 2.2s ease-in-out infinite;
@@ -487,7 +487,7 @@ main.wrap{display:block;min-height:100svh}
 }
 .filter-chip:hover{color:var(--paper);border-color:var(--arcane)}
 .filter-chip[aria-pressed="true"]{
-  color:var(--void);background:var(--cyan);border-color:var(--cyan);
+  color:var(--on-accent);background:var(--cyan);border-color:var(--cyan);
 }
 .filter-chip[aria-pressed="true"] .n{opacity:.75}
 
@@ -564,7 +564,7 @@ main.wrap{display:block;min-height:100svh}
   align-items:stretch;
   border:1px solid var(--line);
   background:
-    linear-gradient(180deg, rgba(16,12,33,.55), rgba(16,12,33,.18));
+    linear-gradient(180deg, var(--panel-wash), var(--panel-wash-soft));
 }
 .channel,
 .wechat-card{
@@ -642,14 +642,14 @@ main.wrap{display:block;min-height:100svh}
   align-self:flex-start;
 }
 .channel .go-primary{
-  color:var(--void);background:var(--cyan);border:1px solid var(--cyan);
+  color:var(--on-accent);background:var(--cyan);border:1px solid var(--cyan);
 }
 .channel .go-primary:hover{box-shadow:0 0 24px -6px var(--cyan);filter:brightness(1.06);transform:translateY(-1px)}
 .channel .go-ghost{
-  color:var(--cyan);background:transparent;border:1px solid rgba(63,224,208,.45);
+  color:var(--cyan);background:transparent;border:1px solid color-mix(in srgb, var(--cyan) 45%, transparent);
   clip-path:none;padding:11px 18px;
 }
-.channel .go-ghost:hover{border-color:var(--cyan);color:var(--paper);background:rgba(63,224,208,.06);transform:translateY(-1px)}
+.channel .go-ghost:hover{border-color:var(--cyan);color:var(--paper);background:color-mix(in srgb, var(--cyan) 8%, transparent);transform:translateY(-1px)}
 .channel .go .arrow{font-family:var(--font-mono);font-weight:400;opacity:.8}
 
 .wechat-top{
