@@ -37,10 +37,22 @@ document.addEventListener("visibilitychange", () => {
 (function(){
   const box = $("#credits");
   const items = [...box.querySelectorAll("li")];
-  /* 颜色插值：两端 #6E6790(暗紫) → 中间 #3FE0D0(亮青)
-     用 ul 的 transform 推算位置，避免每帧 getBoundingClientRect
-     强制整页重排——那会让右侧终端读数跟着抖。 */
-  const edge = [110,103,144], mid = [63,224,208];
+  /* 颜色插值：两端暗紫灰 → 中间主题青；随主题切换重读 */
+  let edge = [110,103,144], mid = [63,224,208];
+  const readThemeColors = () => {
+    const cs = getComputedStyle(document.documentElement);
+    const parse = (v, fb) => {
+      const s = (cs.getPropertyValue(v) || "").trim();
+      const m = s.match(/^#([0-9a-f]{6})$/i);
+      if (!m) return fb;
+      const n = parseInt(m[1], 16);
+      return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    };
+    edge = parse("--ash", edge);
+    mid = parse("--cyan", mid);
+  };
+  readThemeColors();
+  document.addEventListener("cc:theme", readThemeColors);
   const lerp = (a,b,t) => Math.round(a + (b-a)*t);
   const ul = box.querySelector("ul");
   const rowH = items[0] ? (items[0].offsetHeight || 22) : 22;
@@ -308,16 +320,16 @@ function renderSpellsMember() {
   );
   if (!FLAT.length) return "";
   return `
-    <h3 class="spell-cat">集会摘录<span class="cat-en">MEMBERS</span></h3>
+    <h3 class="spell-cat">使用心得</h3>
     <div class="grid">${renderCards(FLAT)}</div>`;
 }
 
 function renderSpellsMemberLocked() {
   return `
-    <h3 class="spell-cat">集会摘录<span class="cat-en">MEMBERS</span></h3>
+    <h3 class="spell-cat">使用心得</h3>
     <div class="lock-box">
-      <h2>现场技巧与踩坑需成员权限</h2>
-      <p>上面的工具卡片可自由查阅。方法论、经验与踩坑等技巧，请参会登录后查看。</p>
+      <h2>使用心得需成员权限</h2>
+      <p>上面的工具卡片可自由查阅。具体使用心得请参会登录后查看。</p>
       <div class="lock-actions">
         <a class="btn btn-primary" href="login.html">成员登录</a>
         <a class="btn btn-ghost" href="apply.html">申请加入</a>
@@ -374,13 +386,26 @@ $("#chanList").innerHTML = DATA.channels.map(c => {
     ? `<div class="qr-slot">${c.img ? `<img src="${esc(c.img)}" alt="${esc(c.name)}二维码">` : esc(c.alt||"").replace(/\n/g,"<br>")}</div>`
     : `<a class="go go-${variant}" href="${esc(c.url)}">${esc(c.cta||"前往")}<span class="arrow" aria-hidden="true">→</span></a>`;
   return `<div class="channel channel-${variant}">
+    ${c.kicker ? `<div class="channel-kicker">${esc(c.kicker)}</div>` : ""}
     <h3>${esc(c.name)}</h3>
     <div class="note">${esc(c.note||"")}</div>
     ${body}
   </div>`;
-}).join("");
+}).join("") + (() => {
+  const w = DATA.wechatCommunity;
+  if (!w) return "";
+  return `<div class="wechat-card">
+    <div class="wechat-kicker">${esc(w.kicker || "COMMUNITY")}</div>
+    <div class="wechat-top">
+      <h3>${esc(w.title || "微信社群")}</h3>
+      ${w.status === "pending" ? `<span class="wechat-badge">待维护</span>` : ""}
+    </div>
+    <p>${esc(w.note || "")}</p>
+    <div class="wechat-slot" aria-hidden="true">二维码待维护</div>
+  </div>`;
+})();
 
-/* 登录态：公开工具目录始终展示；集会摘录按成员解锁 */
+/* 登录态：公开工具目录始终展示；使用心得按成员解锁 */
 renderSpellbook(false);
 (async function syncAuth(){
   const foot = $("#footNote");
@@ -450,5 +475,6 @@ tabs.forEach((t,i) => {
 CC.BGM.init({
   mode: "sigil",
   toggleId: "coreJoin",
-  sigilEl: $(".sigil")
+  sigilEl: $(".sigil"),
+  gestureKick: true
 });

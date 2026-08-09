@@ -39,23 +39,56 @@ const DATA = {
       label: "即将开放",
       role: "成员作品位",
       desc: "用于展示成员的项目、工具或个人网页。做好了就可以申请挂上来。",
-      tags: ["项目", "网页"],
-      link: "apply.html",
-      linkText: "申请展示"
+      tags: ["项目", "网页"]
     }
   ],
 
   /* 咒语手册筛选分类：cat 与下方 tools 的 cat 字段对应 */
   toolCats: [
     { k: "all",       name: "全部" },
+    { k: "desktop",   name: "桌面" },
+    { k: "coding",    name: "编程" },
     { k: "capture",   name: "采集" },
     { k: "document",  name: "文档" },
     { k: "knowledge", name: "知识库" },
     { k: "voice",     name: "语音" }
   ],
 
-  /* 咒语手册：只列工具（卡片式，按名称字母序）；技巧归集会摘录 */
+  /* 咒语手册：只列工具（卡片式，按名称字母序）；使用心得归成员区 */
   tools: [
+    {
+      name: "Claude Code",
+      cat: "coding",
+      status: "tool",
+      label: "编程",
+      role: "终端编程 Agent",
+      desc: "Anthropic 的命令行编程助手：读仓库、改文件、跑命令，适合在终端里把开发任务闭环完成。",
+      tags: ["编程", "Agent", "CLI"],
+      link: "https://docs.anthropic.com/en/docs/claude-code",
+      linkText: "打开"
+    },
+    {
+      name: "Claude Desktop",
+      cat: "desktop",
+      status: "tool",
+      label: "桌面",
+      role: "综合桌面 Agent",
+      desc: "Anthropic 桌面端：聊天、Cowork 与本地协作集于一处，可接文件与应用，适合跨场景把事做完。",
+      tags: ["桌面", "Agent", "综合"],
+      link: "https://claude.com/download",
+      linkText: "打开"
+    },
+    {
+      name: "Codex",
+      cat: "desktop",
+      status: "tool",
+      label: "桌面",
+      role: "综合桌面 Agent",
+      desc: "OpenAI 的 Codex 应用 / ChatGPT 入口：并行调度多 Agent、审 diff、跨项目推进，不只是写几行补丁。",
+      tags: ["桌面", "Agent", "综合"],
+      link: "https://chatgpt.com/codex/",
+      linkText: "打开"
+    },
     {
       name: "Cubox",
       cat: "capture",
@@ -65,6 +98,17 @@ const DATA = {
       desc: "把链接与摘录收进统一收件箱，减少「看过就丢」。第一期聊过的采集层入口之一。",
       tags: ["采集", "剪藏"],
       link: "https://cubox.pro/",
+      linkText: "打开"
+    },
+    {
+      name: "Cursor",
+      cat: "coding",
+      status: "tool",
+      label: "编程",
+      role: "AI 代码编辑器",
+      desc: "在 IDE 里写代码、审 diff、跑 Agent；适合日常开发与多文件改动。",
+      tags: ["编程", "IDE", "Agent"],
+      link: "https://cursor.com/",
       linkText: "打开"
     },
     {
@@ -88,6 +132,17 @@ const DATA = {
       tags: ["文档", "Office", "CLI"],
       link: "https://github.com/iOfficeAI/OfficeCLI",
       linkText: "仓库"
+    },
+    {
+      name: "OpenCode",
+      cat: "coding",
+      status: "tool",
+      label: "编程",
+      role: "开源编程 Agent",
+      desc: "开源 AI 编程助手，终端 / 桌面 / IDE 都能用；可接多家模型，读仓库、改代码、跑命令。",
+      tags: ["编程", "Agent", "开源"],
+      link: "https://opencode.ai/",
+      linkText: "打开"
     },
     {
       name: "Pandoc",
@@ -123,6 +178,17 @@ const DATA = {
       linkText: "仓库"
     },
     {
+      name: "Workbuddy",
+      cat: "desktop",
+      status: "tool",
+      label: "桌面",
+      role: "综合桌面 Agent",
+      desc: "腾讯全场景 AI 工作台：研究、文档、表格到本地文件操作一条龙；Coding Mode 只是其中一环。",
+      tags: ["桌面", "Agent", "综合"],
+      link: "https://www.workbuddy.ai/",
+      linkText: "打开"
+    },
+    {
       name: "闪电说",
       /* 中文名按拼音参与字母排序 */
       sortKey: "shandianshuo",
@@ -137,7 +203,7 @@ const DATA = {
     }
   ],
 
-  /* 集会摘录：技巧 / 方法 / 踩坑，仅参会成员可见 */
+  /* 使用心得：技巧 / 方法 / 踩坑，仅参会成员可见 */
   spellsMemberOnly: true,
   spells: [
     { group: "格式与排版", src: "gathering-001.html#s03", items: [
@@ -158,7 +224,7 @@ const DATA = {
   ],
 
   about: {
-    title: "赛博法师的初心与理念",
+    title: "赛博法师的初心",
     lead: "我们希望建立一个真诚、务实、开放的熟人社群。在 AI 技术快速演进、信息不断涌现的时代，彼此分享、共同探索，把对变化的焦虑转化为学习与行动，把零散的经验和灵感沉淀为真正有用的方法、产品与连接。",
     principles: [
       {
@@ -181,9 +247,20 @@ const DATA = {
   },
 
   channels: [
-    { name: "我想参加", type: "link", url: "apply.html", note: "留个称呼和意向时间即可 · 审核后发登录名与通行码",
+    { name: "我想参加", type: "link", url: "apply.html",
+      kicker: "JOIN",
+      note: "留下称呼与意向，审核通过后会收到登录名和通行码。",
       cta: "填写申请", variant: "primary" },
-    { name: "成员登录", type: "link", url: "login.html", note: "登录名 + 通行码 · 查阅参会纪要",
+    { name: "成员登录", type: "link", url: "login.html",
+      kicker: "LOGIN",
+      note: "用登录名和通行码进入，查阅参会纪要与留言。",
       cta: "去登录", variant: "ghost" }
-  ]
+  ],
+
+  wechatCommunity: {
+    title: "微信社群",
+    kicker: "COMMUNITY",
+    status: "pending",
+    note: "群二维码待维护。需要加群可先报名留下联系方式。"
+  }
 };

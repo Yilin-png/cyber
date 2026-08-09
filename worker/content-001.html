@@ -1,0 +1,247 @@
+<section class="sec" id="s01">
+        <h2><i>01</i>爬虫与反爬</h2>
+
+        <h3>需求场景</h3>
+        <p>抓取微信公众号文章、评论区，用于做日报／行研。</p>
+
+        <h3>实操路径</h3>
+        <ul>
+          <li><strong>搜狗当跳板</strong>：微信文章可借搜狗的公众号搜索接口抓取（搜狗抓不了评论区）。</li>
+          <li><strong>多渠道找同文</strong>：同一篇文章往往多渠道分发，微信抓不到就去门户网等其他渠道找。</li>
+          <li><strong>让 AI 先学 skill，别自己硬写</strong>：做爬虫前先让 AI 去 GitHub 找现成 skill，搜索关键词 <code>spider</code> ／ <code>crawler</code> + <code>skill</code>（如 <code>spider skill</code>），挑 star 多的用。</li>
+          <li><strong>不下载代码，只给网址</strong>：担心 GitHub 仓库藏「不干净的东西」，做法是把仓库网址复制给 AI，让它自己去学，不本地下载。</li>
+          <li><strong>反爬对抗</strong>：腾讯（微信）等对文章做了防 AI 抓取。高 star 的 skill 会用指纹浏览器、把身份标识伪装成真实用户来突破——skill 本质是工具，多数反爬能过。但确有防护做得极强的站点，即便有 AI 加持也爬不动。</li>
+          <li><strong>权限墙</strong>：部分资源需付费／登录，没有账号 AI 也拿不到。</li>
+        </ul>
+
+        <h3>傻瓜化操作两步法</h3>
+        <ol>
+          <li>把项目网页复制给 AI → 说「分析一下这个项目、我怎么用它、能否帮我爬取特定网站数据」→ 让它先<strong>模拟跑一遍</strong>确认能跑通；</li>
+          <li>确认 OK 后，直接让它安装 skill 并实际运行抓取。</li>
+        </ol>
+
+        <h3>延伸想法</h3>
+        <p>做一个法律／投资专业的爬虫工具，把各大网站的会员权限池化，以付费方式把插件分享出去。</p>
+
+        <h3>微信文章 → Obsidian 自动同步</h3>
+        <ul>
+          <li>用 <strong>心知小助手</strong>（GitHub 上的插件，非 Obsidian 官方 community，需手动添加）：在微信里把文章转发给它，设置好路径后，只要电脑开着，每隔约 1 小时自动同步到本地 Obsidian，AI 即可读取。</li>
+          <li>另一款 <strong>Cubox</strong>：免费版即可用，好处是还能同步到 Kindle。</li>
+        </ul>
+      </section>
+
+      <section class="sec" id="s02">
+        <h2><i>02</i>Skill 的封装与管理</h2>
+        <ul>
+          <li><strong>Skill = 把自己独创的经验蒸馏成 markdown</strong>，本质是自然语言，跨工具通用（Claude Code、Kimi code、Open Code 都能读同一套 skill）。</li>
+          <li><strong>别指望直接复用网上的 skill</strong>：除非高度可复用，否则很难套到自己工作上——每个人对法律研究的格式、审美、严谨度要求都不同，无法通用。</li>
+          <li><strong>可链式组合 + 封装成斜杠命令</strong>：多个 skill 串起来（如「爬取 + 按指定格式生成」），封装成 <code>/命令</code>，未来新对话直接调用。</li>
+          <li><strong>痛点：skill 太多，AI 想不起来调用</strong>。解法：
+            <ul>
+              <li>让 AI 把所有 skill 做一次整理，为每个 skill 生成命令，并画一张 <strong>skill 图谱</strong>；</li>
+              <li>重复的合并、没用的删掉，保持唯一性；</li>
+              <li><strong>分层管理</strong>：项目级 skill 放各项目目录下（查找不易错）；系统级放 <code>.claude</code> ／ agent 文件；数量大时在根目录加图谱让 AI 自学调用。</li>
+            </ul>
+          </li>
+          <li><strong>「PUA」式自我沉淀</strong>：要求 AI 每做完一件事、每次关窗口前都要复盘——「你做错了什么、我要求了你什么」，把经验固化成自己的流程／skill／pack；并让它维护一个 markdown 记录当前项目进度。</li>
+        </ul>
+      </section>
+
+      <section class="sec" id="s03">
+        <h2><i>03</i>格式与工具的效率账</h2>
+        <p>分享人给出三条方法论 + 一份成本实测。</p>
+
+        <h3>用对的格式和对的工具</h3>
+        <p><strong>MD ／ HTML 最适合 AI；Word ／ Office 不适合。</strong>非用 Office 不可时，要用对工具。</p>
+        <table>
+          <caption>表 1　Word 处理方式成本实测（1800 字、61 段，按 Claude 5 定价）</caption>
+          <thead><tr><th>操作</th><th>成本</th></tr></thead>
+          <tbody>
+            <tr><td>直接读 markdown</td><td>≈ ¥0.1</td></tr>
+            <tr><td>用 office-cli 读 Word（约 1600 字）</td><td>≈ ¥0.13</td></tr>
+            <tr><td>Python 解包读 Word</td><td>≈ ¥0.45</td></tr>
+            <tr><td>Python 解包改格式</td><td>≈ ¥3.31（md 的 33 倍）</td></tr>
+          </tbody>
+        </table>
+        <ul>
+          <li>Word 若走 pandoc／Python 解包，token 会从 4.6k 膨胀到约 100k，慢且易错。</li>
+          <li><strong>日报场景累积效应</strong>：每天读 md ¥0.1，一年 360 天 ≈ ¥25；换成解包方式则数百上千元。</li>
+          <li><strong>office-cli</strong>（GitHub 开源脚本）：不解包，直接定位、直接改。原理是把 Office <strong>渲染成图片</strong>，AI 能直接找到第几行／第几句去改，实操体感明显更快。与「漂亮模板类」的 skill 不冲突，可叠加使用。</li>
+          <li><strong>对照：Python 解包原理</strong>——docx 后缀改 zip → 解压出 <code>styles</code> ／ <code>numbering</code> ／ <code>settings</code> 等文件（Word 就是这些文件拼装出来的，分别决定编号、样式）→ AI 改 XML → 再打包回去，环节多、易出错。</li>
+        </ul>
+
+        <h3>用对的模型做对的事</h3>
+        <ul>
+          <li>同一任务：最轻的模型约 7 秒，顶级大模型要几分钟。「对的模型」不一定便宜、也不一定大，按任务选。</li>
+          <li>模型已明显分化（如 GPT-5.6 分三档），既省钱速度也有别。</li>
+          <li><strong>自动选模型</strong>：有公司自建「中转站」带 auto 模式自动选路由；千问、Kimi 也有「轻／重工作」之分（目前多为人工选）。</li>
+        </ul>
+      </section>
+
+      <section class="sec" id="s04">
+        <h2><i>04</i>保密纪要 ／ 本地化处理</h2>
+
+        <h3>场景</h3>
+        <p>有录音，不想上云、不想用科大讯飞等公有服务。</p>
+
+        <h3>流程</h3>
+        <ol>
+          <li><strong>本地装语音模型</strong>（如 Whisper），让 AI 自己装即可——<em>「语音转文字」这一步在本地完成，即完成脱敏</em>；</li>
+          <li>转出文档后，再用<strong>可信的私有／公司大模型</strong>（也可用本地模型）把文字<strong>提炼成结构化纪要</strong>。</li>
+        </ol>
+
+        <h3>注意点</h3>
+        <ul>
+          <li>本地模型可能不擅长<strong>区分发言人</strong>，且较耗资源；</li>
+          <li>本地识别准确率低于公有云，但后续大模型提炼时能纠正部分识别错误，实测可用（甚至不比免费千问差）；</li>
+          <li>本地部署门槛已很低（llama 等，什么电脑都能跑；Windows 带显卡更好，小模型也够写纪要）。分享者因公司有私有大模型，直接用了公司模型。</li>
+        </ul>
+      </section>
+
+      <section class="sec" id="s05">
+        <h2><i>05</i>音频 ／ 会议记录管理</h2>
+
+        <h3>需求</h3>
+        <p>电话、客户会议等音频难以管理、归档、团队共享。</p>
+
+        <h3>方案</h3>
+        <ul>
+          <li>腾讯会议自带转写；来不及开会议软件时，用手机录音（非 iPhone 多可自动录音）→ 发给任意 AI 转文字。</li>
+          <li><strong>硬件</strong>：
+            <ul>
+              <li><strong>Plaud</strong>（NotePin ／ Note）：贴在手机背面的卡片式录音器，录音 + 转写，云端，较贵（1000 多），专为商务人士纪要管理做过调优，效果最好；</li>
+              <li><strong>Get 笔记</strong>外设、<strong>科大讯飞</strong>录音笔：转写已很成熟；</li>
+              <li><strong>AirPods Pro</strong> 长时录音，放办公室 24 小时开着。</li>
+            </ul>
+          </li>
+          <li><strong>愿景</strong>：把每天工作相关的电话、微信语音等信息汇集，自动生成总结 + 待办提醒。</li>
+          <li><strong>隐忧</strong>：Plaud 等上云后的保密性。</li>
+        </ul>
+      </section>
+
+      <section class="sec" id="s06">
+        <h2><i>06</i>语音输入工具</h2>
+        <ul>
+          <li><strong>Typeless、闪电说、papi ／ Type</strong>（后二者为台湾产品）：语音输入法，能把你零散的口述<strong>结构化整理</strong>成文字。</li>
+          <li>用法举例：回客户消息时说「先帮我写一段恭维、再帮我写……」，它会自动组织成有结构的文本。</li>
+          <li><strong>豆包输入法</strong>也有类似能力。要点：说话时尽量有结构，它整理效果更好；多为付费／试用后收费。</li>
+        </ul>
+      </section>
+
+      <section class="sec" id="s07">
+        <h2><i>07</i>Cowork 模式与模型切换</h2>
+
+        <h3>Claude 桌面端 Cowork 模式</h3>
+        <ul>
+          <li>有独立对话窗口，且能<strong>读取本地文件夹</strong>（普通 chat 只能拖文件进去）。</li>
+          <li><strong>不推荐给易被封号的人</strong>：Cowork 约 <strong>2 倍 usage</strong> 消耗；一旦封号，只能通过链接下载 data（压缩包，邮件发得慢、24 小时有效）。</li>
+          <li>Claude 桌面端 <strong>Mac 版比 Windows 版稳定</strong>（Windows 常报错）。</li>
+        </ul>
+
+        <h3>跨厂商模型切换</h3>
+        <ul>
+          <li>CLI 里用斜杠命令换模型；</li>
+          <li>VS Code 装 <strong>Claude Code 插件 ／ Codex 插件</strong>，或用 <strong>GitHub Copilot</strong>，可在图形界面切换模型（GPT-5.6、Sonnet 4.6、Haiq 等），跨品牌跨厂商。需登录 subscription 或接 API（钱付给 Claude，不是付给 VS Code）。</li>
+          <li>安装：在插件市场搜官方 <code>Claude Code</code> ／ <code>Codex</code>，只认官方插件。</li>
+        </ul>
+      </section>
+
+      <section class="sec" id="s08">
+        <h2><i>08</i>软件工程师视角（编程 + 多 Agent）</h2>
+        <ul>
+          <li><strong>AI 编码演进</strong>：2023 ChatGPT → workflow（人工编排）→ 自主运行 → 现在的 <strong>skill + MCP 时代</strong>（用 skill 控制软件／工具）。</li>
+          <li><strong>Superpowers</strong>：一个把软件工程专家知识封装进去的 skill 框架。用法：需求分析阶段对它说 <code>brainstorming</code> 头脑风暴 → 它逐步追问帮你完善需求（类似 <strong>plan mode</strong>）→ 再到设计、开发、测试。</li>
+          <li><strong>全流程模板化</strong>：需求分析 → 系统设计 → 开发 → 测试 → 代码审查，每阶段定制模板（类比法律文书模板），并用机制约束 AI 遵守编码规范、架构规范。</li>
+          <li><strong>提效数据</strong>：整体 <strong>20%–40%</strong>（各公司不同）。瓶颈不在编码，而在<strong>需求与测试</strong>阶段；传统流程的冗长人工审核最耗时。</li>
+          <li><strong>多 Agent 协作</strong>（探索中）：配备需求分析师、开发、测试等 agent，各自专注自己的 skill 领域，通过管线协同。</li>
+          <li><strong>PPT</strong>：全部用 Claude 生成——把编码过程中的对话记录 + 成果，给个大纲让 Claude 自己提炼整理成可编辑 PPT（用其 doc ／ pptx skill）。缺点：<strong>极耗 token</strong>，一个 PPT 就能把订阅额度用完。</li>
+        </ul>
+      </section>
+
+      <section class="sec" id="s09">
+        <h2><i>09</i>虚拟机 ／ 云电脑方案</h2>
+        <ul>
+          <li>大厂给每人本地装 Open Code（类 Claude Code）；因信息安全，改为<strong>虚拟机（云电脑，24 小时开机）</strong>操作。大厂可无限用 5（five）。</li>
+          <li><strong>三大好处</strong>：① 隔离；② 出门在外随处可访问；③ 满足境外模型需求。</li>
+          <li><strong>搭法</strong>：买一台云主机 → 部署 Open Code 服务端 → 接入模型 → 手机／国外均可访问。</li>
+          <li><strong>顺带解决「不懂电脑」痛点</strong>：在云端跑，发完指令就能走人。</li>
+          <li><strong>稳定／合规</strong>：用 AWS 等境外服务器不易被封；火山云、阿里云也有香港／全球节点，但国内服务商做这类事更易被监管。此法可省去单独翻墙。</li>
+        </ul>
+      </section>
+
+      <section class="sec" id="s10">
+        <h2><i>10</i>Claude Projects 用法</h2>
+        <p>面向无编程基础者，纯从项目管理角度用 Claude 桌面端：</p>
+        <ul>
+          <li><strong>一项目一 Project 文件夹</strong>：先写指示（角色、风格、语言等 basic 设置）+ 项目背景（客户是谁、要做什么），相当于给它灌输基础知识。</li>
+          <li><strong>Context 区</strong>放项目基础文件（DD 报告、与客户的会议纪要等），后续改东西时 AI 自动读取。</li>
+          <li><strong>Memories</strong>：对话多时会弹出 memories，把对话精炼成 memory；也可主动让它生成；每个项目有 summary。桌面端数据存<strong>本地电脑</strong>。</li>
+          <li><strong>保密隐忧</strong>：不脱敏的话，Project 信息会反哺训练大模型，存在 N 分之一概率在别人的建议里看到你的项目案例。</li>
+          <li><strong>Artifacts</strong>：能生成预览（网页版左侧可预览）；好处是<strong>直接用 Claude 主力模型、无需配 API</strong>。</li>
+        </ul>
+      </section>
+
+      <section class="sec" id="s11">
+        <h2><i>11</i>MCP 打通数据源</h2>
+        <ul>
+          <li>Claude 桌面端还有 <strong>Cowork</strong>、Codex 账户配 <strong>computer use</strong> 等玩法。</li>
+          <li><strong>Kimi 默认接入同花顺 MCP</strong>：几十块的 Kimi 订阅即可用同花顺，且免费、开放彻底（所有数据经 MCP 打通）。当前订阅难抢，需预约。</li>
+          <li><strong>行研／投资</strong>：可接数据库抓数据。</li>
+          <li><strong>法律的短板</strong>：案例数据基本不对外，裁判文书网都受限，更别提开放 MCP。</li>
+        </ul>
+      </section>
+
+      <section class="sec" id="s12">
+        <h2><i>12</i>Obsidian 插件与小技巧合集</h2>
+        <ul>
+          <li><strong>心知小助手</strong>：微信文章 → Obsidian 自动同步（见「爬虫与反爬」）。</li>
+          <li><strong>Templater</strong>：定制化模板。</li>
+          <li><strong>Open in VS Code</strong>：右键 md 用 VS Code 打开，编辑完回 Obsidian 看渲染效果；配合 VS Code 里的 AI 插件可直接对某段对话式修改。</li>
+          <li><strong>图片 asset 插件</strong>：粘贴图片时自动在同目录建 asset 文件夹并归档，md 与图片路径绑定——好处是 AI 读取时能同时读到文字和对应图片。</li>
+          <li><strong>Quicker</strong>（与 AI 无关的小工具）：滚轮 + Ctrl 唤出截图 OCR、常用语、剪切板、快搜等；如「快搜」选中文字即可在 Google ／搜狗中搜索。</li>
+          <li><strong>Quick Switcher</strong>（Obsidian 快捷键）：快速搜索定位。</li>
+        </ul>
+      </section>
+
+      <section class="sec" id="s13">
+        <h2><i>13</i>pandoc 排版工作流</h2>
+        <ul>
+          <li><strong>pandoc</strong>：命令行格式转换工具，可配<strong>映射规则</strong>。</li>
+          <li><strong>Obsidian + Share Command 插件</strong>：预设好 pandoc 语法后，一个快捷键就能把当前 md 转换成符合律所格式要求的 Word，直接在桌面生成文件。</li>
+          <li><strong>reference 文档（reference.docx）</strong>：承载律所的格式要求（字体、行间距、编号、样式等）。作者把它<strong>开源到 GitHub</strong>——里面无内容、纯格式，可安全共享；用时用 AI 对话改字体大小等即可。</li>
+          <li><strong>封装成 skill</strong>：即一个 pandoc 转换器 + 映射规则。</li>
+          <li><strong>坑</strong>：pandoc 自带规则会让输出带「值得」水印，必须改 reference 覆盖。</li>
+          <li><strong>反向转换：docling</strong>——命令行工具，已嵌入右键菜单，右键把 Word ／ PDF 转成 md 用于知识管理，可批量。也是 GitHub 开源、让 AI 帮装即可。</li>
+          <li><strong>另有一法</strong>（作者不推荐）：利用 Word 的<strong>宏（Macro）</strong>功能让 AI 调用、实现对 Word 的编辑。</li>
+        </ul>
+        <div class="note">
+          <b>三种改 Word 方式对比</b>（作者问 AI 的结论）：① pandoc 转 md 再改——快但<strong>会丢格式</strong>（每次转 md 就没格式，需重加）；② 解压 zip 改 XML 再封回——完整但环节多易错；③ <strong>office-cli 最快，一般首选</strong>。
+        </div>
+      </section>
+
+      <section class="sec" id="s14">
+        <h2><i>14</i>账号封禁与代理</h2>
+        <ul>
+          <li><strong>封号很快（秒封）</strong>，可能诱因：IP、付款账号、邮箱、Cowork 高消耗等，防不胜防；有人三个账号全被封。</li>
+          <li><strong>代理推荐</strong>：<strong>Clash Party</strong>（作者认为比 Clash Verge 好用），节点自己找。</li>
+          <li><strong>关键设置</strong>：系统代理 + 虚拟网卡都要开，否则桌面端文件打不开；靠<strong>规则分流</strong>保证国内网站正常访问。</li>
+          <li>VPN ／账号来源等敏感信息约定「场外／私下」解决，不在群里发（会被封）。</li>
+        </ul>
+      </section>
+
+      <section class="sec" id="s15">
+        <h2><i>15</i>活动组织与共识</h2>
+        <ul>
+          <li><strong>缘起</strong>：组织者发现大家 AI 都用得很深但用法各异，线下深聊很有启发，遂发起这个<strong>纯技术、无商务</strong>的同好会（类似大学社团）。</li>
+          <li><strong>群组织</strong>：拟设一个<strong>大群</strong>（凡感兴趣者可入）+ 每期一个<strong>小群</strong>（限当期参会者），在大群里通知每期时间地点，报名参加。</li>
+          <li><strong>筛选原则</strong>：核心是「真的对这件事感兴趣」；过滤纯白嫖、功利／商务目的者；不追求人多，保唯一性。</li>
+          <li><strong>共识</strong>：律师圈把 AI 用得深的人不多，甚至有不少抵制者；AI + <strong>保密需求</strong>是天然话题。聚焦「文字处理」这一共同点，纯技术分享可接受门槛，但要保持<strong>多样性</strong>，避免跨行太远（如纯诉讼话题）听不下去。</li>
+          <li><strong>控制「校友浓度」</strong>：不希望演变成校友会／律师局。</li>
+          <li><strong>展望</strong>：以后可去香港等地办；下期或邀一位做 TikTok 内部软件的朋友（字节）分享。志同道合、无功利，反而走得远。</li>
+        </ul>
+      </section>
+
+      <section class="sec shots" id="s16">
+        <h2><i>16</i>现场</h2>
+        <div class="shot-grid" id="shotGrid"></div>
+      </section>
