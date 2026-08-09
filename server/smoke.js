@@ -1,17 +1,32 @@
-/* 临时联调脚本：node server/smoke.js [baseUrl] */
+/* 烟雾联调脚本：node server/smoke.js [baseUrl] */
 const BASE = process.argv[2] || "http://localhost:3100";
-const TOKEN = process.env.ADMIN_TOKEN || "cc-admin-change-me";
+const ADMIN_USER = process.env.ADMIN1_USER || "yilin";
+const ADMIN_PASS = process.env.ADMIN1_PASS || "vo04HMlq1DhP2v";
 
-async function call(method, path, body, headers = {}) {
+async function call(method, path, body, headers = {}, jar) {
   const res = await fetch(BASE + path, {
     method,
     headers: { "Content-Type": "application/json", ...headers },
-    body: body ? JSON.stringify(body) : undefined
+    body: body === undefined ? undefined : JSON.stringify(body),
+    redirect: "manual"
   });
+  const setCookie = res.headers.getSetCookie ? res.headers.getSetCookie() : [];
+  if (jar && setCookie.length) {
+    for (const c of setCookie) {
+      const [pair] = c.split(";");
+      const eq = pair.indexOf("=");
+      if (eq > 0) jar.set(pair.slice(0, eq).trim(), pair.slice(eq + 1).trim());
+    }
+  }
   const text = await res.text();
   let data;
   try { data = JSON.parse(text); } catch { data = text.slice(0, 200); }
   return { status: res.status, data };
+}
+
+function cookieHeader(jar) {
+  if (!jar || !jar.size) return {};
+  return { Cookie: [...jar.entries()].map(([k, v]) => `${k}=${v}`).join("; ") };
 }
 
 function check(label, ok, extra = "") {
@@ -21,6 +36,7 @@ function check(label, ok, extra = "") {
 
 (async () => {
   const stamp = Date.now().toString().slice(-5);
+  const jar = new Map();
 
   const cnName = await call("POST", "/api/apply", {
     name: "张三" + stamp, intentDates: "8月20日晚上", contact: "zs@example.com"
@@ -41,23 +57,28 @@ function check(label, ok, extra = "") {
   check("蜜罐字段拦截", bot.status === 400, String(bot.status));
 
   const noAuth = await call("GET", "/api/admin/applications");
-  check("管理接口需令牌", noAuth.status === 403, String(noAuth.status));
+  check("管理接口需登录", noAuth.status === 403, String(noAuth.status));
 
-  const list = await call("GET", "/api/admin/applications?status=pending", null, { "x-admin-token": TOKEN });
+  const adminLogin = await call("POST", "/api/admin/login",
+    { username: ADMIN_USER, password: ADMIN_PASS }, {}, jar);
+  check("管理员可登录", adminLogin.status === 200 && adminLogin.data.ok,
+    adminLogin.data.admin && adminLogin.data.admin.username);
+
+  const list = await call("GET", "/api/admin/applications?status=pending", undefined, cookieHeader(jar), jar);
   check("待审列表可读", list.status === 200 && Array.isArray(list.data.applications),
     `pending=${list.data.counts && list.data.counts.pending}`);
 
   const search = await call("GET", `/api/admin/applications?q=${encodeURIComponent(cnName.data.handle)}`,
-    null, { "x-admin-token": TOKEN });
+    undefined, cookieHeader(jar), jar);
   check("按登录名搜索", search.data.applications && search.data.applications.length === 1);
 
   const approve = await call("POST", `/api/admin/applications/${cnName.data.id}/approve`,
-    { gatherings: ["001"] }, { "x-admin-token": TOKEN });
+    { gatherings: ["001"] }, cookieHeader(jar), jar);
   check("审批生成通行码", /^[A-Z2-9]{8}$/.test(approve.data.passcode || ""),
     `${approve.data.handle} / ${approve.data.passcode}`);
 
   const reApprove = await call("POST", `/api/admin/applications/${cnName.data.id}/approve`,
-    { gatherings: ["001"] }, { "x-admin-token": TOKEN });
+    { gatherings: ["001"] }, cookieHeader(jar), jar);
   check("重复审批被拒", reApprove.status === 400);
 
   const badLogin = await call("POST", "/api/auth/login",
@@ -72,8 +93,8 @@ function check(label, ok, extra = "") {
     { handle: (approve.data.handle || "").toUpperCase(), passcode: approve.data.passcode });
   check("登录名大小写不敏感", caseLogin.status === 200);
 
-  const reissue = await call("POST", `/api/admin/applications/${cnName.data.id}/reissue`, {},
-    { "x-admin-token": TOKEN });
+  const reissue = await call("POST", `/api/admin/applications/${cnName.data.id}/reissue`,
+    {}, cookieHeader(jar), jar);
   check("重发通行码", reissue.status === 200 && reissue.data.passcode !== approve.data.passcode,
     reissue.data.passcode);
 
@@ -86,7 +107,7 @@ function check(label, ok, extra = "") {
   check("新通行码可用", newCode.status === 200);
 
   const reject = await call("POST", `/api/admin/applications/${enName.data.id}/reject`,
-    { reason: "本期名额已满" }, { "x-admin-token": TOKEN });
+    { reason: "本期名额已满" }, cookieHeader(jar), jar);
   check("驳回申请", reject.status === 200 && reject.data.application.status === "rejected");
 
   const inject = await call("POST", "/api/apply", {
@@ -94,8 +115,9 @@ function check(label, ok, extra = "") {
   });
   check("公式注入样本已录入", inject.status === 200);
 
-  const csv = await fetch(BASE + "/api/admin/applications.csv", { headers: { "x-admin-token": TOKEN } });
-  /* fetch 的 text() 会吞掉 BOM，要看原始字节 */
+  const csv = await fetch(BASE + "/api/admin/applications.csv", {
+    headers: cookieHeader(jar)
+  });
   const bytes = new Uint8Array(await csv.arrayBuffer());
   const csvText = Buffer.from(bytes).toString("utf8");
   const hasBom = bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf;

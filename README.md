@@ -27,14 +27,61 @@ npm start
 - 登录名：`demo_caster`
 - 通行码：`CAST-DEMO`
 
-## 部署上线（推荐）
+### 本地模拟 Cloudflare（可选）
 
-本站是 **Node + Express**，需要能跑 Node 的平台（申请 / 登录 / 评论都写本地数据库）。
+```bash
+npm run dev:cf
+```
 
-> **不要**用 Cloudflare Workers / Pages「拖文件夹上传」整仓部署：  
-> Workers 跑不了 Express，且 `node_modules` 里的 `.d.ts` 会被误判成 TypeScript 项目。
+会启动 Workers + Assets + Durable Object（数据持久在本地 `.wrangler`）。
 
-### 方式 A：Render（最简单）
+## 部署上线
+
+### 方式 A：Cloudflare Workers（推荐）
+
+静态页走 **Workers Assets**，API 走 **Worker（Hono）**，申请/用户/评论存在 **Durable Object**（重启不丢）。
+
+> 不要再把整仓拖进 Cloudflare Pages 当纯静态站：权限与评论依赖 `/api/*`。
+
+1. 安装依赖并登录 Cloudflare：
+
+```bash
+npm install
+npx wrangler login
+```
+
+2. 部署：
+
+```bash
+npm run deploy
+```
+
+首次会打印 `*.workers.dev` 地址。
+
+3. 配置密钥（生产务必改掉默认值）：
+
+```bash
+npx wrangler secret put SESSION_SECRET
+npx wrangler secret put ADMIN_TOKEN
+# 可选微信登录
+# npx wrangler secret put WECHAT_APP_ID
+# npx wrangler secret put WECHAT_APP_SECRET
+```
+
+4. 在 `wrangler.jsonc` 的 `vars.PUBLIC_BASE` 填上线地址（或部署后用自定义域），例如：
+
+```jsonc
+"vars": {
+  "PUBLIC_BASE": "https://cybercasters.<你的子域>.workers.dev",
+  "DISABLE_DEMO": "1"
+}
+```
+
+再执行一次 `npm run deploy`。健康检查：`/api/health`。
+
+5. （可选）绑定自定义域名：Cloudflare Dashboard → Workers → cybercasters → Domains & Routes。
+
+### 方式 B：Render
 
 1. 代码推到 GitHub  
 2. 打开 [Render](https://render.com) → **New** → **Blueprint**，选本仓库（读 `render.yaml`）  
@@ -52,7 +99,7 @@ npm start
 
 免费实例无持久盘时，**重新部署会清空**申请/用户/评论。要留数据：加 Disk，并把 `DATA_DIR` 指到挂载路径。
 
-### 方式 B：Docker（任意 VPS / Railway / Fly）
+### 方式 C：Docker（任意 VPS / Railway / Fly）
 
 ```bash
 docker build -t cybercasters .
@@ -67,7 +114,7 @@ docker run -d -p 3000:3000 \
 
 数据写在容器内 `/data`（`DATA_DIR`），务必挂卷。
 
-### 方式 C：已有 Linux 服务器
+### 方式 D：已有 Linux 服务器
 
 ```bash
 git clone <你的仓库>
@@ -83,12 +130,9 @@ NODE_ENV=production npm start
 
 ```
 app/                    前端静态页
-server/
-  index.js              API + 静态托管
-  gatherings.js         公开摘要元数据
-  content/gatherings/   完整纪要 HTML（仅 API 对参会者返回）
-  data/                 默认数据目录（可被 DATA_DIR 覆盖）
-  seed.js               演示账号
+server/                 Node + Express（本地 / Render / Docker）
+worker/                 Cloudflare Worker API（Hono + Durable Object）
+wrangler.jsonc          Cloudflare 部署配置
 Dockerfile              容器镜像
 render.yaml             Render 蓝图
 ```
@@ -112,10 +156,10 @@ PUBLIC_BASE=https://your-domain.com
 
 ## 环境变量
 
-见 `.env.example`。本地可放 `.env`（已接入 `dotenv`）；线上用平台面板注入。
+见 `.env.example`。本地可放 `.env`（已接入 `dotenv`）；Cloudflare 用 `wrangler secret` / `vars`；其他平台用面板注入。
 
 ## 注意
 
-- 请用 `npm start` 跑服务，不要只用静态文件服务器——权限与评论依赖 `/api/*`。  
-- 生产环境务必修改 `SESSION_SECRET` 与 `ADMIN_TOKEN`。  
+- 请用 `npm start`（Node）或 `npm run deploy`（Cloudflare）跑完整服务，不要只用静态文件服务器——权限与评论依赖 `/api/*`。  
+- 生产环境务必修改 `SESSION_SECRET` 与 `ADMIN_TOKEN`；Cloudflare 上建议 `DISABLE_DEMO=1`。  
 - 数据文件含用户哈希，勿提交到公开仓库。
