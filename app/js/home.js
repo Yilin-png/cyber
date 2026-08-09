@@ -320,16 +320,16 @@ function renderSpellsMember() {
   );
   if (!FLAT.length) return "";
   return `
-    <h3 class="spell-cat">集会摘录<span class="cat-en">MEMBERS</span></h3>
+    <h3 class="spell-cat">使用心得</h3>
     <div class="grid">${renderCards(FLAT)}</div>`;
 }
 
 function renderSpellsMemberLocked() {
   return `
-    <h3 class="spell-cat">集会摘录<span class="cat-en">MEMBERS</span></h3>
+    <h3 class="spell-cat">使用心得</h3>
     <div class="lock-box">
-      <h2>现场技巧与踩坑需成员权限</h2>
-      <p>上面的工具卡片可自由查阅。方法论、经验与踩坑等技巧，请参会登录后查看。</p>
+      <h2>使用心得需成员权限</h2>
+      <p>上面的工具卡片可自由查阅。具体使用心得请参会登录后查看。</p>
       <div class="lock-actions">
         <a class="btn btn-primary" href="login.html">成员登录</a>
         <a class="btn btn-ghost" href="apply.html">申请加入</a>
@@ -405,7 +405,7 @@ $("#chanList").innerHTML = DATA.channels.map(c => {
   </div>`;
 })();
 
-/* 登录态：公开工具目录始终展示；集会摘录按成员解锁 */
+/* 登录态：公开工具目录始终展示；使用心得按成员解锁 */
 renderSpellbook(false);
 (async function syncAuth(){
   const foot = $("#footNote");

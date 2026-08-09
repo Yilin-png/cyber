@@ -54,7 +54,7 @@ const DATA = {
     { k: "voice",     name: "语音" }
   ],
 
-  /* 咒语手册：只列工具（卡片式，按名称字母序）；技巧归集会摘录 */
+  /* 咒语手册：只列工具（卡片式，按名称字母序）；使用心得归成员区 */
   tools: [
     {
       name: "Claude Code",
@@ -203,7 +203,7 @@ const DATA = {
     }
   ],
 
-  /* 集会摘录：技巧 / 方法 / 踩坑，仅参会成员可见 */
+  /* 使用心得：技巧 / 方法 / 踩坑，仅参会成员可见 */
   spellsMemberOnly: true,
   spells: [
     { group: "格式与排版", src: "gathering-001.html#s03", items: [

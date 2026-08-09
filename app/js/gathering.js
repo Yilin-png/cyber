@@ -159,8 +159,10 @@ async function main() {
     $("#digestCount").textContent = String(topics.length).padStart(2, "0");
     $("#topicList").innerHTML = topics.map(t => `
       <li class="topic-card">
-        <span class="t-no">${esc(t.no)}</span>
-        <h3 class="t-title">${esc(t.title)}</h3>
+        <div class="card-top">
+          <h3 class="t-title">${esc(t.title)}</h3>
+          <span class="t-no">${esc(t.no)}</span>
+        </div>
         <p class="t-blurb">${esc(t.blurb || "")}</p>
       </li>`).join("");
   }
