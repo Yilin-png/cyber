@@ -204,6 +204,7 @@ CC.Theme = (function () {
   }
 
   function init() {
+    purgeLegacyPref();
     ensureToggle();
     apply(readPref());
     bind();

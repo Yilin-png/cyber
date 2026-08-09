@@ -152,12 +152,15 @@ CC.BGM = (function () {
 
     const seekWhenReady = (t) =>
       new Promise((resolve) => {
+        let done = false;
         const apply = () => {
+          if (done) return;
+          done = true;
           try {
             const dur = audio.duration;
             let x = t;
-            if (isFinite(dur) && dur > 0) x = x % dur;
-            if (Math.abs((audio.currentTime || 0) - x) > 0.2) {
+            if (isFinite(dur) && dur > 0) x = ((x % dur) + dur) % dur;
+            if (Math.abs((audio.currentTime || 0) - x) > 0.12) {
               audio.currentTime = Math.max(0, x);
             }
           } catch (_) {}
@@ -166,27 +169,70 @@ CC.BGM = (function () {
         if (audio.readyState >= 1) apply();
         else {
           audio.addEventListener("loadedmetadata", apply, { once: true });
-          /* 兜底：缓存命中慢时也不堵死 */
-          setTimeout(apply, 1200);
+          audio.addEventListener("canplay", apply, { once: true });
+          setTimeout(apply, 800);
         }
       });
 
-    const resume = () => {
+    const waitCanPlay = () =>
+      new Promise((resolve) => {
+        if (audio.readyState >= 2) return resolve();
+        const done = () => resolve();
+        audio.addEventListener("canplay", done, { once: true });
+        setTimeout(done, 450);
+      });
+
+    /** 部分浏览器在 play() 后会把未完成的 seek 弹回开头，播后再校正一次 */
+    const confirmSeek = (t) => {
+      try {
+        const dur = audio.duration;
+        let x = t;
+        if (isFinite(dur) && dur > 0) x = ((x % dur) + dur) % dur;
+        if (x < 1.2) return;
+        const cur = audio.currentTime || 0;
+        if (Math.abs(cur - x) > 1.25) audio.currentTime = Math.max(0, x);
+      } catch (_) {}
+    };
+
+    const resume = (opts = {}) => {
       if (resumeLock) return resumeLock;
+      const soft = !!opts.soft; /* 跨页续播：短淡入，少静音感 */
+      /* 已在播且音量接近目标时勿再压低，避免可见页切换时「抽一下」 */
+      if (soft && !audio.paused && audio.volume >= VOL * 0.85) {
+        save();
+        syncUi();
+        return Promise.resolve();
+      }
       resumeLock = (async () => {
         const t = getResumeTime();
+        const near = Math.abs((audio.currentTime || 0) - t) <= 0.4;
         await seekWhenReady(t);
+        if (soft) await waitCanPlay();
+        let fadeMs = FADE_MS;
+        let startVol = 0;
+        if (soft) {
+          const warm = audio.readyState >= 2;
+          /* 有缓冲时从较高起点短淡入；冷启动才从很低音量爬 */
+          startVol = warm ? Math.min(VOL * 0.62, VOL) : Math.min(VOL * 0.18, 0.08);
+          fadeMs = warm ? 90 : 150;
+          if (near && warm) {
+            startVol = Math.min(VOL * 0.78, VOL);
+            fadeMs = 70;
+          }
+        }
         try {
-          audio.volume = 0;
+          audio.volume = startVol;
         } catch (_) {}
         try {
           await audio.play();
+          confirmSeek(t);
+          audio.addEventListener("playing", () => confirmSeek(t), { once: true });
           try {
             localStorage.setItem(KEY.on, "on");
           } catch (_) {}
           syncUi();
           save();
-          await fadeTo(VOL, FADE_MS);
+          await fadeTo(VOL, fadeMs);
         } catch (_) {
           syncUi();
         } finally {
@@ -228,33 +274,42 @@ CC.BGM = (function () {
     });
     syncUi();
 
-    /* 尽早拉元数据，缩短首启/跨页 seek 等待 */
-    try {
-      audio.load();
-    } catch (_) {}
+    /* 仅在尚未就绪时预热；跨页勿 audio.load()，否则会丢掉缓冲与进度 */
+    if (audio.readyState < 1) {
+      try {
+        audio.load();
+      } catch (_) {}
+    }
 
-    if (shouldPlay()) resume();
+    if (shouldPlay()) resume({ soft: true });
 
     if (mode === "sigil" && toggle) {
       let lastUserAction = 0;
+      let castTimer = 0;
+      const playCast = () => {
+        if (!sigilEl) return;
+        sigilEl.classList.remove("casting");
+        /* 双 rAF 重启动画，避免 offsetWidth 强制同步布局造成卡顿 */
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            sigilEl.classList.add("casting");
+            if (castTimer) clearTimeout(castTimer);
+            /* 覆盖最长涟漪（980ms + 160ms delay） */
+            castTimer = setTimeout(() => sigilEl.classList.remove("casting"), 1200);
+          });
+        });
+      };
       toggle.addEventListener("click", () => {
         lastUserAction = performance.now();
+        playCast();
+        togglePlay();
       });
       audio.addEventListener("pause", () => {
         if (localStorage.getItem(KEY.on) === "off") return;
         if (performance.now() - lastUserAction < 1200) return;
         setTimeout(() => {
-          if (audio.paused && shouldPlay()) resume();
+          if (audio.paused && shouldPlay()) resume({ soft: true });
         }, 280);
-      });
-      toggle.addEventListener("click", () => {
-        if (sigilEl) {
-          sigilEl.classList.remove("casting");
-          void sigilEl.offsetWidth;
-          sigilEl.classList.add("casting");
-          setTimeout(() => sigilEl.classList.remove("casting"), 1050);
-        }
-        togglePlay();
       });
     }
 
@@ -293,11 +348,11 @@ CC.BGM = (function () {
     window.addEventListener("beforeunload", save);
     window.addEventListener("pageshow", (e) => {
       /* bfcache 回来时直接续；硬跳转也再试一次 */
-      if (shouldPlay() && (e.persisted || audio.paused)) resume();
+      if (shouldPlay() && (e.persisted || audio.paused)) resume({ soft: true });
     });
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden") save();
-      else if (shouldPlay() && audio.paused) resume();
+      else if (shouldPlay() && audio.paused) resume({ soft: true });
     });
     setInterval(() => {
       if (!audio.paused) save();
@@ -306,7 +361,7 @@ CC.BGM = (function () {
     if (opts.gestureKick || shouldPlay()) {
       const kick = () => {
         if (!shouldPlay()) return;
-        if (audio.paused) resume();
+        if (audio.paused) resume({ soft: true });
       };
       const KICKS = ["pointerdown", "touchstart", "click", "keydown"];
       KICKS.forEach((ev) => document.addEventListener(ev, kick, { passive: true, capture: true }));

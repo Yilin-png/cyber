@@ -211,8 +211,9 @@ html{scroll-behavior:smooth}
   width:clamp(50px,15%,74px);
   color:var(--arcane);
   filter:drop-shadow(0 0 13px rgba(157,107,255,.65));
-  transition:filter .28s;
+  transition:filter .28s ease;
   -webkit-tap-highlight-color:transparent;
+  transform:translateZ(0);
 }
 .hand-fill{fill:#0A0817;fill-opacity:.93;stroke:currentColor;stroke-width:1.6;
   stroke-linejoin:round;stroke-linecap:round}
@@ -231,23 +232,43 @@ html{scroll-behavior:smooth}
 .sigil.casting .pupil{animation:constrict 760ms ease-out}
 @keyframes constrict{0%{transform:scale(1)}18%{transform:scale(.4)}100%{transform:scale(1)}}
 
-.mudra{width:100%;height:auto;display:block;
-  animation:idlefloat 3.6s ease-in-out infinite}
-@keyframes idlefloat{0%,100%{transform:translateY(0) scale(1)}
-                     50%{transform:translateY(-3px) scale(1.035)}}
+/* 外层持续浮动；按压只动内层，casting 时 pause 外层，避免跳回原点 */
+.mudra-float{
+  display:block;width:100%;
+  animation:idlefloat 3.6s ease-in-out infinite;
+  will-change:transform;
+  backface-visibility:hidden;
+  transform:translateZ(0);
+}
+.mudra{
+  width:100%;height:auto;display:block;
+  transform-origin:50% 58%;
+  will-change:transform;
+  backface-visibility:hidden;
+  transform:translateZ(0);
+}
+@keyframes idlefloat{0%,100%{transform:translate3d(0,0,0) scale(1)}
+                     50%{transform:translate3d(0,-3px,0) scale(1.035)}}
 .core-cta:hover{filter:drop-shadow(0 0 30px rgba(157,107,255,1))}
-.core-cta:active .mudra{animation:none;transform:scale(.82)}
+/* 不用 :active 强行 animation:none——会与 casting 的 press 抢同一帧，手感发涩 */
 
-/* 按压：手印下沉回弹 + 双层涟漪外扩 + 印台闪一下 */
-.sigil.casting .mudra{animation:press 760ms cubic-bezier(.25,.9,.3,1)}
-@keyframes press{0%{transform:scale(1)}16%{transform:scale(.78)}
-                 42%{transform:scale(1.14)}100%{transform:scale(1)}}
+/* 按压：暂停浮动 + 内层下沉回弹；涟漪/印台仍由 .casting 驱动 */
+.sigil.casting .mudra-float{animation-play-state:paused}
+.sigil.casting .mudra{
+  animation:press 760ms cubic-bezier(.25,.9,.3,1) both;
+}
+@keyframes press{
+  0%{transform:translate3d(0,0,0) scale(1)}
+  16%{transform:translate3d(0,2px,0) scale(.82)}
+  42%{transform:translate3d(0,-1px,0) scale(1.12)}
+  100%{transform:translate3d(0,0,0) scale(1)}
+}
 .pad-ring{fill:none;stroke:var(--arcane);stroke-width:1.2;
   transform-box:view-box;transform-origin:240px 240px;
   animation:padpulse 3.6s ease-in-out infinite}
 @keyframes padpulse{0%,100%{opacity:.32;transform:scale(1)}
                     50%{opacity:.68;transform:scale(1.06)}}
-.sigil.casting .pad-ring{animation:padflash 760ms ease-out}
+.sigil.casting .pad-ring{animation:padflash 760ms ease-out both}
 @keyframes padflash{0%{opacity:1;stroke-width:3}100%{opacity:.32;stroke-width:1.2}}
 .ripple{fill:none;stroke-width:2;opacity:0;
   transform-box:view-box;transform-origin:240px 240px}
@@ -255,6 +276,7 @@ html{scroll-behavior:smooth}
 .sigil.casting .ripple-b{animation-delay:160ms}
 @keyframes ripple{0%{opacity:.85;transform:scale(.5)}
                   100%{opacity:0;transform:scale(3.1)}}
+.sigil.casting .core-cta{filter:drop-shadow(0 0 22px rgba(157,107,255,.9))}
 
 .thesis{
   position:relative;

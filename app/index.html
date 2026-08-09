@@ -254,6 +254,8 @@
 
     <div class="sigil-core">
       <button class="core-cta" id="coreJoin" aria-label="按手印开关背景乐" title="按手印 · 音乐开关">
+      <!-- 浮动与按压分层：外层 idlefloat，内层 press，避免 casting 打断浮动时跳回原点 -->
+      <span class="mudra-float">
       <svg class="mudra" viewBox="0 0 128 152" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
         <path class="hand-fill" d="M42,150 C38,140 35,130 34,120
           C31,118 24,118 18,114 C11,109 4,102 3,94 C2,88 6,84 12,86
@@ -286,6 +288,7 @@
           <circle class="glint" cx="59.4" cy="107.4" r="1.3"/>
         </g>
       </svg>
+      </span>
     </button>
       <span class="core-hint" aria-hidden="true">
         <span class="hint-pulse"></span>
