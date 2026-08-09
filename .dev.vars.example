@@ -1,0 +1,11 @@
+# 复制为 .dev.vars 供 `npm run dev:cf` 使用
+SESSION_SECRET=cyber-casters-dev-secret
+ADMIN1_USER=yilin
+ADMIN1_PASS=vo04HMlq1DhP2v
+ADMIN2_USER=jiawen
+ADMIN2_PASS=ZeYF2Bu9PN7emm
+DISABLE_DEMO=0
+# PUBLIC_BASE=http://127.0.0.1:8787
+# COOKIE_SECURE=0
+# WECHAT_APP_ID=
+# WECHAT_APP_SECRET=
