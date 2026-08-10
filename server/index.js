@@ -190,8 +190,8 @@ app.post("/api/apply", applyLimiter, (req, res) => {
   const intentDates = safeText(req.body.intentDates, 200);
   const message = safeText(req.body.message, 800);
 
-  if (!name || !intentDates) {
-    return res.status(400).json({ error: "请填写称呼与意向参与时间" });
+  if (!name) {
+    return res.status(400).json({ error: "请填写称呼" });
   }
   if (name.length < 2) {
     return res.status(400).json({ error: "称呼太短了，写两个字以上吧" });

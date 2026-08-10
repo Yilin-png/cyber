@@ -286,8 +286,8 @@ app.post("/api/apply", applyLimiter, async (c) => {
   const intentDates = safeText(body.intentDates, 200);
   const message = safeText(body.message, 800);
 
-  if (!name || !intentDates) {
-    return c.json({ error: "请填写称呼与意向参与时间" }, 400);
+  if (!name) {
+    return c.json({ error: "请填写称呼" }, 400);
   }
   if (name.length < 2) {
     return c.json({ error: "称呼太短了，写两个字以上吧" }, 400);

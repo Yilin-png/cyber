@@ -36,9 +36,7 @@ window.CC_GATHERINGS = [
       { no: "11", title: "用 MCP 打通数据源", blurb: "接外部数据与工具；能走多远看数据开放度。" },
       { no: "12", title: "Obsidian 小技巧", blurb: "同步、模板、图片归档与编辑器联动。" },
       { no: "13", title: "pandoc 排版工作流", blurb: "映射规则 + 样式模板，Markdown 一键出 Word。" },
-      { no: "14", title: "账号风控与网络（原则）", blurb: "敏感事项场外谈；代理要可用也要会分流。" },
-      { no: "15", title: "活动组织与共识", blurb: "筛选原则、大小群分工、控制功利浓度。" },
-      { no: "16", title: "现场照片", blurb: "当期留影；完整图集仅参会成员可见。" }
+      { no: "14", title: "现场照片", blurb: "当期留影；完整图集仅参会成员可见。" }
     ]
   }
 ];

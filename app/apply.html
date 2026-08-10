@@ -194,13 +194,13 @@
       </div>
 
       <div class="field">
-        <label>下期参加意向 *</label>
+        <label>下期参加意向（选填）</label>
         <div class="field-row">
-          <select id="intentPeriod" required>
-            <option value="" disabled selected>日期</option>
+          <select id="intentPeriod">
+            <option value="" selected>日期</option>
           </select>
-          <select id="intentSlot" required>
-            <option value="" disabled selected>时段</option>
+          <select id="intentSlot">
+            <option value="" selected>时段</option>
             <option value="工作日晚上">工作日晚上</option>
             <option value="周末上午">周末上午</option>
             <option value="周末下午">周末下午</option>
@@ -208,8 +208,8 @@
             <option value="周末全天">周末全天</option>
             <option value="时间灵活">时间灵活</option>
           </select>
-          <select id="intentArea" required>
-            <option value="" disabled selected>地点</option>
+          <select id="intentArea">
+            <option value="" selected>地点</option>
             <option value="南山·科技园">南山·科技园</option>
             <option value="南山·后海/深圳湾">南山·后海/深圳湾</option>
             <option value="福田·车公庙">福田·车公庙</option>
@@ -221,7 +221,7 @@
             <option value="不限地点">不限地点</option>
           </select>
         </div>
-        <div class="hint">日期会随最近一期滚动更新；选大概方便的日期、时段和地点即可</div>
+        <div class="hint">选填。日期会随最近一期滚动更新；有意向时选大概方便的日期、时段和地点即可</div>
       </div>
 
       <input type="hidden" name="intentDates" id="intentDates">
@@ -327,7 +327,7 @@ function buildPeriodOptions(count = 6) {
 function fillPeriodOptions(keepValue) {
   const opts = buildPeriodOptions(6);
   const prev = keepValue || intentPeriod.value;
-  intentPeriod.innerHTML = '<option value="" disabled selected>日期</option>';
+  intentPeriod.innerHTML = '<option value="" selected>日期</option>';
   for (const label of opts) {
     const o = document.createElement("option");
     o.value = label;
@@ -364,12 +364,15 @@ function composeTopics() {
 
 function composeIntent() {
   const join = selectedJoinNext();
+  if (!join) return "";
   const period = intentPeriod.value;
   const slot = intentSlot.value;
   const area = intentArea.value;
   const note = intentNote.value.trim();
-  if (!join || !period || !slot || !area) return "";
-  const base = `最近一期（${nextFull}）：${join}｜日期：${period}｜时段：${slot}｜地点：${area}`;
+  let base = `最近一期（${nextFull}）：${join}`;
+  if (period) base += `｜日期：${period}`;
+  if (slot) base += `｜时段：${slot}`;
+  if (area) base += `｜地点：${area}`;
   return note ? `${base}｜补充：${note}` : base;
 }
 
@@ -382,7 +385,7 @@ form.addEventListener("submit", async (e) => {
   const composed = composeIntent();
   if (!composed) {
     msg.className = "form-msg err";
-    msg.textContent = "请选择是否参加最近一期，以及日期、时段和地点";
+    msg.textContent = "请选择是否参加最近一期";
     submitBtn.disabled = false;
     return;
   }
