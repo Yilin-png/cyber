@@ -123,6 +123,39 @@ const DATA = {
       linkText: "打开"
     },
     {
+      name: "Firecrawl",
+      cat: "capture",
+      status: "tool",
+      label: "采集",
+      role: "网页采集 API",
+      desc: "把网页搜、爬、转成干净的 Markdown / JSON，适合给 Agent 喂网页上下文。",
+      tags: ["采集", "爬虫", "API"],
+      link: "https://www.firecrawl.dev/",
+      linkText: "打开"
+    },
+    {
+      name: "MinerU",
+      cat: "document",
+      status: "tool",
+      label: "文档",
+      role: "文档解析",
+      desc: "把 PDF / Office / 图片解析成结构化 Markdown 与 JSON，方便 RAG 与 Agent 后续处理。",
+      tags: ["文档", "PDF", "解析"],
+      link: "https://github.com/opendatalab/MinerU",
+      linkText: "仓库"
+    },
+    {
+      name: "NotebookLM",
+      cat: "knowledge",
+      status: "tool",
+      label: "知识库",
+      role: "资料笔记本",
+      desc: "Google 的资料笔记本：上传文档与链接后，按来源问答、摘要与整理，适合深读一批材料。",
+      tags: ["知识库", "问答"],
+      link: "https://notebooklm.google.com/",
+      linkText: "打开"
+    },
+    {
       name: "Obsidian",
       cat: "knowledge",
       status: "tool",
