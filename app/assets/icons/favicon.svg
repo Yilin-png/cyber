@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="[Z�">
-  <rect width="64" height="64" rx="12" fill="#07060E"/>
-  <circle cx="32" cy="32" r="22" fill="none" stroke="#9D6BFF" stroke-width="2" opacity=".85"/>
-  <circle cx="32" cy="32" r="14" fill="none" stroke="#3FE0D0" stroke-width="1.5" opacity=".9"/>
-  <circle cx="32" cy="32" r="4" fill="#F0C070"/>
-  <path d="M32 10 L36 22 L32 20 L28 22 Z M54 32 L42 36 L44 32 L42 28 Z M32 54 L28 42 L32 44 L36 42 Z M10 32 L22 28 L20 32 L22 36 Z"
-        fill="#3FE0D0" opacity=".75"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Cyber Casters">
+  <!-- 透明底；实心紫色六芒星（两三角 evenodd，中空六边形） -->
+  <path
+    fill="#9D6BFF"
+    fill-rule="evenodd"
+    d="M32 6 L54 46 H10 Z M32 58 L10 18 H54 Z"
+  />
 </svg>

@@ -1,21 +1,101 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
+<script>
+(function(){
+  try{
+    var k="cc-theme", purge="cc-theme-purged-v3";
+    if(!localStorage.getItem(purge)){
+      localStorage.removeItem(k);
+      localStorage.removeItem("cc-lat");
+      localStorage.removeItem("cc-lng");
+      localStorage.setItem(purge,"1");
+    }
+    var p=localStorage.getItem(k);
+    if(p!=="light"&&p!=="dark") p=null;
+    function day(){
+      var lat=39.9042, lng=116.4074;
+      var rad=Math.PI/180, dayMs=8.64e7, J1970=2440588, J2000=2451545, e=rad*23.4397;
+      var now=new Date();
+      var toJ=function(d){return d/dayMs-0.5+J1970;};
+      var fromJ=function(j){return new Date((j+0.5-J1970)*dayMs);};
+      var d=toJ(now)-J2000;
+      var lw=-lng*rad, phi=lat*rad;
+      var n=Math.round(d-0.0009-lw/(2*Math.PI));
+      var ds=0.0009+lw/(2*Math.PI)+n;
+      var M=rad*(357.5291+0.98560028*ds);
+      var C=rad*(1.9148*Math.sin(M)+0.02*Math.sin(2*M)+0.0003*Math.sin(3*M));
+      var L=M+C+rad*102.9372+Math.PI;
+      var dec=Math.asin(Math.sin(L)*Math.sin(e));
+      var Jnoon=J2000+ds+0.0053*Math.sin(M)-0.0069*Math.sin(2*L);
+      var h0=-0.833*rad;
+      var cosH=(Math.sin(h0)-Math.sin(phi)*Math.sin(dec))/(Math.cos(phi)*Math.cos(dec));
+      if(cosH>1) return false; if(cosH<-1) return true;
+      var w=Math.acos(cosH);
+      var a=0.0009+(w+lw)/(2*Math.PI)+n;
+      var Jset=J2000+a+0.0053*Math.sin(M)-0.0069*Math.sin(2*L);
+      var Jrise=Jnoon-(Jset-Jnoon);
+      return now>=fromJ(Jrise)&&now<fromJ(Jset);
+    }
+    var light=p==="light"||(p!=="dark"&&day());
+    var t=light?"light":"dark";
+    var root=document.documentElement;
+    root.dataset.theme=t;
+    root.dataset.themePref=p||"auto";
+    root.style.colorScheme=t;
+  }catch(e){
+    document.documentElement.dataset.theme="dark";
+    document.documentElement.dataset.themePref="auto";
+  }
+})();
+</script>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>审批台 • 赛博法师</title>
-<link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icons/favicon.svg?v=hex2" type="image/svg+xml">
+<link rel="icon" href="assets/icons/favicon.ico?v=hex2" sizes="any">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=hex2">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/auth.css">
 <style>
-  .admin-wrap{max-width:1020px;margin:0 auto;padding:28px 24px 60px}
-  table{width:100%;border-collapse:collapse;font-size:var(--text-sm);margin-top:18px}
-  th,td{border:1px solid var(--line);padding:10px;text-align:left;vertical-align:top;color:var(--body)}
+  html,body{max-width:100%;overscroll-behavior-x:none}
+  .admin-wrap{
+    max-width:1020px;width:100%;margin:0 auto;
+    padding:28px max(24px, env(safe-area-inset-right)) 60px max(24px, env(safe-area-inset-left));
+    box-sizing:border-box;
+  }
+  .admin-wrap > *{min-width:0;max-width:100%}
+  #tableWrap{
+    width:100%;max-width:100%;overflow-x:auto;
+    -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;
+  }
+  table{width:100%;min-width:720px;border-collapse:collapse;font-size:var(--text-sm);margin-top:18px}
+  th,td{border:1px solid var(--line);padding:10px;text-align:left;vertical-align:top;color:var(--body);overflow-wrap:anywhere}
   th{color:var(--gold);font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);font-weight:400}
-  .token-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:18px 0 10px}
-  .token-bar .field{flex:1;min-width:180px;margin:0}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:18px 0 10px;max-width:100%}
+  .toolbar .field{flex:1 1 200px;min-width:0;margin:0}
+  .toolbar input{width:100%;box-sizing:border-box}
+  .toolbar .btn{flex:0 0 auto}
+  .login-card{
+    max-width:420px;margin:28px 0 0;
+    padding:22px 20px 24px;
+    border:1px solid var(--line);
+    background:linear-gradient(160deg,var(--panel-glass),var(--panel-wash-soft));
+  }
+  .login-card h2{
+    font-family:var(--font-display);font-size:var(--text-lg);font-weight:700;
+    letter-spacing:var(--track-title);margin:0 0 14px;
+  }
+  .who-bar{
+    display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;
+    margin:14px 0 4px;
+  }
+  .who-bar .who{
+    font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);color:var(--ash);
+  }
+  .who-bar .who b{color:var(--cyan);font-weight:600}
   code,.mono{font-family:var(--font-mono);color:var(--cyan)}
   .filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0 4px}
   .chip{
@@ -38,66 +118,144 @@
   .credential{
     margin-top:14px;padding:16px 18px;
     border:1px solid rgba(63,224,208,.4);
-    background:linear-gradient(135deg,rgba(16,12,33,.75),rgba(16,12,33,.25));
+    background:linear-gradient(135deg,var(--panel-glass),var(--panel-wash-soft));
   }
   .credential .k{font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);color:var(--gold)}
-  .credential .v{font-family:var(--font-mono);font-size:var(--text-lg);color:var(--cyan);user-select:all}
-  .credential .grid{display:flex;gap:36px;flex-wrap:wrap;margin:8px 0 10px}
+  .credential .v{
+    font-family:var(--font-mono);font-size:var(--text-lg);color:var(--cyan);
+    user-select:all;overflow-wrap:anywhere;
+  }
+  .credential .grid{display:flex;gap:36px;flex-wrap:wrap;margin:8px 0 10px;min-width:0}
+  .credential .grid > div{min-width:0}
   .muted{color:var(--ash)}
+  .intent-block{display:flex;flex-direction:column;gap:4px;line-height:1.45}
+  .intent-block .line strong{color:var(--paper);font-weight:600}
+  .intent-join{
+    font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);
+    display:inline-block;padding:2px 7px;border:1px solid var(--line);margin-right:6px;
+  }
+  .intent-join.yes{color:var(--cyan);border-color:rgba(63,224,208,.5)}
+  .intent-join.no{color:var(--ash)}
+
+  @media (max-width:640px){
+    .admin-wrap{
+      padding:22px max(16px, env(safe-area-inset-right)) 56px max(16px, env(safe-area-inset-left));
+    }
+    .filter-bar .spacer{display:none}
+    #tableWrap{overflow-x:visible}
+    table{min-width:0;display:block;margin-top:14px}
+    thead{display:none}
+    tbody{display:block}
+    tr{
+      display:block;margin-bottom:12px;
+      border:1px solid var(--line);
+      background:linear-gradient(160deg,var(--panel-glass),var(--panel-wash-soft));
+    }
+    td{
+      display:block;border:0;padding:10px 14px;
+      border-bottom:1px solid rgba(42,33,80,.6);
+    }
+    tr td:last-child{border-bottom:0}
+    td::before{
+      content:attr(data-label);
+      display:block;margin-bottom:5px;
+      font-family:var(--font-mono);font-size:var(--text-xs);
+      letter-spacing:var(--track-label);color:var(--gold);
+    }
+    .row-actions{flex-direction:row;flex-wrap:wrap}
+    .row-actions .btn{flex:1 1 auto}
+    .credential .grid{gap:16px}
+  }
 </style>
 </head>
 <body>
 <div class="admin-wrap">
   <a class="auth-nav" href="index.html" style="display:inline-block;border:0;padding:0;color:var(--cyan)">← 首页</a>
   <h1 style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;margin:16px 0 8px;letter-spacing:var(--track-title)">报名审批</h1>
-  <p class="muted" style="font-size:var(--text-base);line-height:var(--leading-body)">使用服务端 <code>ADMIN_TOKEN</code>（默认见启动日志）拉取报名表。批准后会生成一次性通行码，请立刻私下发给申请人——页面刷新后无法再次查看，只能「重发通行码」换一个新的。</p>
+  <p class="muted" style="font-size:var(--text-base);line-height:var(--leading-body)">使用管理员账号登录后审批报名。批准后会生成一次性通行码，请立刻私下发给申请人——页面刷新后无法再次查看，只能「重发通行码」换一个新的。</p>
 
-  <div class="token-bar">
-    <div class="field">
-      <label>管理员令牌</label>
-      <input id="token" placeholder="x-admin-token" autocomplete="off">
-    </div>
-    <div class="field">
-      <label>搜索</label>
-      <input id="q" placeholder="称呼 / 登录名 / 联系方式" autocomplete="off">
-    </div>
-    <button class="btn btn-primary" id="loadBtn" type="button">刷新列表</button>
+  <div id="loginPanel" class="login-card" hidden>
+    <h2>管理员登录</h2>
+    <form id="loginForm">
+      <div class="field">
+        <label for="adminUser">账号</label>
+        <input id="adminUser" name="username" required autocomplete="username" maxlength="40">
+      </div>
+      <div class="field">
+        <label for="adminPass">密码</label>
+        <input id="adminPass" name="password" type="password" required autocomplete="current-password" maxlength="64">
+      </div>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn btn-primary" type="submit" id="loginBtn">登录</button>
+      </div>
+    </form>
   </div>
 
-  <div class="filter-bar" id="filterBar">
-    <button class="chip" type="button" data-status="pending" aria-pressed="true">待审核</button>
-    <button class="chip" type="button" data-status="approved" aria-pressed="false">已通过</button>
-    <button class="chip" type="button" data-status="rejected" aria-pressed="false">已驳回</button>
-    <button class="chip" type="button" data-status="" aria-pressed="false">全部</button>
-    <span class="spacer"></span>
-    <button class="chip" type="button" id="csvBtn">导出 CSV</button>
+  <div id="deskPanel" hidden>
+    <div class="who-bar">
+      <span class="who">已登录 · <b id="adminName">—</b></span>
+      <button class="btn btn-ghost" type="button" id="logoutBtn" style="padding:8px 14px;font-size:var(--text-xs)">退出</button>
+    </div>
+
+    <div class="toolbar">
+      <div class="field">
+        <label>搜索</label>
+        <input id="q" placeholder="称呼 / 登录名 / 地点 / 方向" autocomplete="off">
+      </div>
+      <button class="btn btn-primary" id="loadBtn" type="button">刷新列表</button>
+    </div>
+
+    <div class="filter-bar" id="filterBar">
+      <button class="chip" type="button" data-status="pending" aria-pressed="true">待审核</button>
+      <button class="chip" type="button" data-status="approved" aria-pressed="false">已通过</button>
+      <button class="chip" type="button" data-status="rejected" aria-pressed="false">已驳回</button>
+      <button class="chip" type="button" data-status="" aria-pressed="false">全部</button>
+      <span class="spacer"></span>
+      <button class="chip" type="button" id="csvBtn">导出 CSV</button>
+    </div>
+
+    <div id="credential"></div>
+    <div id="tableWrap"></div>
   </div>
 
   <div class="form-msg" id="msg" aria-live="polite"></div>
-  <div id="credential"></div>
-  <div id="tableWrap"></div>
 </div>
+<script src="js/util.js"></script>
+<script src="js/theme.js"></script>
 <script src="js/api.js"></script>
 <script>
 const msg = document.getElementById("msg");
-const tokenInput = document.getElementById("token");
 const qInput = document.getElementById("q");
 const tableWrap = document.getElementById("tableWrap");
 const credentialBox = document.getElementById("credential");
 const filterBar = document.getElementById("filterBar");
+const loginPanel = document.getElementById("loginPanel");
+const deskPanel = document.getElementById("deskPanel");
+const adminName = document.getElementById("adminName");
+const loginForm = document.getElementById("loginForm");
+const loginBtn = document.getElementById("loginBtn");
 
 let status = "pending";
-tokenInput.value = localStorage.getItem("cc-admin-token") || "";
+let authed = false;
 
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const fmtTime = s => (s ? String(s).replace("T", " ").slice(0, 16) : "—");
-const token = () => tokenInput.value.trim();
-const authHeaders = () => ({ "x-admin-token": token() });
+const fmtTime = s => CC.fmtChinaTime(s);
 
 function setMsg(text, kind) {
   msg.className = "form-msg" + (kind ? " " + kind : "");
   msg.textContent = text;
+}
+
+function showGate(loggedIn, username) {
+  authed = !!loggedIn;
+  loginPanel.hidden = !!loggedIn;
+  deskPanel.hidden = !loggedIn;
+  adminName.textContent = username || "—";
+  if (!loggedIn) {
+    tableWrap.innerHTML = "";
+    credentialBox.innerHTML = "";
+  }
 }
 
 function showCredential(data, label) {
@@ -114,22 +272,63 @@ function showCredential(data, label) {
     </div>`;
 }
 
+async function refreshAuth() {
+  try {
+    const me = await CC.api("/api/admin/me");
+    showGate(me.auth, me.admin && me.admin.username);
+    if (me.auth) await load();
+    else setMsg("");
+  } catch (err) {
+    showGate(false);
+    setMsg(err.message, "err");
+  }
+}
+
 async function load() {
-  localStorage.setItem("cc-admin-token", token());
+  if (!authed) return;
   setMsg("加载中…");
   const params = new URLSearchParams();
   if (status) params.set("status", status);
   if (qInput.value.trim()) params.set("q", qInput.value.trim());
 
   try {
-    const data = await CC.api("/api/admin/applications?" + params, { headers: authHeaders() });
+    const data = await CC.api("/api/admin/applications?" + params);
     const c = data.counts || {};
     setMsg(`共 ${c.all || 0} 条报名　·　待审核 ${c.pending || 0}　已通过 ${c.approved || 0}　已驳回 ${c.rejected || 0}`);
     render(data.applications);
   } catch (err) {
+    if (err.status === 403) {
+      showGate(false);
+      setMsg("登录已失效，请重新登录", "err");
+      return;
+    }
     setMsg(err.message, "err");
     tableWrap.innerHTML = "";
   }
+}
+
+function renderIntent(a) {
+  const p = CC.parseIntent(a.intentDates);
+  if (p.legacy && !p.joinNext) {
+    return `
+      <div class="intent-block">
+        <div class="line">${esc(p.legacy)}</div>
+        ${a.message ? `<div class="line muted">方向：${esc(a.message)}</div>` : ""}
+      </div>`;
+  }
+
+  const joinClass = p.joinNext === "参加" ? "yes" : "no";
+  const when = [p.period, p.slot].filter(Boolean).join(" · ");
+  return `
+    <div class="intent-block">
+      <div class="line">
+        <span class="intent-join ${joinClass}">${esc(p.joinNext || "—")}</span>
+        <span class="muted">${esc(p.nextLabel || "最近一期")}</span>
+      </div>
+      ${when || p.area ? `<div class="line"><strong>${esc(when || "—")}</strong>${p.area ? ` · ${esc(p.area)}` : ""}</div>` : ""}
+      ${a.message ? `<div class="line muted">方向：${esc(a.message)}</div>` : ""}
+      ${p.note ? `<div class="line muted">补充：${esc(p.note)}</div>` : ""}
+    </div>`;
 }
 
 function render(rows) {
@@ -140,28 +339,25 @@ function render(rows) {
   tableWrap.innerHTML = `
     <table>
       <thead><tr>
-        <th>提交时间</th><th>申请人</th><th>意向时间 / 留言</th><th>状态</th><th>操作</th>
+        <th>提交时间</th><th>申请人</th><th>报名意向</th><th>状态</th><th>操作</th>
       </tr></thead>
       <tbody>
         ${rows.map(a => `
           <tr>
-            <td class="muted">${esc(fmtTime(a.createdAt))}</td>
-            <td>
+            <td class="muted" data-label="提交时间">${esc(fmtTime(a.createdAt))}</td>
+            <td data-label="申请人">
               <strong style="color:var(--paper)">${esc(a.name)}</strong><br>
               <span class="mono">${esc(a.handle)}</span>
               ${a.contact ? `<br><span class="muted">${esc(a.contact)}</span>` : ""}
             </td>
-            <td>
-              ${esc(a.intentDates)}
-              ${a.message ? `<br><span class="muted">${esc(a.message)}</span>` : ""}
-            </td>
-            <td>
+            <td data-label="报名意向">${renderIntent(a)}</td>
+            <td data-label="状态">
               <span class="status-pill st-${esc(a.status)}">${esc(a.status)}</span>
               ${a.issuedGatherings && a.issuedGatherings.length
                 ? `<br><span class="muted">期次 ${esc(a.issuedGatherings.join(","))}</span>` : ""}
               ${a.rejectReason ? `<br><span class="muted">${esc(a.rejectReason)}</span>` : ""}
             </td>
-            <td>
+            <td data-label="操作">
               <div class="row-actions">
                 ${a.status === "pending" ? `
                   <button class="btn btn-primary" data-act="approve" data-id="${esc(a.id)}">批准 + 绑定 001</button>
@@ -179,26 +375,57 @@ function render(rows) {
 const actions = {
   async approve(id) {
     const data = await CC.api(`/api/admin/applications/${id}/approve`, {
-      method: "POST", headers: authHeaders(), body: JSON.stringify({ gatherings: ["001"] })
+      method: "POST", body: JSON.stringify({ gatherings: ["001"] })
     });
     showCredential(data, "已批准");
   },
   async reissue(id) {
     if (!confirm("重发会作废旧通行码，确定？")) return;
     const data = await CC.api(`/api/admin/applications/${id}/reissue`, {
-      method: "POST", headers: authHeaders(), body: "{}"
+      method: "POST", body: "{}"
     });
     showCredential(data, "已重发通行码");
   },
   async reject(id) {
-    const reason = prompt("驳回理由（可留空，仅自己可见）") ;
+    const reason = prompt("驳回理由（可留空，仅自己可见）");
     if (reason === null) return;
     await CC.api(`/api/admin/applications/${id}/reject`, {
-      method: "POST", headers: authHeaders(), body: JSON.stringify({ reason })
+      method: "POST", body: JSON.stringify({ reason })
     });
     setMsg("已驳回", "ok");
   }
 };
+
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  loginBtn.disabled = true;
+  setMsg("登录中…");
+  try {
+    const data = await CC.api("/api/admin/login", {
+      method: "POST",
+      body: JSON.stringify({
+        username: document.getElementById("adminUser").value.trim(),
+        password: document.getElementById("adminPass").value
+      })
+    });
+    document.getElementById("adminPass").value = "";
+    showGate(true, data.admin && data.admin.username);
+    setMsg("登录成功", "ok");
+    await load();
+  } catch (err) {
+    setMsg(err.message, "err");
+  } finally {
+    loginBtn.disabled = false;
+  }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+  try {
+    await CC.api("/api/admin/logout", { method: "POST", body: "{}" });
+  } catch (_) {}
+  showGate(false);
+  setMsg("已退出");
+});
 
 tableWrap.addEventListener("click", async (e) => {
   const btn = e.target.closest("button[data-act]");
@@ -226,8 +453,8 @@ filterBar.addEventListener("click", (e) => {
 
 document.getElementById("csvBtn").addEventListener("click", async () => {
   try {
-    const res = await fetch("/api/admin/applications.csv", { headers: authHeaders() });
-    if (!res.ok) throw new Error("导出失败，请检查管理员令牌");
+    const res = await fetch("/api/admin/applications.csv", { credentials: "same-origin" });
+    if (!res.ok) throw new Error("导出失败，请确认已登录");
     const url = URL.createObjectURL(await res.blob());
     const a = document.createElement("a");
     a.href = url;
@@ -241,7 +468,7 @@ document.getElementById("csvBtn").addEventListener("click", async () => {
 
 document.getElementById("loadBtn").addEventListener("click", load);
 qInput.addEventListener("keydown", e => { if (e.key === "Enter") load(); });
-if (tokenInput.value) load();
+refreshAuth();
 </script>
 </body>
 </html>
