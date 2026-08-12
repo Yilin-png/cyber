@@ -137,6 +137,40 @@
   .intent-join.yes{color:var(--cyan);border-color:rgba(63,224,208,.5)}
   .intent-join.no{color:var(--ash)}
 
+  .perm-backdrop{
+    position:fixed;inset:0;z-index:80;
+    background:rgba(7,6,14,.72);backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+  }
+  .perm-backdrop[hidden]{display:none!important}
+  .perm-modal{
+    width:min(440px,100%);
+    background:var(--panel);border:1px solid var(--line);
+    padding:22px 20px 18px;
+    max-height:min(84vh,640px);overflow:auto;
+  }
+  .perm-modal h3{
+    font-family:var(--font-display);font-size:var(--text-lg);font-weight:700;
+    letter-spacing:var(--track-title);margin:0 0 6px;
+  }
+  .perm-modal .sub{font-size:var(--text-sm);color:var(--ash);margin:0 0 16px;line-height:1.5}
+  .perm-list{display:flex;flex-direction:column;gap:8px;margin:0 0 16px}
+  .perm-item{
+    display:flex;align-items:flex-start;gap:10px;
+    padding:10px 12px;border:1px solid var(--line);background:var(--panel-2);
+    cursor:pointer;user-select:none;
+  }
+  .perm-item:has(input:checked){border-color:var(--cyan);background:rgba(63,224,208,.08)}
+  .perm-item input{margin-top:3px;accent-color:var(--cyan)}
+  .perm-item .t{font-family:var(--font-display);font-size:var(--text-sm);font-weight:600;color:var(--paper)}
+  .perm-item .d{font-size:var(--text-xs);color:var(--ash);margin-top:3px;line-height:1.4}
+  .perm-note{
+    font-size:var(--text-xs);color:var(--ash);line-height:1.5;margin:0 0 14px;
+    padding:10px 12px;border-left:2px solid var(--gold);background:var(--panel-wash-soft);
+  }
+  .perm-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+
   @media (max-width:640px){
     .admin-wrap{
       padding:22px max(16px, env(safe-area-inset-right)) 56px max(16px, env(safe-area-inset-left));
@@ -172,7 +206,7 @@
 <div class="admin-wrap">
   <a class="auth-nav" href="index.html" style="display:inline-block;border:0;padding:0;color:var(--cyan)">← 首页</a>
   <h1 style="font-family:var(--font-display);font-size:var(--text-xl);font-weight:700;margin:16px 0 8px;letter-spacing:var(--track-title)">报名审批</h1>
-  <p class="muted" style="font-size:var(--text-base);line-height:var(--leading-body)">使用管理员账号登录后审批报名。批准后会生成一次性通行码，请立刻私下发给申请人——页面刷新后无法再次查看，只能「重发通行码」换一个新的。</p>
+  <p class="muted" style="font-size:var(--text-base);line-height:var(--leading-body)">使用管理员账号登录后审批报名。<strong style="color:var(--paper);font-weight:600">批准</strong>会生成一次性通行码；用<strong style="color:var(--paper);font-weight:600">权限</strong>勾选可读的期次纪要（勾选任一期次即可查看使用心得）。通行码仅出现一次，请立刻私下发给申请人。</p>
 
   <div id="loginPanel" class="login-card" hidden>
     <h2>管理员登录</h2>
@@ -220,6 +254,20 @@
 
   <div class="form-msg" id="msg" aria-live="polite"></div>
 </div>
+
+<div class="perm-backdrop" id="permBackdrop" hidden>
+  <div class="perm-modal" role="dialog" aria-modal="true" aria-labelledby="permTitle">
+    <h3 id="permTitle">设置权限</h3>
+    <p class="sub" id="permSub">选择该成员可阅读的期次。</p>
+    <div class="perm-note">勾选任意一期后，也可查看咒语手册里的「使用心得」。未勾选则仅有账号，看不到完整纪要与心得。</div>
+    <div class="perm-list" id="permList"></div>
+    <div class="perm-actions">
+      <button type="button" class="btn btn-ghost" id="permCancel">取消</button>
+      <button type="button" class="btn btn-primary" id="permSave">保存权限</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/util.js"></script>
 <script src="js/theme.js"></script>
 <script src="js/api.js"></script>
@@ -237,6 +285,9 @@ const loginBtn = document.getElementById("loginBtn");
 
 let status = "pending";
 let authed = false;
+let gatheringCatalog = [];
+let permTargetId = null;
+let appsById = {};
 
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -332,6 +383,8 @@ function renderIntent(a) {
 }
 
 function render(rows) {
+  appsById = {};
+  rows.forEach(a => { appsById[a.id] = a; });
   if (!rows.length) {
     tableWrap.innerHTML = "<p class='muted' style='margin-top:18px'>该筛选下暂无报名记录</p>";
     return;
@@ -353,18 +406,17 @@ function render(rows) {
             <td data-label="报名意向">${renderIntent(a)}</td>
             <td data-label="状态">
               <span class="status-pill st-${esc(a.status)}">${esc(a.status)}</span>
-              ${a.issuedGatherings && a.issuedGatherings.length
-                ? `<br><span class="muted">期次 ${esc(a.issuedGatherings.join(","))}</span>` : ""}
+              ${(a.gatherings || a.issuedGatherings || []).length
+                ? `<br><span class="muted">期次 ${esc((a.gatherings || a.issuedGatherings).join(","))}</span>` : ""}
               ${a.rejectReason ? `<br><span class="muted">${esc(a.rejectReason)}</span>` : ""}
             </td>
             <td data-label="操作">
               <div class="row-actions">
-                ${a.status === "pending" ? `
-                  <button class="btn btn-primary" data-act="approve" data-id="${esc(a.id)}">批准 + 绑定 001</button>
-                  <button class="btn btn-ghost" data-act="reject" data-id="${esc(a.id)}">驳回</button>` : ""}
+                ${a.status === "pending"
+                  ? `<button class="btn btn-primary" data-act="approve" data-id="${esc(a.id)}">批准</button>` : ""}
                 ${a.status === "approved"
                   ? `<button class="btn btn-ghost" data-act="reissue" data-id="${esc(a.id)}">重发通行码</button>` : ""}
-                ${a.status === "rejected" ? `<span class="muted">—</span>` : ""}
+                <button class="btn btn-ghost" data-act="permissions" data-id="${esc(a.id)}">权限</button>
               </div>
             </td>
           </tr>`).join("")}
@@ -372,10 +424,50 @@ function render(rows) {
     </table>`;
 }
 
+async function ensureGatheringCatalog() {
+  if (gatheringCatalog.length) return gatheringCatalog;
+  try {
+    const data = await CC.api("/api/gatherings");
+    gatheringCatalog = (data.gatherings || []).map(g => ({
+      id: String(g.id),
+      title: g.title || `第 ${g.id} 期`,
+      date: g.date || "",
+      status: g.status || ""
+    }));
+  } catch (_) {
+    gatheringCatalog = [{ id: "001", title: "赛博法师 • 第一期AI交流会", date: "2026.07.24", status: "past" }];
+  }
+  return gatheringCatalog;
+}
+
+async function openPermissions(id) {
+  const appRow = appsById[id];
+  if (!appRow) return;
+  permTargetId = id;
+  const catalog = await ensureGatheringCatalog();
+  const selected = new Set(appRow.gatherings || appRow.issuedGatherings || []);
+  document.getElementById("permSub").textContent =
+    `${appRow.name}（${appRow.handle}）· 当前状态 ${appRow.status}`;
+  document.getElementById("permList").innerHTML = catalog.map(g => `
+    <label class="perm-item">
+      <input type="checkbox" value="${esc(g.id)}" ${selected.has(g.id) ? "checked" : ""}>
+      <span>
+        <div class="t">${esc(g.id)} · ${esc(g.title)}</div>
+        <div class="d">${esc([g.date, g.status === "upcoming" ? "待举办" : ""].filter(Boolean).join(" · "))}</div>
+      </span>
+    </label>`).join("");
+  document.getElementById("permBackdrop").hidden = false;
+}
+
+function closePermissions() {
+  permTargetId = null;
+  document.getElementById("permBackdrop").hidden = true;
+}
+
 const actions = {
   async approve(id) {
     const data = await CC.api(`/api/admin/applications/${id}/approve`, {
-      method: "POST", body: JSON.stringify({ gatherings: ["001"] })
+      method: "POST", body: JSON.stringify({ gatherings: [] })
     });
     showCredential(data, "已批准");
   },
@@ -386,13 +478,8 @@ const actions = {
     });
     showCredential(data, "已重发通行码");
   },
-  async reject(id) {
-    const reason = prompt("驳回理由（可留空，仅自己可见）");
-    if (reason === null) return;
-    await CC.api(`/api/admin/applications/${id}/reject`, {
-      method: "POST", body: JSON.stringify({ reason })
-    });
-    setMsg("已驳回", "ok");
+  async permissions(id) {
+    await openPermissions(id);
   }
 };
 
@@ -430,14 +517,45 @@ document.getElementById("logoutBtn").addEventListener("click", async () => {
 tableWrap.addEventListener("click", async (e) => {
   const btn = e.target.closest("button[data-act]");
   if (!btn) return;
+  const act = btn.dataset.act;
   btn.disabled = true;
   try {
-    await actions[btn.dataset.act](btn.dataset.id);
-    await load();
+    await actions[act](btn.dataset.id);
+    /* 打开权限弹层时不要立刻刷新，以免冲掉勾选状态 */
+    if (act !== "permissions") await load();
   } catch (err) {
     setMsg(err.message, "err");
   } finally {
     btn.disabled = false;
+  }
+});
+
+document.getElementById("permCancel").addEventListener("click", closePermissions);
+document.getElementById("permBackdrop").addEventListener("click", (e) => {
+  if (e.target === e.currentTarget) closePermissions();
+});
+document.getElementById("permSave").addEventListener("click", async () => {
+  if (!permTargetId) return;
+  const saveBtn = document.getElementById("permSave");
+  saveBtn.disabled = true;
+  try {
+    const gatherings = [...document.querySelectorAll("#permList input[type=checkbox]:checked")]
+      .map((el) => el.value);
+    const data = await CC.api(`/api/admin/applications/${permTargetId}/permissions`, {
+      method: "POST",
+      body: JSON.stringify({ gatherings })
+    });
+    closePermissions();
+    if (data.passcode) showCredential(data, "已设置权限并开通账号");
+    else {
+      setMsg(`已更新权限：${(data.gatherings || []).join("、") || "无期次"}`, "ok");
+      credentialBox.innerHTML = "";
+    }
+    await load();
+  } catch (err) {
+    setMsg(err.message, "err");
+  } finally {
+    saveBtn.disabled = false;
   }
 });
 

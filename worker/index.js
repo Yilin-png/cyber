@@ -48,7 +48,9 @@ function publicGathering(g) {
   };
 }
 
-function adminApplication(row) {
+function adminApplication(row, user) {
+  const issued = row.issuedGatherings || [];
+  const live = user && Array.isArray(user.gatherings) ? user.gatherings : issued;
   return {
     id: row.id,
     name: row.name,
@@ -61,8 +63,15 @@ function adminApplication(row) {
     approvedAt: row.approvedAt || null,
     rejectedAt: row.rejectedAt || null,
     rejectReason: row.rejectReason || "",
-    issuedGatherings: row.issuedGatherings || []
+    issuedGatherings: issued,
+    userId: user ? user.id : null,
+    gatherings: live
   };
+}
+
+function findUserByApp(db, appRow) {
+  const handle = handleOf(appRow).toLowerCase();
+  return db.users.find((u) => handleOf(u).toLowerCase() === handle) || null;
 }
 
 function canAccessGathering(user, gatheringId) {
@@ -599,7 +608,10 @@ app.get("/api/admin/applications", async (c) => {
     counts[s] = db.applications.filter((a) => a.status === s).length;
   }
 
-  return c.json({ applications: rows.map(adminApplication), counts });
+  return c.json({
+    applications: rows.map((a) => adminApplication(a, findUserByApp(db, a))),
+    counts
+  });
 });
 
 app.get("/api/admin/applications.csv", async (c) => {
@@ -720,6 +732,61 @@ app.post("/api/admin/applications/:id/reissue", async (c) => {
   } catch (e) {
     if (e.code === "NF") return c.json({ error: "申请不存在" }, 404);
     if (e.code === "BAD") return c.json({ error: "只有已通过的申请才能重发通行码" }, 400);
+    throw e;
+  }
+  return c.json(result);
+});
+
+app.post("/api/admin/applications/:id/permissions", async (c) => {
+  if (!requireAdmin(c)) return c.json({ error: "请先登录管理账号" }, 403);
+  let body = {};
+  try {
+    body = await c.req.json();
+  } catch {
+    /* empty */
+  }
+  const gatherings = Array.isArray(body.gatherings) ? body.gatherings.map(String) : null;
+  if (!gatherings) return c.json({ error: "需要 gatherings 数组" }, 400);
+
+  let result;
+  try {
+    await mutate(c.get("store"), (db) => {
+      const appRow = db.applications.find((a) => a.id === c.req.param("id"));
+      if (!appRow) {
+        const err = new Error("NF");
+        err.code = "NF";
+        throw err;
+      }
+
+      let passcode = null;
+      let user = findUserByApp(db, appRow);
+
+      if (appRow.status !== "approved") {
+        const issued = issueAccess(db, appRow, []);
+        user = issued.user;
+        passcode = issued.passcode;
+        appRow.status = "approved";
+        appRow.approvedAt = new Date().toISOString();
+        appRow.rejectedAt = null;
+        appRow.rejectReason = "";
+      } else if (!user) {
+        const issued = issueAccess(db, appRow, []);
+        user = issued.user;
+        passcode = issued.passcode;
+      }
+
+      user.gatherings = [...new Set(gatherings)];
+      appRow.issuedGatherings = user.gatherings;
+      result = {
+        ok: true,
+        name: user.name,
+        handle: handleOf(user),
+        passcode,
+        gatherings: user.gatherings
+      };
+    });
+  } catch (e) {
+    if (e.code === "NF") return c.json({ error: "申请不存在" }, 404);
     throw e;
   }
   return c.json(result);

@@ -124,7 +124,9 @@ function safeText(s, max = 500) {
 const APPLY_STATUSES = ["pending", "approved", "rejected"];
 
 /** 管理端展示用：统一字段名，不外泄哈希等敏感信息 */
-function adminApplication(row) {
+function adminApplication(row, user) {
+  const issued = row.issuedGatherings || [];
+  const live = user && Array.isArray(user.gatherings) ? user.gatherings : issued;
   return {
     id: row.id,
     name: row.name,
@@ -137,8 +139,15 @@ function adminApplication(row) {
     approvedAt: row.approvedAt || null,
     rejectedAt: row.rejectedAt || null,
     rejectReason: row.rejectReason || "",
-    issuedGatherings: row.issuedGatherings || []
+    issuedGatherings: issued,
+    userId: user ? user.id : null,
+    gatherings: live
   };
+}
+
+function findUserByApp(db, appRow) {
+  const handle = handleOf(appRow).toLowerCase();
+  return db.users.find(u => handleOf(u).toLowerCase() === handle) || null;
 }
 
 /* ── 公开：集会列表（仅摘要） ── */
@@ -464,7 +473,10 @@ app.get("/api/admin/applications", (req, res) => {
     counts[s] = db.applications.filter(a => a.status === s).length;
   }
 
-  res.json({ applications: rows.map(adminApplication), counts });
+  res.json({
+    applications: rows.map(a => adminApplication(a, findUserByApp(db, a))),
+    counts
+  });
 });
 
 /* 报名表导出：给组织者拉到表格里排期用 */
@@ -572,6 +584,45 @@ app.post("/api/admin/applications/:id/reissue", (req, res) => {
   appRow.issuedGatherings = user.gatherings;
   save(db);
   res.json({ ok: true, name: user.name, handle: handleOf(user), passcode, gatherings: user.gatherings });
+});
+
+app.post("/api/admin/applications/:id/permissions", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const gatherings = Array.isArray(req.body.gatherings) ? req.body.gatherings.map(String) : null;
+  if (!gatherings) return res.status(400).json({ error: "需要 gatherings 数组" });
+
+  const db = load();
+  const appRow = db.applications.find(a => a.id === req.params.id);
+  if (!appRow) return res.status(404).json({ error: "申请不存在" });
+
+  let passcode = null;
+  let user = findUserByApp(db, appRow);
+
+  if (appRow.status !== "approved") {
+    const issued = issueAccess(db, appRow, []);
+    user = issued.user;
+    passcode = issued.passcode;
+    appRow.status = "approved";
+    appRow.approvedAt = new Date().toISOString();
+    appRow.rejectedAt = null;
+    appRow.rejectReason = "";
+  } else if (!user) {
+    const issued = issueAccess(db, appRow, []);
+    user = issued.user;
+    passcode = issued.passcode;
+  }
+
+  user.gatherings = [...new Set(gatherings)];
+  appRow.issuedGatherings = user.gatherings;
+  save(db);
+
+  res.json({
+    ok: true,
+    name: user.name,
+    handle: handleOf(user),
+    passcode,
+    gatherings: user.gatherings
+  });
 });
 
 app.post("/api/admin/applications/:id/reject", (req, res) => {
