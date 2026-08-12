@@ -455,16 +455,22 @@ main.wrap{display:block;min-height:100svh}
 .panel-head p{margin-top:8px;font-size:var(--text-base);color:var(--ash)}
 
 /* 活动记录 —— 时间轴
-   竖线 left:5px / 宽 1px → 中心 5.5px；内容区 padding-left:26px
-   圆点 11px：left:-26px 时中心落在线上 */
+   竖线 absolute left:5px；内容 padding-left:26px
+   圆点略偏左（left:-28px），竖线在圆处断开、不穿过圆 */
 .log{position:relative;padding-left:26px}
-.log::before{
-  content:"";position:absolute;left:5px;top:8px;bottom:8px;width:1px;z-index:0;
+.log-item{position:relative;padding:0 0 34px;overflow:visible}
+/* 竖线段：从本圆下方接到下一圆上沿，碰到圆即止 */
+.log-item::after{
+  content:"";position:absolute;left:-21px;top:22px;bottom:-9px;width:1px;
+  background:linear-gradient(var(--arcane),var(--line));
+  pointer-events:none;
+}
+.log-item:last-child::after{
+  bottom:8px;
   background:linear-gradient(var(--arcane),var(--line),transparent);
 }
-.log-item{position:relative;z-index:1;padding:0 0 34px}
 .log-item::before{
-  content:"";position:absolute;left:-26px;top:9px;
+  content:"";position:absolute;left:-28px;top:9px;z-index:1;
   width:11px;height:11px;border-radius:50%;
   background:var(--void);border:1px solid var(--arcane);
   box-shadow:0 0 12px -2px var(--arcane);
@@ -478,16 +484,15 @@ html[data-theme="light"] .log-item.is-past::before{
   background:#2f9e5a;border-color:#2f9e5a;
   box-shadow:0 0 12px -2px color-mix(in srgb,#2f9e5a 65%,transparent);
 }
-/* 待举办：空心黄点（透视竖线）+ 闪烁，中心对齐轴线 */
+/* 待举办：实心黄点闪烁（只闪圆，不闪线） */
 .log-item.is-upcoming::before{
-  background:transparent;
-  border:2px solid var(--gold);
+  background:var(--gold);border-color:var(--gold);
   box-shadow:0 0 12px -2px var(--gold);
   animation:log-dot-blink 1.4s ease-in-out infinite;
 }
 @keyframes log-dot-blink{
-  0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 14px -1px var(--gold)}
-  50%{opacity:.35;transform:scale(.82);box-shadow:0 0 4px -2px var(--gold)}
+  0%,100%{opacity:1;box-shadow:0 0 14px -1px var(--gold)}
+  50%{opacity:.35;box-shadow:0 0 4px -2px var(--gold)}
 }
 @media (prefers-reduced-motion:reduce){
   .log-item.is-upcoming::before{animation:none}
