@@ -10,19 +10,14 @@ const $ = CC.$;
 const esc = CC.esc;
 
 function fmtTime(iso) {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleString("zh-CN", { hour12: false });
-  } catch (_) {
-    return iso;
-  }
+  return CC.fmtChinaTime(iso);
 }
 
 function renderUserChip(me) {
   const el = $("#userChip");
   if (!me || !me.auth) {
     el.innerHTML = `
-      <span class="who">MEETING NOTES · ${GATHERING_ID}</span>
+      <span class="who">NOTES · ${GATHERING_ID}</span>
       <a href="login.html?next=gathering-001.html">登录</a>
       <a href="apply.html">申请</a>`;
     return;
@@ -156,18 +151,19 @@ async function main() {
   $("#gMeta").textContent = `${data.date} · ${data.place} · ${data.mode}`;
   $("#gSummary").textContent = data.summary;
 
-  /* 公开纪要：议题目录 + 一句摘要 */
+  /* 公开纪要：要点卡片网格，桌面端多列 */ /* digest-cards-v2 */
   const digest = $("#publicDigest");
   const topics = data.topics || [];
   if (topics.length) {
     digest.hidden = false;
+    $("#digestCount").textContent = String(topics.length).padStart(2, "0");
     $("#topicList").innerHTML = topics.map(t => `
-      <li>
-        <i>${esc(t.no)}</i>
-        <div>
-          <div class="t-title">${esc(t.title)}</div>
-          ${t.blurb ? `<div class="t-blurb">${esc(t.blurb)}</div>` : ""}
+      <li class="topic-card">
+        <div class="card-top">
+          <h3 class="t-title">${esc(t.title)}</h3>
+          <span class="t-no">${esc(t.no)}</span>
         </div>
+        <p class="t-blurb">${esc(t.blurb || "")}</p>
       </li>`).join("");
   }
 
