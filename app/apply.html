@@ -1,22 +1,94 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
+<script>
+(function(){
+  try{
+    var k="cc-theme", purge="cc-theme-purged-v3";
+    if(!localStorage.getItem(purge)){
+      localStorage.removeItem(k);
+      localStorage.removeItem("cc-lat");
+      localStorage.removeItem("cc-lng");
+      localStorage.setItem(purge,"1");
+    }
+    var p=localStorage.getItem(k);
+    if(p!=="light"&&p!=="dark") p=null;
+    function day(){
+      var lat=39.9042, lng=116.4074;
+      var rad=Math.PI/180, dayMs=8.64e7, J1970=2440588, J2000=2451545, e=rad*23.4397;
+      var now=new Date();
+      var toJ=function(d){return d/dayMs-0.5+J1970;};
+      var fromJ=function(j){return new Date((j+0.5-J1970)*dayMs);};
+      var d=toJ(now)-J2000;
+      var lw=-lng*rad, phi=lat*rad;
+      var n=Math.round(d-0.0009-lw/(2*Math.PI));
+      var ds=0.0009+lw/(2*Math.PI)+n;
+      var M=rad*(357.5291+0.98560028*ds);
+      var C=rad*(1.9148*Math.sin(M)+0.02*Math.sin(2*M)+0.0003*Math.sin(3*M));
+      var L=M+C+rad*102.9372+Math.PI;
+      var dec=Math.asin(Math.sin(L)*Math.sin(e));
+      var Jnoon=J2000+ds+0.0053*Math.sin(M)-0.0069*Math.sin(2*L);
+      var h0=-0.833*rad;
+      var cosH=(Math.sin(h0)-Math.sin(phi)*Math.sin(dec))/(Math.cos(phi)*Math.cos(dec));
+      if(cosH>1) return false; if(cosH<-1) return true;
+      var w=Math.acos(cosH);
+      var a=0.0009+(w+lw)/(2*Math.PI)+n;
+      var Jset=J2000+a+0.0053*Math.sin(M)-0.0069*Math.sin(2*L);
+      var Jrise=Jnoon-(Jset-Jnoon);
+      return now>=fromJ(Jrise)&&now<fromJ(Jset);
+    }
+    var light=p==="light"||(p!=="dark"&&day());
+    var t=light?"light":"dark";
+    var root=document.documentElement;
+    root.dataset.theme=t;
+    root.dataset.themePref=p||"auto";
+    root.style.colorScheme=t;
+  }catch(e){
+    document.documentElement.dataset.theme="dark";
+    document.documentElement.dataset.themePref="auto";
+  }
+})();
+</script>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="申请加入赛博法师 · 填写意向">
 <meta name="theme-color" content="#07060E">
-<title>申请加入 · 赛博法师</title>
-<link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+<title>我想参加 • 赛博法师</title>
+<link rel="icon" href="assets/icons/favicon.svg?v=hex2" type="image/svg+xml">
+<link rel="icon" href="assets/icons/favicon.ico?v=hex2" sizes="any">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=hex2">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="赛博法师 CYBER CASTERS">
+<meta property="og:title" content="AI 技巧分享会">
+<meta property="og:description" content="申请加入赛博法师 · 填写意向">
+<meta property="og:url" content="https://cyber-casters.com/apply.html">
+<meta property="og:image" content="https://cyber-casters.com/assets/icons/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:locale" content="zh_CN">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="AI 技巧分享会">
+<meta name="twitter:description" content="申请加入赛博法师 · 填写意向">
+<meta name="twitter:image" content="https://cyber-casters.com/assets/icons/og-image.png">
+<link rel="preload" href="assets/audio/bgm.m4a" as="audio" type="audio/mp4">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/auth.css">
+<link rel="stylesheet" href="css/auth.css?v=input16">
 <style>
-  /* 蜜罐：仅机器人会看到并填写 */
-  .hp-field{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  /* 蜜罐：不位移，避免撑出横向滚动 */
+  .hp-field{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+  }
+  .hp-field input{
+    width:1px!important;height:1px!important;max-width:1px;
+    margin:0;padding:0;border:0;
+  }
   .handle-card{
     margin-top:18px;padding:16px 18px;
     border:1px solid rgba(63,224,208,.35);
-    background:linear-gradient(135deg,rgba(16,12,33,.72),rgba(16,12,33,.24));
+    background:linear-gradient(135deg,var(--panel-glass),var(--panel-wash-soft));
   }
   .handle-label{
     font-family:var(--font-mono);font-size:var(--text-xs);
@@ -25,6 +97,76 @@
   .handle-value{
     font-family:var(--font-mono);font-size:var(--text-lg);
     color:var(--cyan);margin:6px 0 8px;user-select:all;word-break:break-all;
+  }
+  .field-row{
+    display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:8px;
+    min-width:0;
+  }
+  .field-row select{
+    min-width:0;
+    width:100%;
+  }
+  @media (max-width:720px){
+    .field-row{
+      grid-template-columns:1fr 1fr;
+    }
+    .field-row #intentArea{
+      grid-column:1 / -1;
+    }
+  }
+  .field select{
+    appearance:none;
+    background-image:linear-gradient(45deg,transparent 50%,var(--ash) 50%),linear-gradient(135deg,var(--ash) 50%,transparent 50%);
+    background-position:calc(100% - 14px) calc(50% - 2px),calc(100% - 9px) calc(50% - 2px);
+    background-size:5px 5px,5px 5px;background-repeat:no-repeat;
+    padding-right:24px;
+  }
+  .choice-row{
+    display:flex;flex-wrap:wrap;gap:8px;
+  }
+  .choice{
+    position:relative;
+    flex:1 1 0;
+    min-width:0;
+    display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--line);background:var(--panel-2);
+    color:var(--paper);font-family:var(--font-sans);font-size:var(--text-sm);
+    padding:11px 12px;cursor:pointer;user-select:none;
+  }
+  #topicChips{
+    gap:6px;
+  }
+  .choice.topic{
+    flex:0 0 auto;
+    min-width:0;
+    padding:6px 9px;
+    font-size:11px;
+    line-height:1.2;
+    letter-spacing:0.02em;
+  }
+  .choice:has(input:checked){
+    border-color:var(--cyan);color:var(--cyan);background:rgba(63,224,208,.08);
+  }
+  /* 不可见控件：禁止继承 .field input{width:100%}，否则 absolute 会撑出横向滚动 */
+  .choice input{
+    position:absolute;inset:0;margin:0;padding:0;border:0;
+    width:100%;height:100%;max-width:none;
+    opacity:0;appearance:none;-webkit-appearance:none;
+    cursor:pointer;
+  }
+  #topicExtra{
+    margin-top:10px;
+    min-height:72px;
+    height:72px;
+    resize:vertical;
+    line-height:1.45;
+    padding:10px 12px;
+  }
+  #topicExtra::placeholder{
+    font-size:12px;
+    line-height:1.4;
+    color:var(--ash);
+    opacity:.9;
   }
 </style>
 </head>
@@ -36,25 +178,78 @@
 
   <div class="wrap" style="flex:1;display:flex;align-items:flex-start">
     <form class="auth-card" id="applyForm">
-      <h1>我想参加</h1>
-      <p class="lead">留下称呼和意向时间；通过后你会得到<strong style="color:var(--paper)">登录名</strong>和<strong style="color:var(--paper)">通行码</strong>，用来看纪要。</p>
+      <h1>我想参加 • 赛博法师</h1>
 
       <div class="field">
         <label>怎么称呼你 *</label>
-        <input name="name" required maxlength="40" placeholder="昵称即可">
+        <input name="name" required maxlength="40" placeholder="昵称即可" autocomplete="nickname">
       </div>
+
       <div class="field">
-        <label>意向参与时间 *</label>
-        <input name="intentDates" required maxlength="120" placeholder="如：下期线上 / 8 月深圳线下均可">
+        <label>是否参加最近一期（<span id="nextLabel">2026.08.20 19:00</span>）*</label>
+        <div class="choice-row" role="radiogroup" aria-label="是否参加最近一期">
+          <label class="choice"><input type="radio" name="joinNext" value="参加" required>参加</label>
+          <label class="choice"><input type="radio" name="joinNext" value="不参加">不参加</label>
+        </div>
       </div>
+
+      <div class="field">
+        <label>下期参加意向（选填）</label>
+        <div class="field-row">
+          <select id="intentPeriod">
+            <option value="" selected>日期</option>
+          </select>
+          <select id="intentSlot">
+            <option value="" selected>时段</option>
+            <option value="工作日晚上">工作日晚上</option>
+            <option value="周末上午">周末上午</option>
+            <option value="周末下午">周末下午</option>
+            <option value="周末晚上">周末晚上</option>
+            <option value="周末全天">周末全天</option>
+            <option value="时间灵活">时间灵活</option>
+          </select>
+          <select id="intentArea">
+            <option value="" selected>地点</option>
+            <option value="南山·科技园">南山·科技园</option>
+            <option value="南山·后海/深圳湾">南山·后海/深圳湾</option>
+            <option value="福田·车公庙">福田·车公庙</option>
+            <option value="福田·CBD">福田·CBD</option>
+            <option value="罗湖">罗湖</option>
+            <option value="宝安·前海">宝安·前海</option>
+            <option value="龙华">龙华</option>
+            <option value="龙岗/坂田">龙岗/坂田</option>
+            <option value="香港">香港</option>
+            <option value="不限地点">不限地点</option>
+          </select>
+        </div>
+        <div class="hint">选填。日期会随最近一期滚动更新；有意向时选大概方便的日期、时段和地点即可</div>
+      </div>
+
+      <input type="hidden" name="intentDates" id="intentDates">
+
       <div class="field">
         <label>联系方式（选填）</label>
-        <input name="contact" maxlength="80" placeholder="手机、邮箱或微信等联系方式，方便通知">
+        <input name="contact" maxlength="80" placeholder="手机、邮箱或微信等">
         <div class="hint">建议填写，方便组织者联系</div>
       </div>
+
       <div class="field">
         <label>想交流的方向（选填）</label>
-        <textarea name="message" maxlength="800" placeholder="一句话就好，比如日常写材料、做纪要、折腾本地知识库…"></textarea>
+        <div class="choice-row" id="topicChips">
+          <label class="choice topic"><input type="checkbox" value="信息整理">信息整理</label>
+          <label class="choice topic"><input type="checkbox" value="Skill 封装">Skill 封装</label>
+          <label class="choice topic"><input type="checkbox" value="知识库">知识库</label>
+          <label class="choice topic"><input type="checkbox" value="多 Agent">多 Agent</label>
+          <label class="choice topic"><input type="checkbox" value="会议纪要">会议纪要</label>
+          <label class="choice topic"><input type="checkbox" value="写作排版">写作排版</label>
+        </div>
+        <textarea id="topicExtra" maxlength="400" placeholder="也可手填，如 RAG、本地模型…"></textarea>
+        <input type="hidden" name="message" id="message">
+      </div>
+
+      <div class="field">
+        <label>补充说明（选填）</label>
+        <input id="intentNote" maxlength="80" placeholder="如：可推荐场地/其他特殊要求等">
       </div>
 
       <div class="hp-field" aria-hidden="true">
@@ -75,20 +270,132 @@
     </form>
   </div>
 
+<audio id="bgm" src="assets/audio/bgm.m4a" preload="auto" playsinline webkit-playsinline></audio>
+<button id="bgmBtn" type="button" aria-label="背景音乐开关" title="背景音乐" aria-pressed="false">♪</button>
+
+<script src="js/util.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/data.js"></script>
 <script src="js/api.js"></script>
+<script src="js/bgm.js"></script>
 <script>
+CC.BGM.init({ mode: "button", toggleId: "bgmBtn", gestureKick: true });
+
 const form = document.getElementById("applyForm");
 const msg = document.getElementById("msg");
 const submitBtn = document.getElementById("submitBtn");
 const handleCard = document.getElementById("handleCard");
 const handleValue = document.getElementById("handleValue");
+const intentPeriod = document.getElementById("intentPeriod");
+const intentSlot = document.getElementById("intentSlot");
+const intentArea = document.getElementById("intentArea");
+const intentNote = document.getElementById("intentNote");
+const intentDates = document.getElementById("intentDates");
+const topicExtra = document.getElementById("topicExtra");
+const messageField = document.getElementById("message");
+const nextLabel = document.getElementById("nextLabel");
+
+/** DATA.nextGathering（如 2026.08.20 19:00）保持点分格式展示 */
+function formatNextFull(raw) {
+  const m = String(raw || "").match(/(\d{4})\.(\d{2})\.(\d{2})(?:\s+(\d{2}):(\d{2}))?/);
+  if (!m) return raw || "近期线下";
+  const time = m[4] != null ? ` ${m[4]}:${m[5]}` : "";
+  return `${m[1]}.${m[2]}.${m[3]}${time}`;
+}
+
+/** 从九月上旬起滚动生成「2026.09上旬/中旬/下旬」 */
+function buildPeriodOptions(count = 6) {
+  const bands = ["上旬", "中旬", "下旬"];
+  let y = 2026;
+  let m = 8; // 九月
+  let band = 0; // 上旬
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    out.push(`${y}.${String(m + 1).padStart(2, "0")}${bands[band]}`);
+    band += 1;
+    if (band > 2) {
+      band = 0;
+      m += 1;
+      if (m > 11) {
+        m = 0;
+        y += 1;
+      }
+    }
+  }
+  return out;
+}
+
+function fillPeriodOptions(keepValue) {
+  const opts = buildPeriodOptions(6);
+  const prev = keepValue || intentPeriod.value;
+  intentPeriod.innerHTML = '<option value="" selected>日期</option>';
+  for (const label of opts) {
+    const o = document.createElement("option");
+    o.value = label;
+    o.textContent = label;
+    intentPeriod.appendChild(o);
+  }
+  const flex = document.createElement("option");
+  flex.value = "时间灵活";
+  flex.textContent = "时间灵活";
+  intentPeriod.appendChild(flex);
+  if (prev && [...intentPeriod.options].some((o) => o.value === prev)) {
+    intentPeriod.value = prev;
+  }
+}
+
+const nextRaw = (typeof DATA !== "undefined" && DATA.nextGathering) || "2026.08.20 19:00";
+const nextFull = formatNextFull(nextRaw);
+nextLabel.textContent = nextFull;
+fillPeriodOptions();
+
+function selectedJoinNext() {
+  const el = form.querySelector('input[name="joinNext"]:checked');
+  return el ? el.value : "";
+}
+
+function composeTopics() {
+  const picked = [...form.querySelectorAll('#topicChips input:checked')].map((el) => el.value);
+  const extra = topicExtra.value.trim();
+  if (!picked.length && !extra) return "";
+  if (!picked.length) return extra;
+  if (!extra) return picked.join("、");
+  return `${picked.join("、")}｜${extra}`;
+}
+
+function composeIntent() {
+  const join = selectedJoinNext();
+  if (!join) return "";
+  const period = intentPeriod.value;
+  const slot = intentSlot.value;
+  const area = intentArea.value;
+  const note = intentNote.value.trim();
+  let base = `最近一期（${nextFull}）：${join}`;
+  if (period) base += `｜日期：${period}`;
+  if (slot) base += `｜时段：${slot}`;
+  if (area) base += `｜地点：${area}`;
+  return note ? `${base}｜补充：${note}` : base;
+}
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   msg.className = "form-msg";
   msg.textContent = "提交中…";
   submitBtn.disabled = true;
+
+  const composed = composeIntent();
+  if (!composed) {
+    msg.className = "form-msg err";
+    msg.textContent = "请选择是否参加最近一期";
+    submitBtn.disabled = false;
+    return;
+  }
+  intentDates.value = composed.slice(0, 200);
+  messageField.value = composeTopics().slice(0, 800);
+
   const body = Object.fromEntries(new FormData(form).entries());
+  delete body.joinNext;
+
   try {
     const data = await CC.api("/api/apply", { method: "POST", body: JSON.stringify(body) });
     msg.className = "form-msg ok";
@@ -99,6 +406,8 @@ form.addEventListener("submit", async (e) => {
       try { sessionStorage.setItem("cc-apply-handle", data.handle); } catch (_) {}
     }
     form.reset();
+    nextLabel.textContent = nextFull;
+    fillPeriodOptions();
   } catch (err) {
     msg.className = "form-msg err";
     msg.textContent = err.message;
