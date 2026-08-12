@@ -467,7 +467,28 @@ main.wrap{display:block;min-height:100svh}
   background:var(--void);border:1px solid var(--arcane);
   box-shadow:0 0 12px -2px var(--arcane);
 }
-.log-item[data-latest]::before{background:var(--cyan);border-color:var(--cyan)}
+/* 已举办：绿点 */
+.log-item.is-past::before{
+  background:#3dba6e;border-color:#3dba6e;
+  box-shadow:0 0 12px -2px color-mix(in srgb,#3dba6e 70%,transparent);
+}
+html[data-theme="light"] .log-item.is-past::before{
+  background:#2f9e5a;border-color:#2f9e5a;
+  box-shadow:0 0 12px -2px color-mix(in srgb,#2f9e5a 65%,transparent);
+}
+/* 待举办：闪烁黄点 */
+.log-item.is-upcoming::before{
+  background:var(--gold);border-color:var(--gold);
+  box-shadow:0 0 12px -2px var(--gold);
+  animation:log-dot-blink 1.4s ease-in-out infinite;
+}
+@keyframes log-dot-blink{
+  0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 14px -1px var(--gold)}
+  50%{opacity:.35;transform:scale(.82);box-shadow:0 0 4px -2px var(--gold)}
+}
+@media (prefers-reduced-motion:reduce){
+  .log-item.is-upcoming::before{animation:none}
+}
 .log-meta{
   font-family:var(--font-sans);font-size:var(--text-sm);color:var(--ash);
   letter-spacing:var(--track-tight);margin-top:2px;
@@ -489,10 +510,6 @@ main.wrap{display:block;min-height:100svh}
 .log-item .status.upcoming{
   color:var(--cyan);
   vertical-align:middle;
-}
-.log-item.is-upcoming::before{
-  background:var(--gold);border-color:var(--gold);
-  box-shadow:0 0 12px -2px var(--gold);
 }
 .log-item p{margin-top:9px;font-size:var(--text-base);color:var(--body);max-width:640px;line-height:var(--leading-body)}
 

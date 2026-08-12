@@ -233,7 +233,7 @@ function renderActivity(items) {
         ? `<a class="log-link" href="apply.html">申请参加<span class="arrow" aria-hidden="true">→</span></a>`
         : "");
     return `
-    <article class="log-item${upcoming ? " is-upcoming" : ""}" ${i === 0 ? "data-latest" : ""} ${href ? `data-href="${esc(href)}"` : ""}>
+    <article class="log-item${upcoming ? " is-upcoming" : " is-past"}" ${i === 0 ? "data-latest" : ""} ${href ? `data-href="${esc(href)}"` : ""}>
       <div class="log-date">${esc(a.date)}</div>
       <h3 class="log-heading">${titleInner}${statusHtml}</h3>
       <div class="log-meta">${esc(metaBits.join(" · "))}</div>
