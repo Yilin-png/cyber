@@ -1,12 +1,25 @@
-/* 纪要页静态兜底：仅公开字段，与 server/gatherings.js 保持一致。
+/* 纪要页静态兜底：仅公开字段，与 server/gatherings.json 保持一致。
    直接双击 HTML 或用第三方静态服务器打开时没有 /api，用它渲染公开部分。 */
 window.CC_GATHERINGS = [
+  {
+    id: "002",
+    date: "2026.08.20",
+    time: "19:00",
+    title: "赛博法师 • 第二期AI交流会",
+    mode: "线下",
+    place: "深圳",
+    status: "upcoming",
+    summary:
+      "第二期线下交流，待举办。时间 2026.08.20 19:00 · 深圳。欢迎申请参加，带上你最近踩过的坑，或一个顺手好用的小技巧。",
+    topics: []
+  },
   {
     id: "001",
     date: "2026.07.24",
     title: "赛博法师 • 第一期AI交流会",
     mode: "线下",
     place: "深圳",
+    status: "past",
     summary:
       "第一期线下交流。一件AI没能替你搞定的难事、一个你自己顺手、别人多半不知道的小技巧。打开电脑，同题异解，互相修炼。",
     topics: [
@@ -23,9 +36,7 @@ window.CC_GATHERINGS = [
       { no: "11", title: "用 MCP 打通数据源", blurb: "接外部数据与工具；能走多远看数据开放度。" },
       { no: "12", title: "Obsidian 小技巧", blurb: "同步、模板、图片归档与编辑器联动。" },
       { no: "13", title: "pandoc 排版工作流", blurb: "映射规则 + 样式模板，Markdown 一键出 Word。" },
-      { no: "14", title: "账号风控与网络（原则）", blurb: "敏感事项场外谈；代理要可用也要会分流。" },
-      { no: "15", title: "活动组织与共识", blurb: "筛选原则、大小群分工、控制功利浓度。" },
-      { no: "16", title: "现场照片", blurb: "当期留影；完整图集仅参会成员可见。" }
+      { no: "14", title: "现场照片", blurb: "当期留影；完整图集仅参会成员可见。" }
     ]
   }
 ];
