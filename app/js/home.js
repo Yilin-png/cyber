@@ -428,15 +428,23 @@ renderSpellbook(false);
   const foot = $("#footNote");
   try {
     const me = await CC.authMe();
-    const member = !!(me.auth && me.user && me.user.gatherings && me.user.gatherings.length);
+    const member = !!(me.auth && (
+      me.admin ||
+      me.user?.isAdmin ||
+      (me.user && me.user.gatherings && me.user.gatherings.length)
+    ));
     renderSpellbook(DATA.spellsMemberOnly ? member : true);
 
     if (me.auth) {
-      foot.innerHTML = `${esc(me.user.name)} · <a href="gathering-001.html" style="color:var(--cyan)">我的纪要</a> · <a href="#" id="homeLogout" style="color:var(--cyan)">退出</a>`;
+      const who = me.admin
+        ? `${esc(me.user?.name || me.admin.username)}（管理）`
+        : esc(me.user.name);
+      foot.innerHTML = `${who} · <a href="gathering-001.html" style="color:var(--cyan)">我的纪要</a> · <a href="#" id="homeLogout" style="color:var(--cyan)">退出</a>`;
       const btn = document.getElementById("homeLogout");
       if (btn) btn.addEventListener("click", async e => {
         e.preventDefault();
         await CC.logout();
+        try { await CC.api("/api/admin/logout", { method: "POST", body: "{}" }); } catch (_) {}
         location.reload();
       });
     } else {

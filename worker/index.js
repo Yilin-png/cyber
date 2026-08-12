@@ -74,7 +74,8 @@ function findUserByApp(db, appRow) {
   return db.users.find((u) => handleOf(u).toLowerCase() === handle) || null;
 }
 
-function canAccessGathering(user, gatheringId) {
+function canAccessGathering(user, gatheringId, session) {
+  if (session && session.adminUser) return true;
   return !!(user && Array.isArray(user.gatherings) && user.gatherings.includes(gatheringId));
 }
 
@@ -251,13 +252,19 @@ app.get("/api/gatherings/:id", async (c) => {
   const g = GATHERINGS.find((x) => x.id === c.req.param("id"));
   if (!g) return c.json({ error: "未找到该期集会" }, 404);
 
+  const session = c.get("session") || {};
   const user = await currentUser(c);
-  const unlocked = canAccessGathering(user, g.id);
+  const unlocked = canAccessGathering(user, g.id, session);
   const payload = {
     ...publicGathering(g),
     unlocked,
-    auth: !!user,
-    user: user ? { name: user.name, gatherings: user.gatherings } : null
+    auth: !!(user || session.adminUser),
+    admin: !!session.adminUser,
+    user: user
+      ? { name: user.name, gatherings: user.gatherings }
+      : (session.adminUser
+        ? { name: `管理·${session.adminUser}`, gatherings: GATHERINGS.map((x) => x.id), isAdmin: true }
+        : null)
   };
 
   if (unlocked) {
@@ -395,15 +402,31 @@ app.post("/api/auth/logout", (c) => {
 
 app.get("/api/auth/me", async (c) => {
   const { wechatAppId, wechatAppSecret } = c.get("secrets");
+  const wechatOAuth = !!(wechatAppId && wechatAppSecret);
+  const session = c.get("session") || {};
   const user = await currentUser(c);
-  if (!user) {
-    return c.json({ auth: false, user: null, wechatOAuth: !!(wechatAppId && wechatAppSecret) });
+  if (user) {
+    return c.json({
+      auth: true,
+      admin: session.adminUser ? { username: session.adminUser } : null,
+      user: { name: user.name, handle: handleOf(user), gatherings: user.gatherings },
+      wechatOAuth
+    });
   }
-  return c.json({
-    auth: true,
-    user: { name: user.name, handle: handleOf(user), gatherings: user.gatherings },
-    wechatOAuth: !!(wechatAppId && wechatAppSecret)
-  });
+  if (session.adminUser) {
+    return c.json({
+      auth: true,
+      admin: { username: session.adminUser },
+      user: {
+        name: `管理·${session.adminUser}`,
+        handle: session.adminUser,
+        gatherings: GATHERINGS.map((g) => g.id),
+        isAdmin: true
+      },
+      wechatOAuth
+    });
+  }
+  return c.json({ auth: false, admin: null, user: null, wechatOAuth });
 });
 
 app.get("/api/auth/wechat", (c) => {
@@ -478,9 +501,10 @@ app.post("/api/auth/bind-wechat", async (c) => {
 });
 
 app.get("/api/gatherings/:id/comments", async (c) => {
+  const session = c.get("session") || {};
   const user = await currentUser(c);
-  if (!user) return c.json({ error: "需要登录", code: "AUTH_REQUIRED" }, 401);
-  if (!canAccessGathering(user, c.req.param("id"))) {
+  if (!user && !session.adminUser) return c.json({ error: "需要登录", code: "AUTH_REQUIRED" }, 401);
+  if (!canAccessGathering(user, c.req.param("id"), session)) {
     return c.json({ error: "仅当期参会成员可查看留言" }, 403);
   }
   const db = await c.get("store").load();
@@ -497,9 +521,10 @@ app.get("/api/gatherings/:id/comments", async (c) => {
 });
 
 app.post("/api/gatherings/:id/comments", async (c) => {
+  const session = c.get("session") || {};
   const user = await currentUser(c);
-  if (!user) return c.json({ error: "需要登录", code: "AUTH_REQUIRED" }, 401);
-  if (!canAccessGathering(user, c.req.param("id"))) {
+  if (!user && !session.adminUser) return c.json({ error: "需要登录", code: "AUTH_REQUIRED" }, 401);
+  if (!canAccessGathering(user, c.req.param("id"), session)) {
     return c.json({ error: "仅当期参会成员可留言" }, 403);
   }
   let body;
@@ -508,28 +533,31 @@ app.post("/api/gatherings/:id/comments", async (c) => {
   } catch {
     return c.json({ error: "无效请求" }, 400);
   }
-  const text = safeText(body.body, 1000);
+  const text = safeText(body.body || body.text, 2000);
   if (!text) return c.json({ error: "留言不能为空" }, 400);
-
+  const authorName = user ? user.name : `管理·${session.adminUser}`;
+  const userId = user ? user.id : `admin:${session.adminUser}`;
   let comment;
   await mutate(c.get("store"), (db) => {
-    const row = {
-      id: uid("c_"),
+    comment = {
+      id: uid("cmt_"),
       gatheringId: c.req.param("id"),
-      userId: user.id,
-      authorName: user.name,
+      userId,
+      authorName,
       body: text,
       createdAt: new Date().toISOString()
     };
-    db.comments.push(row);
-    comment = {
-      id: row.id,
-      authorName: row.authorName,
-      body: row.body,
-      createdAt: row.createdAt
-    };
+    db.comments.push(comment);
   });
-  return c.json({ ok: true, comment });
+  return c.json({
+    ok: true,
+    comment: {
+      id: comment.id,
+      authorName: comment.authorName,
+      body: comment.body,
+      createdAt: comment.createdAt
+    }
+  });
 });
 
 const APPLY_STATUSES = ["pending", "approved", "rejected"];

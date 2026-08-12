@@ -179,6 +179,19 @@ html{scroll-behavior:smooth}
   aspect-ratio:1;
 }
 .sigil svg{width:100%;height:100%;display:block;overflow:hidden}
+/* 中间两层盘面：低透明度叠底，避免与外环形成硬色块 */
+.sigil-disk-mid{
+  fill:color-mix(in srgb, var(--void) 22%, transparent);
+}
+.sigil-disk-core{
+  fill:color-mix(in srgb, var(--void) 30%, transparent);
+}
+[data-theme="light"] .sigil-disk-mid{
+  fill:color-mix(in srgb, var(--panel) 28%, transparent);
+}
+[data-theme="light"] .sigil-disk-core{
+  fill:color-mix(in srgb, var(--panel) 36%, transparent);
+}
 .ring-text{
   font-family:var(--font-mono);
   font-size:var(--text-xs);letter-spacing:.42em;

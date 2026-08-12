@@ -22,11 +22,15 @@ function renderUserChip(me) {
       <a href="apply.html">申请</a>`;
     return;
   }
+  const label = me.admin
+    ? `${esc(me.user?.name || me.admin.username)}（管理）`
+    : esc(me.user.name);
   el.innerHTML = `
-    <span class="who">${esc(me.user.name)}</span>
+    <span class="who">${label}</span>
     <button type="button" id="logoutBtn">退出</button>`;
   $("#logoutBtn").addEventListener("click", async () => {
     await CC.logout();
+    try { await CC.api("/api/admin/logout", { method: "POST", body: "{}" }); } catch (_) {}
     location.reload();
   });
 }

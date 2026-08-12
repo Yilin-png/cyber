@@ -91,7 +91,8 @@ function requireUser(req, res) {
   return u;
 }
 
-function canAccessGathering(user, gatheringId) {
+function canAccessGathering(user, gatheringId, session) {
+  if (session && session.adminUser) return true;
   return !!(user && Array.isArray(user.gatherings) && user.gatherings.includes(gatheringId));
 }
 
@@ -159,13 +160,19 @@ app.get("/api/gatherings/:id", (req, res) => {
   const g = GATHERINGS.find(x => x.id === req.params.id);
   if (!g) return res.status(404).json({ error: "未找到该期集会" });
 
+  const session = req.session || {};
   const user = currentUser(req);
-  const unlocked = canAccessGathering(user, g.id);
+  const unlocked = canAccessGathering(user, g.id, session);
   const payload = {
     ...publicGathering(g),
     unlocked,
-    auth: !!user,
-    user: user ? { name: user.name, gatherings: user.gatherings } : null
+    auth: !!(user || session.adminUser),
+    admin: !!session.adminUser,
+    user: user
+      ? { name: user.name, gatherings: user.gatherings }
+      : (session.adminUser
+        ? { name: `管理·${session.adminUser}`, gatherings: GATHERINGS.map(x => x.id), isAdmin: true }
+        : null)
   };
 
   if (unlocked) {
@@ -283,13 +290,31 @@ app.post("/api/auth/logout", (req, res) => {
 });
 
 app.get("/api/auth/me", (req, res) => {
+  const wechatOAuth = !!(WECHAT_APP_ID && WECHAT_APP_SECRET);
+  const session = req.session || {};
   const user = currentUser(req);
-  if (!user) return res.json({ auth: false, user: null, wechatOAuth: !!(WECHAT_APP_ID && WECHAT_APP_SECRET) });
-  res.json({
-    auth: true,
-    user: { name: user.name, handle: handleOf(user), gatherings: user.gatherings },
-    wechatOAuth: !!(WECHAT_APP_ID && WECHAT_APP_SECRET)
-  });
+  if (user) {
+    return res.json({
+      auth: true,
+      admin: session.adminUser ? { username: session.adminUser } : null,
+      user: { name: user.name, handle: handleOf(user), gatherings: user.gatherings },
+      wechatOAuth
+    });
+  }
+  if (session.adminUser) {
+    return res.json({
+      auth: true,
+      admin: { username: session.adminUser },
+      user: {
+        name: `管理·${session.adminUser}`,
+        handle: session.adminUser,
+        gatherings: GATHERINGS.map(g => g.id),
+        isAdmin: true
+      },
+      wechatOAuth
+    });
+  }
+  return res.json({ auth: false, admin: null, user: null, wechatOAuth });
 });
 
 /* 微信网页授权（可选增强；未配置时前端不展示入口） */
@@ -354,11 +379,14 @@ app.post("/api/auth/bind-wechat", (req, res) => {
   res.json({ ok: true });
 });
 
-/* ── 评论：仅当期参会者可读可写 ── */
+/* ── 评论：当期参会者或管理员可读可写 ── */
 app.get("/api/gatherings/:id/comments", (req, res) => {
-  const user = requireUser(req, res);
-  if (!user) return;
-  if (!canAccessGathering(user, req.params.id)) {
+  const session = req.session || {};
+  const user = currentUser(req);
+  if (!user && !session.adminUser) {
+    return res.status(401).json({ error: "需要登录", code: "AUTH_REQUIRED" });
+  }
+  if (!canAccessGathering(user, req.params.id, session)) {
     return res.status(403).json({ error: "仅当期参会成员可查看留言" });
   }
   const db = load();
@@ -375,9 +403,12 @@ app.get("/api/gatherings/:id/comments", (req, res) => {
 });
 
 app.post("/api/gatherings/:id/comments", (req, res) => {
-  const user = requireUser(req, res);
-  if (!user) return;
-  if (!canAccessGathering(user, req.params.id)) {
+  const session = req.session || {};
+  const user = currentUser(req);
+  if (!user && !session.adminUser) {
+    return res.status(401).json({ error: "需要登录", code: "AUTH_REQUIRED" });
+  }
+  if (!canAccessGathering(user, req.params.id, session)) {
     return res.status(403).json({ error: "仅当期参会成员可留言" });
   }
   const body = safeText(req.body.body, 1000);
@@ -387,8 +418,8 @@ app.post("/api/gatherings/:id/comments", (req, res) => {
   const row = {
     id: uid("c_"),
     gatheringId: req.params.id,
-    userId: user.id,
-    authorName: user.name,
+    userId: user ? user.id : `admin:${session.adminUser}`,
+    authorName: user ? user.name : `管理·${session.adminUser}`,
     body,
     createdAt: new Date().toISOString()
   };
