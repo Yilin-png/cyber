@@ -1,22 +1,166 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-cc-build="nav-utf8-1">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+(function(){
+  try{
+    var k="cc-theme";
+    try{
+      localStorage.removeItem(k);
+      localStorage.removeItem("cc-lat");
+      localStorage.removeItem("cc-lng");
+    }catch(e){}
+    var p=null;
+    try{ p=sessionStorage.getItem(k); }catch(e){}
+    if(p!=="light"&&p!=="dark") p=null;
+    function day(){
+      var lat=39.9042, lng=116.4074;
+      var rad=Math.PI/180, dayMs=8.64e7, J1970=2440588, J2000=2451545, e=rad*23.4397;
+      var now=new Date();
+      var ymd=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Shanghai",year:"numeric",month:"2-digit",day:"2-digit"}).format(now);
+      var noon=new Date(ymd+"T12:00:00+08:00");
+      var toJ=function(d){return d/dayMs-0.5+J1970;};
+      var fromJ=function(j){return new Date((j+0.5-J1970)*dayMs);};
+      var d=toJ(noon)-J2000;
+      var lw=-lng*rad, phi=lat*rad;
+      var n=Math.round(d-0.0009-lw/(2*Math.PI));
+      var ds=0.0009+lw/(2*Math.PI)+n;
+      var M=rad*(357.5291+0.98560028*ds);
+      var C=rad*(1.9148*Math.sin(M)+0.02*Math.sin(2*M)+0.0003*Math.sin(3*M));
+      var L=M+C+rad*102.9372+Math.PI;
+      var dec=Math.asin(Math.sin(L)*Math.sin(e));
+      var Jnoon=J2000+ds+0.0053*Math.sin(M)-0.0069*Math.sin(2*L);
+      var h0=-0.833*rad;
+      var cosH=(Math.sin(h0)-Math.sin(phi)*Math.sin(dec))/(Math.cos(phi)*Math.cos(dec));
+      if(cosH>1) return false; if(cosH<-1) return true;
+      var w=Math.acos(cosH);
+      var a=0.0009+(w+lw)/(2*Math.PI)+n;
+      var Jset=J2000+a+0.0053*Math.sin(M)-0.0069*Math.sin(2*L);
+      var Jrise=Jnoon-(Jset-Jnoon);
+      return now>=fromJ(Jrise)&&now<fromJ(Jset);
+    }
+    var t=p||(day()?"light":"dark");
+    var root=document.documentElement;
+    var c=t==="light"?"#F5F3FB":"#07060E";
+    root.dataset.theme=t;
+    root.dataset.themePref=p||"auto";
+    root.style.colorScheme=t;
+    root.style.backgroundColor=c;
+    var tm=document.createElement("meta");
+    tm.name="theme-color";
+    tm.content=c;
+    document.head.appendChild(tm);
+  }catch(e){
+    document.documentElement.dataset.theme="dark";
+    document.documentElement.dataset.themePref="auto";
+    document.documentElement.style.backgroundColor="#07060E";
+    document.documentElement.style.colorScheme="dark";
+  }
+})();
+</script>
+<style id="cc-boot-bg">html,body{background-color:#F5F3FB;color-scheme:light}html[data-theme="dark"],html[data-theme="dark"] body{background-color:#07060E;color-scheme:dark}</style>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="赛博法师第一期集会纪要摘要：用 AI 做文字处理。完整内容仅对参会成员开放。">
-<meta name="theme-color" content="#07060E">
 <title>赛博法师 • 第一期AI交流会 | 赛博法师 • CYBER CASTERS</title>
-<link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/tokens.css">
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/gathering.css">
-<link rel="stylesheet" href="css/auth.css">
+<link rel="icon" href="assets/icons/favicon.svg?v=hex2" type="image/svg+xml">
+<link rel="icon" href="assets/icons/favicon.ico?v=hex2" sizes="any">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=hex2">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="赛博法师 CYBER CASTERS">
+<meta property="og:title" content="AI 技巧分享会">
+<meta property="og:description" content="赛博法师第一期集会纪要摘要：用 AI 做文字处理。">
+<meta property="og:url" content="https://cyber-casters.com/gathering-001.html">
+<meta property="og:image" content="https://cyber-casters.com/assets/icons/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:locale" content="zh_CN">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="AI 技巧分享会">
+<meta name="twitter:description" content="赛博法师第一期集会纪要摘要：用 AI 做文字处理。">
+<meta name="twitter:image" content="https://cyber-casters.com/assets/icons/og-image.png">
+<link rel="preload" href="assets/audio/bgm.m4a?v=32k" as="audio" type="audio/mp4">
+<link rel="preload" href="css/home.css?v=nav1" as="style">
+<link rel="stylesheet" href="css/tokens.css?v=cs1">
+<link rel="stylesheet" href="css/base.css?v=fab5">
+<link rel="stylesheet" href="css/home.css?v=nav1">
+<link rel="stylesheet" href="css/auth.css?v=apply-layout">
+<link rel="stylesheet" href="css/gathering.css?v=fab1">
 </head>
 <body>
+<audio id="bgm" src="assets/audio/bgm.m4a?v=32k" preload="auto" playsinline webkit-playsinline></audio>
+<script>
+(function(){
+  function appUrl(href){
+    if(!href||href.charAt(0)==="#"||href.indexOf("mailto:")===0||href.indexOf("tel:")===0)return null;
+    var u;try{u=new URL(href,location.href);}catch(err){return null;}
+    if(u.origin!==location.origin)return null;
+    var name=(u.pathname.replace(/\/+$/,"").split("/").pop()||"index.html");
+    if(!(u.pathname==="/"||name===""||name==="index.html"||/^(apply|login|gathering-001)\.html$/i.test(name)))return null;
+    return u;
+  }
+  function navTo(u,e){
+    e.preventDefault();
+    if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+    e.stopPropagation();
+    if(window.CC&&CC.BGM&&CC.BGM.go){CC.BGM.go(u.href);return;}
+    window.__ccPendingNav=u.href;
+  }
+  document.addEventListener("click",function(e){
+    if(e.defaultPrevented)return;
+    if(e.button&&e.button!==0)return;
+    if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+    var a=e.target.closest&&e.target.closest("a[href]");
+    if(!a||a.target==="_blank"||a.hasAttribute("download"))return;
+    var u=appUrl(a.getAttribute("href")||"");
+    if(!u)return;
+    navTo(u,e);
+  },true);
+  var touch0=null;
+  document.addEventListener("touchstart",function(e){
+    var t=e.changedTouches&&e.changedTouches[0];
+    var a=e.target.closest&&e.target.closest("a[href]");
+    touch0=t&&a?{x:t.clientX,y:t.clientY,a:a}:null;
+  },{capture:true,passive:true});
+  document.addEventListener("touchend",function(e){
+    if(!touch0)return;
+    var t=e.changedTouches&&e.changedTouches[0];
+    var start=touch0;touch0=null;
+    if(!t||Math.abs(t.clientX-start.x)>12||Math.abs(t.clientY-start.y)>12)return;
+    var a=start.a;
+    if(!a||a.target==="_blank"||a.hasAttribute("download"))return;
+    var u=appUrl(a.getAttribute("href")||"");
+    if(!u)return;
+    navTo(u,e);
+  },{capture:true,passive:false});
+  var a=document.getElementById("bgm");
+  if(!a)return;
+  try{
+    if(localStorage.getItem("cc-bgm")==="off")return;
+    if(!(localStorage.getItem("cc-bgm")==="on"||sessionStorage.getItem("cc-bgm-playing")==="1"))return;
+    var t=parseFloat(sessionStorage.getItem("cc-bgm-t")||"0")||0;
+    var w=parseInt(sessionStorage.getItem("cc-bgm-wall")||"0",10);
+    if(w) t+=Math.min(6,Math.max(0,(Date.now()-w)/1000));
+    a.volume=0.42;
+    var go=function(){
+      try{
+        var d=a.duration;
+        if(isFinite(d)&&d>0) t=((t%d)+d)%d;
+        if(Math.abs((a.currentTime||0)-t)>0.15) a.currentTime=Math.max(0,t);
+      }catch(e){}
+      var p=a.play();
+      if(p&&p.catch)p.catch(function(){});
+    };
+    if(a.readyState>=1) go();
+    else a.addEventListener("loadedmetadata",go,{once:true});
+  }catch(e){}
+})();
+</script>
 
 <div class="topbar">
   <div class="topbar-in">
-    <a class="back" href="index.html">← 返回 CYBER CASTERS</a>
+    <a class="back" href="index.html">← 返回</a>
     <div class="userchip" id="userChip">
       <span class="who">MEETING NOTES · 001</span>
     </div>
@@ -32,9 +176,12 @@
     <div class="abstract" id="gSummary">加载中…</div>
   </header>
 
-  <!-- 公开纪要：议题目录 + 一句摘要（无需登录） -->
+  <!-- 公开纪要：本期要点（无需登录） -->
   <section class="public-digest" id="publicDigest" hidden>
-    <h2 class="digest-title">议题目录</h2>
+    <div class="digest-head">
+      <h2 class="digest-title">本期要点</h2>
+      <span class="digest-count"><i id="digestCount">00</i> ITEMS</span>
+    </div>
     <ol class="topic-list" id="topicList"></ol>
     <p class="digest-note">逐步实操、对照表、现场照片与留言板，仅对当期参会成员开放。</p>
   </section>
@@ -80,7 +227,6 @@
   </footer>
 </div>
 
-<audio id="bgm" src="assets/audio/bgm.m4a" preload="auto"></audio>
 <button id="bgmBtn" aria-label="背景音乐开关" title="背景音乐" aria-pressed="false">♪</button>
 
 <div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="照片查看">
@@ -92,9 +238,10 @@
 </div>
 
 <script src="js/util.js"></script>
+<script src="js/theme.js?v=bj-sun2"></script>
 <script src="js/api.js"></script>
 <script src="js/gathering-data.js"></script>
-<script src="js/bgm.js"></script>
+<script src="js/bgm.js?v=handoff9"></script>
 <script src="js/gathering.js"></script>
 </body>
 </html>

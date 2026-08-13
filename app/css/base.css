@@ -8,10 +8,13 @@ html,body{overflow-x:clip}
 html{
   font-size:16px;
   -webkit-text-size-adjust:100%;
+  background-color:var(--void);
+  min-height:100%;
+  min-height:100dvh;
 }
 
 body{
-  background:var(--void);
+  background-color:inherit;
   color:var(--paper);
   font-family:var(--font-sans);
   font-size:var(--text-base);
@@ -19,7 +22,28 @@ body{
   font-weight:400;
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
+  min-height:100%;
+  min-height:100dvh;
+  transition:color .22s ease;
 }
+
+#cc-view{min-height:100dvh;position:relative}
+#cc-view > [data-cc-slot]{display:none;min-height:100dvh}
+#cc-view[data-show="index.html"] > [data-cc-slot="index.html"],
+#cc-view[data-show="apply.html"] > [data-cc-slot="apply.html"],
+#cc-view[data-show="login.html"] > [data-cc-slot="login.html"],
+#cc-view[data-show="gathering-001.html"] > [data-cc-slot="gathering-001.html"]{display:block}
+#cc-void{
+  position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background-color:var(--void);
+}
+/* 切页遮罩：盖住样式尚未跟上的那一帧，颜色跟主题走（不是死黑） */
+#cc-veil{
+  position:fixed;inset:0;z-index:2147483000;
+  background-color:var(--void);
+  opacity:0;pointer-events:none;
+}
+#cc-veil.on{opacity:1;pointer-events:auto}
 
 /* 斜体在中文环境下常回落宋体/衬线，统一关掉 */
 em,i,cite,dfn{font-style:normal;font-family:inherit}
@@ -64,13 +88,17 @@ footer{
   color:var(--ash);
   display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
 }
+/* .wrap 的 padding:0 24px 会盖掉 footer 上下内边距，单独补回并加大底距 */
+footer.wrap{
+  padding:26px 24px 56px;
+}
 
 footer a{
   color:var(--cyan);
   font-weight:500;
   text-decoration:none;
 }
-footer a:hover{border-bottom:1px solid rgba(63,224,208,.45)}
+footer a:hover{border-bottom:1px solid color-mix(in srgb, var(--cyan) 45%, transparent)}
 
 /* ── 行动链接 / 标签：中文走无衬线，避免等宽字面发僵 ── */
 .action-link,
@@ -96,7 +124,7 @@ footer a:hover{border-bottom:1px solid rgba(63,224,208,.45)}
 .card-link:hover,
 .spell .from:hover{
   color:var(--paper);
-  border-bottom-color:rgba(63,224,208,.55);
+  border-bottom-color:color-mix(in srgb, var(--cyan) 55%, transparent);
   gap:0.55em;
 }
 .action-link .arrow,
@@ -120,7 +148,7 @@ footer a:hover{border-bottom:1px solid rgba(63,224,208,.45)}
   letter-spacing:var(--track-tight);
   line-height:1.2;
   color:var(--body);
-  background:rgba(157,107,255,.08);
+  background:color-mix(in srgb, var(--arcane) 10%, transparent);
   border:1px solid var(--line);
   border-radius:2px;
   padding:5px 10px;
@@ -138,7 +166,45 @@ footer a:hover{border-bottom:1px solid rgba(63,224,208,.45)}
   border:1px solid currentColor;
 }
 
+/* 音频元素本身不占布局；换页时放在 body 顶部以便尽早续播 */
+#bgm{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
+
+/* 右下角浮钮：主题 / 音乐同一尺寸、同一右边线，垂直叠放 */
+#themeBtn,
+#bgmBtn{
+  position:fixed;
+  right:max(18px, env(safe-area-inset-right));
+  z-index:50;
+  box-sizing:border-box;
+  width:42px;height:42px;padding:0;border-radius:0;
+  border:1px solid var(--line);
+  background:var(--panel-glass);
+  color:var(--ash);
+  cursor:pointer;
+  backdrop-filter:blur(8px);
+  display:inline-flex;align-items:center;justify-content:center;
+  line-height:1;
+}
+#bgmBtn{
+  bottom:max(18px, env(safe-area-inset-bottom));
+  font-size:16px;
+}
+#themeBtn{
+  bottom:calc(max(18px, env(safe-area-inset-bottom)) + 52px);
+  font-size:18px;
+}
+#themeBtn:hover,
+#bgmBtn:hover{border-color:var(--cyan);color:var(--cyan)}
+#themeBtn[data-theme="light"]{color:var(--arcane);border-color:color-mix(in srgb, var(--arcane) 45%, transparent)}
+#bgmBtn.on{
+  color:var(--cyan);border-color:color-mix(in srgb, var(--cyan) 55%, transparent);
+}
+body:not(:has(#bgmBtn)) #themeBtn{
+  bottom:max(18px, env(safe-area-inset-bottom));
+}
+
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
   html{scroll-behavior:auto}
+  body{transition:none}
 }

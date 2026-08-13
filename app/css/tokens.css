@@ -1,5 +1,15 @@
-/* 设计令牌：颜色 / 字体 / 字阶 —— 全站共用 */
+/* 设计令牌：颜色 / 字体 / 字阶 —— 全站共用
+   深浅色对齐 icons 两套底：黑底 (#07060E) 与白底 (#F5F3FB) */
+
 :root{
+  /* 默认浅色画布：iOS 后退手势用根 color-scheme 填背后那一层。
+     若 :root 写 dark，浅色页一滑就透出黑底。 */
+  color-scheme:light;
+}
+
+[data-theme="dark"]{
+  color-scheme:dark;
+
   --void:#07060E;
   --panel:#100C21;
   --panel-2:#171132;
@@ -10,7 +20,48 @@
   --ash:#8E88AE;
   --paper:#ECE8FA;
   --body:#B9B3D4;
+  --on-accent:#07060E;
 
+  --panel-glass:rgba(16,12,33,.86);
+  --panel-wash:rgba(16,12,33,.55);
+  --panel-wash-soft:rgba(16,12,33,.28);
+  --glow-arcane:rgba(157,107,255,.20);
+  --glow-cyan:rgba(63,224,208,.10);
+  --glow-brand:rgba(157,107,255,.10);
+  --logo-glow-near:rgba(236,232,250,.30);
+  --logo-glow-far:rgba(157,107,255,.26);
+  --theme-meta:#07060E;
+  --tabbar-bg:rgba(7,6,14,.88);
+}
+
+[data-theme="light"]{
+  color-scheme:light;
+
+  --void:#F5F3FB;
+  --panel:#FFFFFF;
+  --panel-2:#ECEAF6;
+  --line:#CDC6E3;
+  --cyan:#1FA899;
+  --arcane:#7B4FE0;
+  --gold:#B07A28;
+  --ash:#6A6488;
+  --paper:#161226;
+  --body:#4A4563;
+  --on-accent:#FFFFFF;
+
+  --panel-glass:rgba(255,255,255,.88);
+  --panel-wash:rgba(245,243,251,.72);
+  --panel-wash-soft:rgba(245,243,251,.42);
+  --glow-arcane:rgba(123,79,224,.14);
+  --glow-cyan:rgba(31,168,153,.10);
+  --glow-brand:rgba(123,79,224,.08);
+  --logo-glow-near:rgba(22,18,38,.12);
+  --logo-glow-far:rgba(123,79,224,.18);
+  --theme-meta:#F5F3FB;
+  --tabbar-bg:rgba(245,243,251,.92);
+}
+
+:root{
   /* 中文与英文同一无衬线族；等宽栈末尾必须挂中文无衬线，
      否则 Windows 对汉字会回落到宋体（SimSun） */
   --font-sans:"PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei UI","Microsoft YaHei",

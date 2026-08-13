@@ -10,28 +10,27 @@ const $ = CC.$;
 const esc = CC.esc;
 
 function fmtTime(iso) {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleString("zh-CN", { hour12: false });
-  } catch (_) {
-    return iso;
-  }
+  return CC.fmtChinaTime(iso);
 }
 
 function renderUserChip(me) {
   const el = $("#userChip");
   if (!me || !me.auth) {
     el.innerHTML = `
-      <span class="who">MEETING NOTES · ${GATHERING_ID}</span>
+      <span class="who">NOTES · ${GATHERING_ID}</span>
       <a href="login.html?next=gathering-001.html">登录</a>
       <a href="apply.html">申请</a>`;
     return;
   }
+  const label = me.admin
+    ? `${esc(me.user?.name || me.admin.username)}（管理）`
+    : esc(me.user.name);
   el.innerHTML = `
-    <span class="who">${esc(me.user.name)}</span>
+    <span class="who">${label}</span>
     <button type="button" id="logoutBtn">退出</button>`;
   $("#logoutBtn").addEventListener("click", async () => {
     await CC.logout();
+    try { await CC.api("/api/admin/logout", { method: "POST", body: "{}" }); } catch (_) {}
     location.reload();
   });
 }
@@ -156,18 +155,19 @@ async function main() {
   $("#gMeta").textContent = `${data.date} · ${data.place} · ${data.mode}`;
   $("#gSummary").textContent = data.summary;
 
-  /* 公开纪要：议题目录 + 一句摘要 */
+  /* 公开纪要：要点卡片网格，桌面端多列 */ /* digest-cards-v2 */
   const digest = $("#publicDigest");
   const topics = data.topics || [];
   if (topics.length) {
     digest.hidden = false;
+    $("#digestCount").textContent = String(topics.length).padStart(2, "0");
     $("#topicList").innerHTML = topics.map(t => `
-      <li>
-        <i>${esc(t.no)}</i>
-        <div>
-          <div class="t-title">${esc(t.title)}</div>
-          ${t.blurb ? `<div class="t-blurb">${esc(t.blurb)}</div>` : ""}
+      <li class="topic-card">
+        <div class="card-top">
+          <h3 class="t-title">${esc(t.title)}</h3>
+          <span class="t-no">${esc(t.no)}</span>
         </div>
+        <p class="t-blurb">${esc(t.blurb || "")}</p>
       </li>`).join("");
   }
 
@@ -187,13 +187,13 @@ async function main() {
         `<div class="comment"><div class="body" style="color:#ff8e8e">${esc(err.message)}</div></div>`;
     });
   }
-
-  CC.BGM.init({
-    mode: "button",
-    toggleId: "bgmBtn",
-    gestureKick: true
-  });
 }
+
+CC.BGM.init({
+  mode: "button",
+  toggleId: "bgmBtn",
+  gestureKick: true
+});
 
 main().catch(err => {
   $("#gSummary").textContent = "加载失败：" + err.message;
