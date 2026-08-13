@@ -37,6 +37,13 @@ body{
   position:fixed;inset:0;z-index:-1;pointer-events:none;
   background-color:var(--void);
 }
+/* 切页遮罩：盖住样式尚未跟上的那一帧，颜色跟主题走（不是死黑） */
+#cc-veil{
+  position:fixed;inset:0;z-index:2147483000;
+  background-color:var(--void);
+  opacity:0;pointer-events:none;
+}
+#cc-veil.on{opacity:1;pointer-events:auto}
 
 /* 斜体在中文环境下常回落宋体/衬线，统一关掉 */
 em,i,cite,dfn{font-style:normal;font-family:inherit}

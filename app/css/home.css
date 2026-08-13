@@ -1,6 +1,7 @@
 /* 首页专属样式 */
 /* ── 法阵 hero ──────────────────────── */
-html{scroll-behavior:smooth}
+html:has(#cc-view[data-show="index.html"]),
+html:not(:has(#cc-view)){scroll-behavior:smooth}
 
 .hero{
   position:relative;

@@ -900,12 +900,26 @@ app.post("/api/admin/users/:id/gatherings", async (c) => {
   return c.json({ ok: true, user: userOut });
 });
 
-app.notFound((c) => {
+async function assetResponse(c) {
+  if (!c.env.ASSETS) return null;
+  const res = await c.env.ASSETS.fetch(c.req.raw);
+  const type = (res.headers.get("content-type") || "").toLowerCase();
+  const path = c.req.path || "";
+  const isHtml =
+    type.includes("text/html") || /\.html?$/i.test(path) || path === "/" || path === "";
+  if (!isHtml) return res;
+  const headers = new Headers(res.headers);
+  headers.set("content-type", "text/html; charset=utf-8");
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+}
+
+app.notFound(async (c) => {
   if (c.req.path.startsWith("/api/")) {
     return c.json({ error: "未找到接口" }, 404);
   }
-  /* 非 API：交给 Assets（若绑定存在） */
-  if (c.env.ASSETS) return c.env.ASSETS.fetch(c.req.raw);
+  /* 非 API：交给 Assets（若绑定存在）；HTML 强制带 charset，避免移动端闪乱码 */
+  const asset = await assetResponse(c);
+  if (asset) return asset;
   return c.text("Not Found", 404);
 });
 

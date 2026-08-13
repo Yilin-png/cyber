@@ -498,7 +498,14 @@ CC.BGM = (function () {
     }
   }
 
-  const CHROME_IDS = new Set(["bgm", "themeBtn", "cc-void"]);
+  const CHROME_IDS = new Set(["bgm", "themeBtn", "cc-void", "cc-veil"]);
+  const SPA_CSS = [
+    "css/tokens.css?v=cs1",
+    "css/base.css?v=fab5",
+    "css/home.css?v=nav1",
+    "css/auth.css?v=apply-layout",
+    "css/gathering.css?v=fab1"
+  ];
 
   function pageRoot() {
     return slots.get(activeKey)?.el || null;
@@ -506,30 +513,6 @@ CC.BGM = (function () {
 
   function themeBg() {
     return document.documentElement.dataset.theme === "light" ? "#F5F3FB" : "#07060E";
-  }
-
-  function currentWanted() {
-    const wanted = new Set();
-    document.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
-      if (l.disabled) return;
-      const path = cssPathname(l.href, location.href);
-      if (path) wanted.add(path);
-    });
-    return wanted;
-  }
-
-  function currentPageStyles() {
-    return [...document.querySelectorAll("style[data-cc-page]")].map((s) => s.textContent);
-  }
-
-  function restorePageStyles(texts) {
-    document.querySelectorAll("style[data-cc-page]").forEach((s) => s.remove());
-    (texts || []).forEach((text) => {
-      const el = document.createElement("style");
-      el.dataset.ccPage = "1";
-      el.textContent = text;
-      document.head.appendChild(el);
-    });
   }
 
   function ensureVoid() {
@@ -544,8 +527,40 @@ CC.BGM = (function () {
     return el;
   }
 
+  function ensureVeil() {
+    let el = document.getElementById("cc-veil");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "cc-veil";
+      el.setAttribute("aria-hidden", "true");
+      document.body.appendChild(el);
+    }
+    el.style.backgroundColor = themeBg();
+    return el;
+  }
+
+  function raiseVeil() {
+    const el = ensureVeil();
+    el.style.backgroundColor = themeBg();
+    el.classList.add("on");
+    void el.offsetHeight;
+    return el;
+  }
+
+  function dropVeil() {
+    const el = document.getElementById("cc-veil");
+    if (!el) return;
+    /* 多等两帧，让目标页样式和布局先画完再揭开 */
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setTimeout(() => el.classList.remove("on"), 48);
+      });
+    });
+  }
+
   function ensureView() {
     ensureVoid();
+    ensureVeil();
     if (viewEl && document.body.contains(viewEl)) return viewEl;
     viewEl = document.getElementById("cc-view");
     if (viewEl) return viewEl;
@@ -559,6 +574,34 @@ CC.BGM = (function () {
     if (audio && audio.nextSibling) document.body.insertBefore(viewEl, audio.nextSibling);
     else document.body.appendChild(viewEl);
     return viewEl;
+  }
+
+  function ensureSpaCss() {
+    const pending = [];
+    SPA_CSS.forEach((href) => {
+      const path = cssPathname(href, location.href);
+      let el = [...document.querySelectorAll('link[rel="stylesheet"]')].find(
+        (l) => cssPathname(l.href, location.href) === path
+      );
+      if (el) {
+        el.disabled = false;
+        return;
+      }
+      el = document.createElement("link");
+      el.rel = "stylesheet";
+      el.href = href;
+      pending.push(
+        new Promise((resolve) => {
+          el.addEventListener("load", resolve, { once: true });
+          el.addEventListener("error", resolve, { once: true });
+        })
+      );
+      document.head.appendChild(el);
+    });
+    document.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
+      l.disabled = false;
+    });
+    return pending.length ? Promise.all(pending) : Promise.resolve();
   }
 
   function wrapInitial() {
@@ -577,8 +620,6 @@ CC.BGM = (function () {
           el,
           title: document.title,
           bodyClass: document.body.className,
-          wanted: currentWanted(),
-          pageStyles: currentPageStyles(),
           scrollY: 0,
           hydrated: true
         });
@@ -586,6 +627,7 @@ CC.BGM = (function () {
     });
     activeKey = key;
     showSlot(key);
+    ensureSpaCss();
   }
 
   function snapshot(key) {
@@ -593,19 +635,7 @@ CC.BGM = (function () {
     if (!rec) return;
     rec.title = document.title;
     rec.bodyClass = document.body.className;
-    rec.wanted = currentWanted();
-    rec.pageStyles = currentPageStyles();
     rec.scrollY = window.scrollY || 0;
-  }
-
-  function enableWanted(wanted) {
-    if (!wanted) return;
-    document.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
-      const path = cssPathname(l.href, location.href);
-      if (wanted.has(path) || /\/css\/(tokens|base|auth)\.css$/.test(path)) {
-        l.disabled = false;
-      }
-    });
   }
 
   function showSlot(key) {
@@ -616,17 +646,24 @@ CC.BGM = (function () {
     return true;
   }
 
-  function activate(key) {
+  function activate(key, { veil = true } = {}) {
     const rec = slots.get(key);
     if (!rec || !rec.el) return false;
-    enableWanted(rec.wanted);
+    if (veil) raiseVeil();
     document.title = rec.title || document.title;
     document.body.className = rec.bodyClass || "";
-    if (!showSlot(key)) return false;
+    document.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
+      l.disabled = false;
+    });
+    if (!showSlot(key)) {
+      if (veil) dropVeil();
+      return false;
+    }
     activeKey = key;
     scrollToY(rec.scrollY || 0);
-    if (rec.wanted) pruneStyles(rec.wanted);
+    void document.documentElement.offsetHeight;
     hydrateChrome();
+    if (veil) dropVeil();
     return true;
   }
 
@@ -653,45 +690,14 @@ CC.BGM = (function () {
   }
 
   async function prepareStyles(doc, base) {
+    await ensureSpaCss();
     const wanted = new Set();
-    const pending = [];
     doc.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
       const href = link.getAttribute("href");
       if (!href) return;
       wanted.add(new URL(href, base).pathname);
     });
-    wanted.forEach((path) => {
-      let el = [...document.querySelectorAll('link[rel="stylesheet"]')].find(
-        (l) => cssPathname(l.href, location.href) === path
-      );
-      if (el) {
-        el.disabled = false;
-        return;
-      }
-      el = document.createElement("link");
-      el.rel = "stylesheet";
-      el.href = "css/" + path.split("/").pop();
-      pending.push(
-        new Promise((resolve) => {
-          el.addEventListener("load", resolve, { once: true });
-          el.addEventListener("error", resolve, { once: true });
-        })
-      );
-      document.head.appendChild(el);
-    });
-    if (pending.length) await Promise.all(pending);
     return wanted;
-  }
-
-  function pruneStyles(wanted) {
-    document.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
-      const path = cssPathname(l.href, location.href);
-      if (wanted.has(path) || /\/css\/(tokens|base|auth)\.css$/.test(path)) {
-        l.disabled = false;
-      } else {
-        l.disabled = true;
-      }
-    });
   }
 
   let navGen = 0;
@@ -719,6 +725,7 @@ CC.BGM = (function () {
 
     const gen = ++navGen;
     navigating = true;
+    raiseVeil();
     try {
       const res = await fetch(url.href, {
         credentials: "same-origin",
@@ -728,7 +735,7 @@ CC.BGM = (function () {
       const html = await res.text();
       if (gen !== navGen) return;
       const doc = new DOMParser().parseFromString(html, "text/html");
-      const wanted = await prepareStyles(doc, url.href);
+      await prepareStyles(doc, url.href);
       if (gen !== navGen) return;
 
       const incoming = doc.body.cloneNode(true);
@@ -736,13 +743,8 @@ CC.BGM = (function () {
       incoming.querySelector("#bgm")?.remove();
       incoming.querySelector("#themeBtn")?.remove();
       incoming.querySelector("#cc-void")?.remove();
+      incoming.querySelector("#cc-veil")?.remove();
       incoming.querySelector("#cc-view")?.remove();
-
-      const pageStyles = [];
-      doc.querySelectorAll("head style").forEach((s) => {
-        if (s.id === "cc-boot-bg") return;
-        pageStyles.push(s.textContent);
-      });
 
       if (!opts.pop) history.pushState({ cc: 1, key }, "", url.href);
 
@@ -757,13 +759,11 @@ CC.BGM = (function () {
         el: slot,
         title: doc.title || document.title,
         bodyClass: doc.body.className || "",
-        wanted,
-        pageStyles,
         scrollY: 0,
         hydrated: false
       });
 
-      activate(key);
+      activate(key, { veil: false });
 
       await runPageScripts(doc, url.href);
       if (gen !== navGen) return;
@@ -774,6 +774,7 @@ CC.BGM = (function () {
       console.warn("cc-nav", err);
     } finally {
       if (gen === navGen) navigating = false;
+      dropVeil();
     }
   }
 
@@ -813,14 +814,24 @@ CC.BGM = (function () {
       true
     );
     window.addEventListener("popstate", () => {
+      raiseVeil();
       const key = pageName(location.href);
-      if (!isAppUrl(location.href)) return;
+      if (!isAppUrl(location.href)) {
+        dropVeil();
+        return;
+      }
       navGen += 1;
       navigating = false;
       persist();
-      if (key === activeKey) return;
+      if (key === activeKey) {
+        dropVeil();
+        return;
+      }
       snapshot(activeKey);
-      if (activate(key)) return;
+      if (activate(key, { veil: false })) {
+        dropVeil();
+        return;
+      }
       go(location.href, { pop: true });
     });
     if (window.__ccPendingNav) {
