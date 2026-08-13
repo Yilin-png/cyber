@@ -732,7 +732,8 @@ CC.BGM = (function () {
         headers: { Accept: "text/html" }
       });
       if (!res.ok) throw new Error("nav " + res.status);
-      const html = await res.text();
+      /* Assets 常回 text/html 不带 charset，res.text() 会按错编码，中文变乱码 */
+      const html = new TextDecoder("utf-8").decode(await res.arrayBuffer());
       if (gen !== navGen) return;
       const doc = new DOMParser().parseFromString(html, "text/html");
       await prepareStyles(doc, url.href);

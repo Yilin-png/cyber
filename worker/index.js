@@ -232,17 +232,34 @@ app.get("/api/health", (c) =>
   c.json({ ok: true, service: "cybercasters", runtime: "cloudflare-workers", time: new Date().toISOString() })
 );
 
+async function assetResponse(c, assetPath) {
+  if (!c.env.ASSETS) return null;
+  const req = assetPath
+    ? new Request(new URL(assetPath, c.req.url), c.req.raw)
+    : c.req.raw;
+  const res = await c.env.ASSETS.fetch(req);
+  const type = (res.headers.get("content-type") || "").toLowerCase();
+  const path = assetPath || c.req.path || "";
+  const isHtml =
+    type.includes("text/html") || /\.html?$/i.test(path) || path === "/" || path === "";
+  if (!isHtml) return res;
+  const headers = new Headers(res.headers);
+  headers.set("content-type", "text/html; charset=utf-8");
+  headers.set("cache-control", "public, max-age=0, must-revalidate");
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+}
+
 /* Assets html_handling=none 时 / 不会自动落到 index.html；直接回传首页，便于微信抓取 OG */
 app.get("/", async (c) => {
-  if (!c.env.ASSETS) return c.redirect("/index.html", 302);
-  const res = await c.env.ASSETS.fetch(new URL("/index.html", c.req.url));
-  if (!res.ok) return c.redirect("/index.html", 302);
-  return new Response(res.body, {
-    status: 200,
-    headers: {
-      "content-type": "text/html; charset=utf-8",
-      "cache-control": res.headers.get("cache-control") || "public, max-age=0, must-revalidate"
-    }
+  const asset = await assetResponse(c, "/index.html");
+  return asset && asset.ok ? asset : c.redirect("/index.html", 302);
+});
+
+/* 子页也走 Worker，强制 UTF-8，避免 fetch/SPA 切页中文乱码 */
+["/index.html", "/apply.html", "/login.html", "/gathering-001.html", "/admin.html"].forEach((p) => {
+  app.get(p, async (c) => {
+    const asset = await assetResponse(c, p);
+    return asset || c.text("Not Found", 404);
   });
 });
 
@@ -899,19 +916,6 @@ app.post("/api/admin/users/:id/gatherings", async (c) => {
   }
   return c.json({ ok: true, user: userOut });
 });
-
-async function assetResponse(c) {
-  if (!c.env.ASSETS) return null;
-  const res = await c.env.ASSETS.fetch(c.req.raw);
-  const type = (res.headers.get("content-type") || "").toLowerCase();
-  const path = c.req.path || "";
-  const isHtml =
-    type.includes("text/html") || /\.html?$/i.test(path) || path === "/" || path === "";
-  if (!isHtml) return res;
-  const headers = new Headers(res.headers);
-  headers.set("content-type", "text/html; charset=utf-8");
-  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
-}
 
 app.notFound(async (c) => {
   if (c.req.path.startsWith("/api/")) {
