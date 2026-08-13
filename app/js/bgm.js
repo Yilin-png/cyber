@@ -484,18 +484,39 @@ CC.BGM = (function () {
     }
   }
 
-  function ensureStyles(doc, base) {
+  function syncHead(doc, base) {
+    const wanted = new Set();
     doc.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
       const href = link.getAttribute("href");
       if (!href) return;
-      const path = new URL(href, base).pathname;
+      wanted.add(new URL(href, base).pathname);
+    });
+    document.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
+      const path = new URL(l.href, location.href).pathname;
+      if (wanted.has(path) || /\/css\/(tokens|base|auth)\.css$/.test(path)) {
+        l.disabled = false;
+      } else {
+        l.disabled = true;
+      }
+    });
+    wanted.forEach((path) => {
       const exists = [...document.querySelectorAll('link[rel="stylesheet"]')].some(
         (l) => new URL(l.href, location.href).pathname === path
       );
       if (exists) return;
       const el = document.createElement("link");
       el.rel = "stylesheet";
-      el.href = href;
+      el.href = path.startsWith("/") ? path.replace(/^\/+/, "") : path;
+      /* path is pathname like /css/home.css — use relative css/home.css */
+      const file = path.split("/").pop();
+      el.href = "css/" + file;
+      document.head.appendChild(el);
+    });
+    document.querySelectorAll("style[data-cc-page]").forEach((s) => s.remove());
+    doc.querySelectorAll("head style").forEach((s) => {
+      const el = document.createElement("style");
+      el.dataset.ccPage = "1";
+      el.textContent = s.textContent;
       document.head.appendChild(el);
     });
   }
@@ -520,7 +541,7 @@ CC.BGM = (function () {
       if (!res.ok) throw new Error("nav " + res.status);
       const html = await res.text();
       const doc = new DOMParser().parseFromString(html, "text/html");
-      ensureStyles(doc, url.href);
+      syncHead(doc, url.href);
       document.title = doc.title || document.title;
 
       const keep = ["bgm", "themeBtn"]
