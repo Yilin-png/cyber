@@ -82,6 +82,22 @@
 <audio id="bgm" src="assets/audio/bgm.m4a?v=32k" preload="auto" playsinline webkit-playsinline></audio>
 <script>
 (function(){
+  document.addEventListener("click",function(e){
+    if(e.defaultPrevented)return;
+    if(e.button&&e.button!==0)return;
+    if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+    var a=e.target.closest&&e.target.closest("a[href]");
+    if(!a||a.target==="_blank"||a.hasAttribute("download"))return;
+    var href=a.getAttribute("href")||"";
+    if(!href||href.charAt(0)==="#"||href.indexOf("mailto:")===0||href.indexOf("tel:")===0)return;
+    var u;try{u=new URL(href,location.href);}catch(err){return;}
+    if(u.origin!==location.origin)return;
+    var name=(u.pathname.replace(/\/+$/,"").split("/").pop()||"index.html");
+    if(!(u.pathname==="/"||name===""||name==="index.html"||/^(apply|login|gathering-001)\.html$/i.test(name)))return;
+    e.preventDefault();
+    if(window.CC&&CC.BGM&&CC.BGM.go){CC.BGM.go(u.href);return;}
+    window.__ccPendingNav=u.href;
+  },true);
   var a=document.getElementById("bgm");
   if(!a)return;
   try{
@@ -395,7 +411,7 @@
 <script src="js/theme.js?v=bj-sun1"></script>
 <script src="js/api.js"></script>
 <script src="js/data.js"></script>
-<script src="js/bgm.js?v=handoff1"></script>
+<script src="js/bgm.js?v=handoff2"></script>
 <script src="js/home.js"></script>
 </body>
 </html>

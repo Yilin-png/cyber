@@ -1,4 +1,4 @@
-/* 背景音乐：跨页续播（墙上时钟补偿；换页不压音量重淡入） */
+/* 背景音乐：跨页续播。站内 HTML 用内容替换，不卸载 <audio>，避免自动播放被拦。 */
 window.CC = window.CC || {};
 
 CC.BGM = (function () {
@@ -12,6 +12,29 @@ CC.BGM = (function () {
   };
   const VOL = 0.42;
   const FADE_MS = 280;
+  const APP_PAGES = /^(index|apply|login|gathering-001)\.html$/i;
+
+  let shared = null;
+  let navInstalled = false;
+  let navigating = false;
+
+  function isAppUrl(url) {
+    try {
+      const u = url instanceof URL ? url : new URL(url, location.href);
+      if (u.origin !== location.origin) return false;
+      const name = (u.pathname.replace(/\/+$/, "").split("/").pop() || "index.html");
+      if (u.pathname === "/" || name === "" || name === "index.html") return true;
+      return APP_PAGES.test(name);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function pageName(url) {
+    const u = url instanceof URL ? url : new URL(url, location.href);
+    const name = (u.pathname.replace(/\/+$/, "").split("/").pop() || "index.html");
+    return name === "" ? "index.html" : name;
+  }
 
   /**
    * @param {object} opts
@@ -24,15 +47,11 @@ CC.BGM = (function () {
   function init(opts = {}) {
     const audio = document.getElementById(opts.audioId || "bgm");
     if (!audio) return null;
-    if (audio.dataset.ccBgmInit === "1") {
-      return audio._ccBgm || null;
+    if (shared && shared.audio === audio) {
+      shared.bindUi(opts);
+      if (opts.gestureKick) shared.installGestureKick();
+      return shared;
     }
-    audio.dataset.ccBgmInit = "1";
-
-    const mode = opts.mode || "button";
-    const toggle = opts.toggleId ? document.getElementById(opts.toggleId) : null;
-    const sigilEl = opts.sigilEl || null;
-    const hint = document.querySelector(".core-hint");
 
     audio.loop = PLAYLIST.length === 1;
     audio.preload = "auto";
@@ -62,6 +81,8 @@ CC.BGM = (function () {
     let idx = getI();
     let fadeToken = 0;
     let resumeLock = null;
+    let uiAbort = null;
+    let kickInstalled = false;
 
     const setTrack = (i, t) => {
       idx = ((i % PLAYLIST.length) + PLAYLIST.length) % PLAYLIST.length;
@@ -104,7 +125,6 @@ CC.BGM = (function () {
       return ((t % dur) + dur) % dur;
     };
 
-    /** 读取进度；若上次在播，用墙上时钟把跳转加载耗时补进 currentTime */
     const getResumeTime = () => {
       try {
         const t = parseFloat(sessionStorage.getItem(KEY.t) || "0");
@@ -132,12 +152,12 @@ CC.BGM = (function () {
     };
 
     const syncUi = () => {
-      if (mode === "sigil" && hint) {
-        hint.style.display = audio.paused ? "" : "none";
-      }
-      if (toggle) {
-        toggle.classList.toggle("on", !audio.paused);
-        toggle.setAttribute("aria-pressed", String(!audio.paused));
+      const hint = document.querySelector(".core-hint");
+      if (hint) hint.style.display = audio.paused ? "" : "none";
+      const btn = document.getElementById("bgmBtn") || document.getElementById("coreJoin");
+      if (btn) {
+        btn.classList.toggle("on", !audio.paused);
+        btn.setAttribute("aria-pressed", String(!audio.paused));
       }
     };
 
@@ -194,7 +214,6 @@ CC.BGM = (function () {
     const resume = (opts = {}) => {
       if (resumeLock) return resumeLock;
       const soft = !!opts.soft;
-      /* 已在播：不要压音量再淡入，换页/早启动会「抽一下」 */
       if (!audio.paused) {
         try {
           audio.volume = VOL;
@@ -270,7 +289,6 @@ CC.BGM = (function () {
     audio.addEventListener("timeupdate", () => {
       if (!audio.paused) save();
     });
-    syncUi();
 
     if (audio.readyState < 1 && audio.paused) {
       try {
@@ -278,111 +296,90 @@ CC.BGM = (function () {
       } catch (_) {}
     }
 
-    if (shouldPlay()) resume({ soft: true });
+    const bindUi = (ui = {}) => {
+      uiAbort?.abort();
+      uiAbort = new AbortController();
+      const { signal } = uiAbort;
+      const mode = ui.mode || "button";
+      const toggle = ui.toggleId ? document.getElementById(ui.toggleId) : null;
+      const sigilEl = ui.sigilEl || document.getElementById("sigil");
+      syncUi();
+      if (!toggle) return;
 
-    if (mode === "sigil" && toggle) {
-      let lastUserAction = 0;
-      let castTimer = 0;
-      let pressAnim = null;
-      let castFromPointer = false;
-
-      const playCast = () => {
-        if (!sigilEl) return;
-        const mudra = sigilEl.querySelector(".mudra");
-        if (mudra && typeof mudra.animate === "function") {
-          try {
-            pressAnim?.cancel();
-          } catch (_) {}
-          pressAnim = mudra.animate(
-            [
-              { transform: "translate3d(0,0,0) scale(1)" },
-              { transform: "translate3d(0,2px,0) scale(.82)", offset: 0.16 },
-              { transform: "translate3d(0,-1px,0) scale(1.12)", offset: 0.42 },
-              { transform: "translate3d(0,0,0) scale(1)" }
-            ],
-            { duration: 680, easing: "cubic-bezier(.22,.9,.28,1)" }
-          );
-        }
-        sigilEl.classList.remove("casting");
-        requestAnimationFrame(() => {
-          sigilEl.classList.add("casting");
-          if (castTimer) clearTimeout(castTimer);
-          castTimer = setTimeout(() => sigilEl.classList.remove("casting"), 1100);
-        });
-      };
-
-      toggle.addEventListener("pointerdown", (e) => {
-        if (e.pointerType === "mouse" && e.button !== 0) return;
-        castFromPointer = true;
-        lastUserAction = performance.now();
-        playCast();
-      });
-      toggle.addEventListener("click", () => {
-        lastUserAction = performance.now();
-        if (!castFromPointer) playCast();
-        castFromPointer = false;
-        /* 先画按压，下一帧再碰 audio.play，避免解码抢动画帧 */
-        requestAnimationFrame(() => {
-          togglePlay();
-        });
-      });
-      audio.addEventListener("pause", () => {
-        if (localStorage.getItem(KEY.on) === "off") return;
-        if (performance.now() - lastUserAction < 1200) return;
-        setTimeout(() => {
-          if (audio.paused && shouldPlay()) resume({ soft: true });
-        }, 240);
-      });
-    }
-
-    if (mode === "button" && toggle) {
-      toggle.addEventListener("click", (e) => {
-        e.stopPropagation();
-        togglePlay();
-      });
-    }
-
-    const markNav = () => {
-      try {
-        if (!audio.paused) localStorage.setItem(KEY.on, "on");
-      } catch (_) {}
-      save();
+      if (mode === "sigil") {
+        let lastUserAction = 0;
+        let castTimer = 0;
+        let pressAnim = null;
+        let castFromPointer = false;
+        const playCast = () => {
+          if (!sigilEl) return;
+          const mudra = sigilEl.querySelector(".mudra");
+          if (mudra && typeof mudra.animate === "function") {
+            try {
+              pressAnim?.cancel();
+            } catch (_) {}
+            pressAnim = mudra.animate(
+              [
+                { transform: "translate3d(0,0,0) scale(1)" },
+                { transform: "translate3d(0,2px,0) scale(.82)", offset: 0.16 },
+                { transform: "translate3d(0,-1px,0) scale(1.12)", offset: 0.42 },
+                { transform: "translate3d(0,0,0) scale(1)" }
+              ],
+              { duration: 680, easing: "cubic-bezier(.22,.9,.28,1)" }
+            );
+          }
+          sigilEl.classList.remove("casting");
+          requestAnimationFrame(() => {
+            sigilEl.classList.add("casting");
+            if (castTimer) clearTimeout(castTimer);
+            castTimer = setTimeout(() => sigilEl.classList.remove("casting"), 1100);
+          });
+        };
+        toggle.addEventListener(
+          "pointerdown",
+          (e) => {
+            if (e.pointerType === "mouse" && e.button !== 0) return;
+            castFromPointer = true;
+            lastUserAction = performance.now();
+            playCast();
+          },
+          { signal }
+        );
+        toggle.addEventListener(
+          "click",
+          () => {
+            lastUserAction = performance.now();
+            if (!castFromPointer) playCast();
+            castFromPointer = false;
+            requestAnimationFrame(() => {
+              togglePlay();
+            });
+          },
+          { signal }
+        );
+        const onPause = () => {
+          if (localStorage.getItem(KEY.on) === "off") return;
+          if (performance.now() - lastUserAction < 1200) return;
+          setTimeout(() => {
+            if (audio.paused && shouldPlay()) resume({ soft: true });
+          }, 240);
+        };
+        audio.addEventListener("pause", onPause, { signal });
+      } else {
+        toggle.addEventListener(
+          "click",
+          (e) => {
+            e.stopPropagation();
+            togglePlay();
+          },
+          { signal }
+        );
+      }
     };
 
-    const bindSaveOnNav = () => {
-      document.querySelectorAll("a[href]").forEach((a) => {
-        if (a.dataset.bgmBound) return;
-        const href = a.getAttribute("href") || "";
-        if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) {
-          return;
-        }
-        if (/^https?:\/\//i.test(href) && !href.startsWith(location.origin)) return;
-        a.dataset.bgmBound = "1";
-        a.addEventListener("click", markNav, { capture: true });
-        a.addEventListener("pointerdown", markNav, { capture: true, passive: true });
-      });
-    };
-    bindSaveOnNav();
-    const mo = new MutationObserver(bindSaveOnNav);
-    mo.observe(document.documentElement, { childList: true, subtree: true });
-
-    /* 不要监听 beforeunload：会禁用 bfcache，返回页时音乐必断 */
-    window.addEventListener("pagehide", markNav);
-    window.addEventListener("pageshow", (e) => {
-      if (shouldPlay() && (e.persisted || audio.paused)) resume({ soft: true });
-    });
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") save();
-      else if (shouldPlay() && audio.paused) resume({ soft: true });
-    });
-    if (window.navigation && typeof navigation.addEventListener === "function") {
-      navigation.addEventListener("navigate", markNav);
-    }
-    setInterval(() => {
-      if (!audio.paused) save();
-    }, 400);
-
-    if (opts.gestureKick || shouldPlay()) {
+    const installGestureKick = () => {
+      if (kickInstalled) return;
+      kickInstalled = true;
       const kick = () => {
         if (!shouldPlay()) return;
         if (audio.paused) resume({ soft: true });
@@ -392,14 +389,48 @@ CC.BGM = (function () {
       audio.addEventListener("play", () =>
         KICKS.forEach((ev) => document.removeEventListener(ev, kick, { capture: true }))
       );
-    }
+    };
 
-    const api = { audio, resume, togglePlay, save, turnOn, turnOff };
-    audio._ccBgm = api;
-    return api;
+    const markNav = () => {
+      try {
+        if (!audio.paused) localStorage.setItem(KEY.on, "on");
+      } catch (_) {}
+      save();
+    };
+
+    window.addEventListener("pagehide", markNav);
+    window.addEventListener("pageshow", (e) => {
+      if (shouldPlay() && (e.persisted || audio.paused)) resume({ soft: true });
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") save();
+      else if (shouldPlay() && audio.paused) resume({ soft: true });
+    });
+    setInterval(() => {
+      if (!audio.paused) save();
+    }, 400);
+
+    bindUi(opts);
+    if (opts.gestureKick || shouldPlay()) installGestureKick();
+    if (shouldPlay()) resume({ soft: true });
+
+    shared = {
+      audio,
+      resume,
+      togglePlay,
+      save,
+      turnOn,
+      turnOff,
+      bindUi,
+      installGestureKick,
+      shouldPlay
+    };
+    audio._ccBgm = shared;
+    return shared;
   }
 
-  function persist(audio) {
+  function persist(audioEl) {
+    const audio = audioEl || document.getElementById("bgm");
     if (!audio) return;
     try {
       sessionStorage.setItem(KEY.t, String(audio.currentTime || 0));
@@ -409,5 +440,159 @@ CC.BGM = (function () {
     } catch (_) {}
   }
 
-  return { init, PLAYLIST, KEY, persist };
+  function bindPageBgm() {
+    const sigil = document.getElementById("sigil");
+    const core = document.getElementById("coreJoin");
+    if (sigil && core) {
+      init({ mode: "sigil", toggleId: "coreJoin", sigilEl: sigil, gestureKick: true });
+      return;
+    }
+    if (document.getElementById("bgmBtn")) {
+      init({ mode: "button", toggleId: "bgmBtn", gestureKick: true });
+    }
+  }
+
+  async function runPageScripts(doc, base) {
+    const scripts = [...doc.querySelectorAll("script")];
+    for (const s of scripts) {
+      const src = s.getAttribute("src");
+      const text = s.textContent || "";
+      if (!src) {
+        if (/cc-bgm-t/.test(text) && /getElementById\(["']bgm["']\)/.test(text)) continue;
+        if (/__ccPendingNav/.test(text) && /CC\.BGM\.go/.test(text)) continue;
+        if (!text.trim()) continue;
+        try {
+          new Function(text)();
+        } catch (err) {
+          console.warn("cc-nav inline", err);
+        }
+        continue;
+      }
+      const abs = new URL(src, base);
+      const path = abs.pathname;
+      if (/\/js\/(util|theme|api|bgm)\.js$/.test(path)) continue;
+      if (/\/js\/data\.js$/.test(path) && typeof DATA !== "undefined") continue;
+      try {
+        const code = await fetch(abs.href, { credentials: "same-origin" }).then((r) => {
+          if (!r.ok) throw new Error(String(r.status));
+          return r.text();
+        });
+        new Function(code)();
+      } catch (err) {
+        console.warn("cc-nav script", path, err);
+      }
+    }
+  }
+
+  function ensureStyles(doc, base) {
+    doc.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
+      const href = link.getAttribute("href");
+      if (!href) return;
+      const path = new URL(href, base).pathname;
+      const exists = [...document.querySelectorAll('link[rel="stylesheet"]')].some(
+        (l) => new URL(l.href, location.href).pathname === path
+      );
+      if (exists) return;
+      const el = document.createElement("link");
+      el.rel = "stylesheet";
+      el.href = href;
+      document.head.appendChild(el);
+    });
+  }
+
+  async function go(href, opts = {}) {
+    const url = new URL(href, location.href);
+    if (!isAppUrl(url)) {
+      location.href = url.href;
+      return;
+    }
+    if (!opts.pop && pageName(url) === pageName(location.href) && url.search === location.search) {
+      return;
+    }
+    if (navigating) return;
+    navigating = true;
+    persist();
+    try {
+      const res = await fetch(url.href, {
+        credentials: "same-origin",
+        headers: { Accept: "text/html" }
+      });
+      if (!res.ok) throw new Error("nav " + res.status);
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      ensureStyles(doc, url.href);
+      document.title = doc.title || document.title;
+
+      const keep = ["bgm", "themeBtn"]
+        .map((id) => document.getElementById(id))
+        .filter(Boolean);
+      keep.forEach((el) => el.remove());
+
+      const incoming = doc.body.cloneNode(true);
+      incoming.querySelectorAll("script").forEach((s) => s.remove());
+      incoming.querySelector("#bgm")?.remove();
+      incoming.querySelector("#themeBtn")?.remove();
+
+      document.body.className = doc.body.className || "";
+      document.body.replaceChildren(...Array.from(incoming.childNodes));
+      keep.forEach((el) => document.body.appendChild(el));
+
+      if (!opts.pop) history.pushState({ cc: 1 }, "", url.href);
+      window.scrollTo(0, 0);
+
+      await runPageScripts(doc, url.href);
+      bindPageBgm();
+      if (CC.Theme && typeof CC.Theme.apply === "function") {
+        CC.Theme.apply(CC.Theme.readPref());
+      }
+      const audio = document.getElementById("bgm");
+      if (audio && audio.paused && shared?.shouldPlay()) shared.resume({ soft: true });
+    } catch (_) {
+      location.href = url.href;
+    } finally {
+      navigating = false;
+    }
+  }
+
+  function installNav() {
+    if (navInstalled) return;
+    navInstalled = true;
+    document.addEventListener(
+      "click",
+      (e) => {
+        if (e.defaultPrevented) return;
+        if (e.button && e.button !== 0) return;
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        const a = e.target.closest && e.target.closest("a[href]");
+        if (!a || a.target === "_blank" || a.hasAttribute("download")) return;
+        const href = a.getAttribute("href") || "";
+        if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) {
+          return;
+        }
+        let url;
+        try {
+          url = new URL(href, location.href);
+        } catch (_) {
+          return;
+        }
+        if (!isAppUrl(url)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        go(url.href);
+      },
+      true
+    );
+    window.addEventListener("popstate", () => {
+      go(location.href, { pop: true });
+    });
+    if (window.__ccPendingNav) {
+      const pending = window.__ccPendingNav;
+      window.__ccPendingNav = "";
+      go(pending);
+    }
+  }
+
+  installNav();
+
+  return { init, PLAYLIST, KEY, persist, go, bindPageBgm };
 })();

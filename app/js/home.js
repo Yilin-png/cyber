@@ -254,7 +254,8 @@ if (logListEl && !logListEl.dataset.navBound) {
     if (!href || /^https?:\/\//i.test(href)) return;
     e.preventDefault();
     CC.BGM.persist?.(document.getElementById("bgm"));
-    window.location.assign(href);
+    if (CC.BGM.go) CC.BGM.go(href);
+    else window.location.assign(href);
   });
 }
 
