@@ -598,14 +598,36 @@ CC.BGM = (function () {
     rec.scrollY = window.scrollY || 0;
   }
 
+  function enableWanted(wanted) {
+    if (!wanted) return;
+    document.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
+      const path = cssPathname(l.href, location.href);
+      if (wanted.has(path) || /\/css\/(tokens|base|auth)\.css$/.test(path)) {
+        l.disabled = false;
+      }
+    });
+  }
+
   function showSlot(key) {
     const view = ensureView();
     const next = view.querySelector(`:scope > [data-cc-slot="${key}"]`);
-    if (next) next.hidden = false;
-    view.querySelectorAll(":scope > [data-cc-slot]").forEach((el) => {
-      if (el !== next) el.hidden = true;
-    });
-    return !!next;
+    if (!next) return false;
+    view.dataset.show = key;
+    return true;
+  }
+
+  function activate(key) {
+    const rec = slots.get(key);
+    if (!rec || !rec.el) return false;
+    enableWanted(rec.wanted);
+    document.title = rec.title || document.title;
+    document.body.className = rec.bodyClass || "";
+    if (!showSlot(key)) return false;
+    activeKey = key;
+    scrollToY(rec.scrollY || 0);
+    if (rec.wanted) pruneStyles(rec.wanted);
+    hydrateChrome();
+    return true;
   }
 
   function hydrateChrome() {
@@ -628,19 +650,6 @@ CC.BGM = (function () {
       window.scrollTo(0, y || 0);
     }
     html.style.scrollBehavior = prev;
-  }
-
-  function activate(key) {
-    const rec = slots.get(key);
-    if (!rec || !showSlot(key)) return false;
-    document.title = rec.title || document.title;
-    document.body.className = rec.bodyClass || "";
-    if (rec.wanted) pruneStyles(rec.wanted);
-    restorePageStyles(rec.pageStyles);
-    activeKey = key;
-    scrollToY(rec.scrollY || 0);
-    hydrateChrome();
-    return true;
   }
 
   async function prepareStyles(doc, base) {
@@ -741,7 +750,6 @@ CC.BGM = (function () {
 
       const slot = document.createElement("div");
       slot.dataset.ccSlot = key;
-      slot.hidden = true;
       slot.append(...Array.from(incoming.childNodes));
       ensureView().appendChild(slot);
 

@@ -28,8 +28,11 @@ body{
 }
 
 #cc-view{min-height:100dvh;position:relative}
-#cc-view > [data-cc-slot]{min-height:100dvh}
-#cc-view > [data-cc-slot][hidden]{display:none!important}
+#cc-view > [data-cc-slot]{display:none;min-height:100dvh}
+#cc-view[data-show="index.html"] > [data-cc-slot="index.html"],
+#cc-view[data-show="apply.html"] > [data-cc-slot="apply.html"],
+#cc-view[data-show="login.html"] > [data-cc-slot="login.html"],
+#cc-view[data-show="gathering-001.html"] > [data-cc-slot="gathering-001.html"]{display:block}
 #cc-void{
   position:fixed;inset:0;z-index:-1;pointer-events:none;
   background-color:var(--void);
