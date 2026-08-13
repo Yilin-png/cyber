@@ -9,10 +9,12 @@ html{
   font-size:16px;
   -webkit-text-size-adjust:100%;
   background-color:var(--void);
+  min-height:100%;
+  min-height:100dvh;
 }
 
 body{
-  background:var(--void);
+  background-color:inherit;
   color:var(--paper);
   font-family:var(--font-sans);
   font-size:var(--text-base);
@@ -20,8 +22,12 @@ body{
   font-weight:400;
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
-  transition:background-color .22s ease,color .22s ease;
+  min-height:100%;
+  min-height:100dvh;
+  transition:color .22s ease;
 }
+
+#cc-view{min-height:100dvh}
 
 /* 斜体在中文环境下常回落宋体/衬线，统一关掉 */
 em,i,cite,dfn{font-style:normal;font-family:inherit}

@@ -17,6 +17,9 @@ CC.BGM = (function () {
   let shared = null;
   let navInstalled = false;
   let navigating = false;
+  let activeKey = "";
+  let viewEl = null;
+  const pageStash = new Map();
 
   function isAppUrl(url) {
     try {
@@ -492,6 +495,101 @@ CC.BGM = (function () {
     }
   }
 
+  const CHROME_IDS = new Set(["bgm", "themeBtn"]);
+
+  function currentWanted() {
+    const wanted = new Set();
+    document.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
+      if (l.disabled) return;
+      const path = cssPathname(l.href, location.href);
+      if (path) wanted.add(path);
+    });
+    return wanted;
+  }
+
+  function currentPageStyles() {
+    return [...document.querySelectorAll("style[data-cc-page]")].map((s) => s.textContent);
+  }
+
+  function restorePageStyles(texts) {
+    document.querySelectorAll("style[data-cc-page]").forEach((s) => s.remove());
+    (texts || []).forEach((text) => {
+      const el = document.createElement("style");
+      el.dataset.ccPage = "1";
+      el.textContent = text;
+      document.head.appendChild(el);
+    });
+  }
+
+  function ensureView() {
+    if (viewEl && document.body.contains(viewEl)) return viewEl;
+    viewEl = document.getElementById("cc-view");
+    if (viewEl) return viewEl;
+    viewEl = document.createElement("div");
+    viewEl.id = "cc-view";
+    const audio = document.getElementById("bgm");
+    Array.from(document.body.childNodes).forEach((node) => {
+      if (node.nodeType === 1 && CHROME_IDS.has(node.id)) return;
+      viewEl.appendChild(node);
+    });
+    if (audio && audio.nextSibling) document.body.insertBefore(viewEl, audio.nextSibling);
+    else document.body.appendChild(viewEl);
+    return viewEl;
+  }
+
+  function stashCurrent() {
+    const view = ensureView();
+    if (!activeKey || !view.childNodes.length) return;
+    const frag = document.createDocumentFragment();
+    while (view.firstChild) frag.appendChild(view.firstChild);
+    pageStash.set(activeKey, {
+      frag,
+      scrollY: window.scrollY || 0,
+      title: document.title,
+      bodyClass: document.body.className,
+      wanted: currentWanted(),
+      pageStyles: currentPageStyles()
+    });
+  }
+
+  function hydrateChrome() {
+    bindPageBgm();
+    if (CC.Theme && typeof CC.Theme.apply === "function") {
+      CC.Theme.apply(CC.Theme.readPref());
+    }
+    const audio = document.getElementById("bgm");
+    if (audio && audio.paused && shared?.shouldPlay()) shared.resume({ soft: true });
+  }
+
+  function scrollToY(y) {
+    const html = document.documentElement;
+    const prev = html.style.scrollBehavior;
+    html.style.scrollBehavior = "auto";
+    try {
+      window.scrollTo({ top: y || 0, left: 0, behavior: "auto" });
+    } catch (_) {
+      window.scrollTo(0, y || 0);
+    }
+    html.style.scrollBehavior = prev;
+  }
+
+  function restoreStash(key) {
+    const saved = pageStash.get(key);
+    if (!saved) return false;
+    const view = ensureView();
+    view.replaceChildren();
+    view.appendChild(saved.frag);
+    pageStash.delete(key);
+    document.title = saved.title || document.title;
+    document.body.className = saved.bodyClass || "";
+    if (saved.wanted) pruneStyles(saved.wanted);
+    restorePageStyles(saved.pageStyles);
+    activeKey = key;
+    scrollToY(saved.scrollY || 0);
+    hydrateChrome();
+    return true;
+  }
+
   async function prepareStyles(doc, base) {
     const wanted = new Set();
     const pending = [];
@@ -521,6 +619,7 @@ CC.BGM = (function () {
     });
     document.querySelectorAll("style[data-cc-page]").forEach((s) => s.remove());
     doc.querySelectorAll("head style").forEach((s) => {
+      if (s.id === "cc-boot-bg") return;
       const el = document.createElement("style");
       el.dataset.ccPage = "1";
       el.textContent = s.textContent;
@@ -541,18 +640,31 @@ CC.BGM = (function () {
     });
   }
 
+  let navGen = 0;
+
   async function go(href, opts = {}) {
     const url = new URL(href, location.href);
     if (!isAppUrl(url)) {
       location.href = url.href;
       return;
     }
-    if (!opts.pop && pageName(url) === pageName(location.href) && url.search === location.search) {
+    const key = pageName(url);
+    if (!opts.pop && key === pageName(location.href) && url.search === location.search) {
       return;
     }
-    if (navigating) return;
-    navigating = true;
+    if (key === activeKey && !opts.pop) return;
+
     persist();
+
+    if (pageStash.has(key)) {
+      if (!opts.pop) history.pushState({ cc: 1 }, "", url.href);
+      stashCurrent();
+      restoreStash(key);
+      return;
+    }
+
+    const gen = ++navGen;
+    navigating = true;
     try {
       const res = await fetch(url.href, {
         credentials: "same-origin",
@@ -560,48 +672,45 @@ CC.BGM = (function () {
       });
       if (!res.ok) throw new Error("nav " + res.status);
       const html = await res.text();
+      if (gen !== navGen) return;
       const doc = new DOMParser().parseFromString(html, "text/html");
       const wanted = await prepareStyles(doc, url.href);
-      document.title = doc.title || document.title;
-
-      const keep = ["bgm", "themeBtn"]
-        .map((id) => document.getElementById(id))
-        .filter(Boolean);
-      keep.forEach((el) => el.remove());
+      if (gen !== navGen) return;
 
       const incoming = doc.body.cloneNode(true);
       incoming.querySelectorAll("script").forEach((s) => s.remove());
       incoming.querySelector("#bgm")?.remove();
       incoming.querySelector("#themeBtn")?.remove();
 
-      document.body.className = doc.body.className || "";
-      document.body.style.transition = "none";
-      document.body.replaceChildren(...Array.from(incoming.childNodes));
-      keep.forEach((el) => document.body.appendChild(el));
-      pruneStyles(wanted);
-
       if (!opts.pop) history.pushState({ cc: 1 }, "", url.href);
-      window.scrollTo(0, 0);
 
-      await new Promise((r) => requestAnimationFrame(r));
-      document.body.style.transition = "";
+      stashCurrent();
+      document.body.className = doc.body.className || "";
+      document.title = doc.title || document.title;
+      const view = ensureView();
+      view.replaceChildren(...Array.from(incoming.childNodes));
+      pruneStyles(wanted);
+      activeKey = key;
+      scrollToY(0);
+
       await runPageScripts(doc, url.href);
-      bindPageBgm();
-      if (CC.Theme && typeof CC.Theme.apply === "function") {
-        CC.Theme.apply(CC.Theme.readPref());
-      }
-      const audio = document.getElementById("bgm");
-      if (audio && audio.paused && shared?.shouldPlay()) shared.resume({ soft: true });
+      if (gen !== navGen) return;
+      hydrateChrome();
     } catch (_) {
-      location.href = url.href;
+      if (gen === navGen) location.href = url.href;
     } finally {
-      navigating = false;
+      if (gen === navGen) navigating = false;
     }
   }
 
   function installNav() {
     if (navInstalled) return;
     navInstalled = true;
+    try {
+      history.scrollRestoration = "manual";
+    } catch (_) {}
+    ensureView();
+    activeKey = pageName(location.href);
     document.addEventListener(
       "click",
       (e) => {
@@ -628,6 +737,14 @@ CC.BGM = (function () {
       true
     );
     window.addEventListener("popstate", () => {
+      const key = pageName(location.href);
+      if (!isAppUrl(location.href)) return;
+      navGen += 1;
+      navigating = false;
+      persist();
+      if (key === activeKey) return;
+      stashCurrent();
+      if (restoreStash(key)) return;
       go(location.href, { pop: true });
     });
     if (window.__ccPendingNav) {

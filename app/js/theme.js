@@ -151,13 +151,15 @@ CC.Theme = (function () {
     root.dataset.theme = mode;
     root.dataset.themePref = pref || "auto";
     root.style.colorScheme = mode;
+    const bg = mode === "light" ? "#F5F3FB" : "#07060E";
+    root.style.backgroundColor = bg;
+    if (document.body) document.body.style.backgroundColor = bg;
 
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
       meta.setAttribute(
         "content",
-        getComputedStyle(root).getPropertyValue("--theme-meta").trim() ||
-          (mode === "light" ? "#F5F3FB" : "#07060E")
+        getComputedStyle(root).getPropertyValue("--theme-meta").trim() || bg
       );
     }
 

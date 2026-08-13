@@ -44,16 +44,26 @@
     root.dataset.theme=t;
     root.dataset.themePref=p||"auto";
     root.style.colorScheme=t;
+    root.style.backgroundColor=t==="light"?"#F5F3FB":"#07060E";
   }catch(e){
     document.documentElement.dataset.theme="dark";
     document.documentElement.dataset.themePref="auto";
+    document.documentElement.style.backgroundColor="#07060E";
   }
 })();
 </script>
+<style id="cc-boot-bg">html,body{background-color:#07060E}html[data-theme="light"],html[data-theme="light"] body{background-color:#F5F3FB}</style>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="赛博法师第一期集会纪要摘要：用 AI 做文字处理。完整内容仅对参会成员开放。">
 <meta name="theme-color" content="#07060E">
+<script>
+(function(){
+  var t=document.documentElement.dataset.theme;
+  var m=document.querySelector('meta[name="theme-color"]');
+  if(m)m.setAttribute("content",t==="light"?"#F5F3FB":"#07060E");
+})();
+</script>
 <title>赛博法师 • 第一期AI交流会 | 赛博法师 • CYBER CASTERS</title>
 <link rel="icon" href="assets/icons/favicon.svg?v=hex2" type="image/svg+xml">
 <link rel="icon" href="assets/icons/favicon.ico?v=hex2" sizes="any">
@@ -75,7 +85,7 @@
 <link rel="preload" href="assets/audio/bgm.m4a?v=32k" as="audio" type="audio/mp4">
 <link rel="preload" href="css/home.css" as="style">
 <link rel="stylesheet" href="css/tokens.css">
-<link rel="stylesheet" href="css/base.css?v=fab1">
+<link rel="stylesheet" href="css/base.css?v=fab2">
 <link rel="stylesheet" href="css/gathering.css?v=fab1">
 <link rel="stylesheet" href="css/auth.css?v=apply-layout">
 </head>
@@ -203,10 +213,10 @@
 </div>
 
 <script src="js/util.js"></script>
-<script src="js/theme.js?v=bj-sun1"></script>
+<script src="js/theme.js?v=bj-sun2"></script>
 <script src="js/api.js"></script>
 <script src="js/gathering-data.js"></script>
-<script src="js/bgm.js?v=handoff4"></script>
+<script src="js/bgm.js?v=handoff5"></script>
 <script src="js/gathering.js"></script>
 </body>
 </html>
