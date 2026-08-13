@@ -143,6 +143,9 @@ footer a:hover{border-bottom:1px solid color-mix(in srgb, var(--cyan) 45%, trans
   border:1px solid currentColor;
 }
 
+/* 音频元素本身不占布局；换页时放在 body 顶部以便尽早续播 */
+#bgm{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
+
 /* ── 主题切换（与 BGM 浮钮同侧叠放） ── */
 #themeBtn{
   position:fixed;

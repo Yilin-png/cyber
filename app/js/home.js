@@ -253,6 +253,7 @@ if (logListEl && !logListEl.dataset.navBound) {
     const href = (a && a.getAttribute("href")) || (item && item.getAttribute("data-href"));
     if (!href || /^https?:\/\//i.test(href)) return;
     e.preventDefault();
+    CC.BGM.persist?.(document.getElementById("bgm"));
     window.location.assign(href);
   });
 }

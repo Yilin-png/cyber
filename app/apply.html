@@ -72,7 +72,7 @@
 <meta name="twitter:title" content="AI 技巧分享会">
 <meta name="twitter:description" content="申请加入赛博法师 · 填写意向">
 <meta name="twitter:image" content="https://cyber-casters.com/assets/icons/og-image.png">
-<link rel="preload" href="assets/audio/bgm.m4a" as="audio" type="audio/mp4">
+<link rel="preload" href="assets/audio/bgm.m4a?v=32k" as="audio" type="audio/mp4">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/auth.css?v=input16">
@@ -172,6 +172,32 @@
 </style>
 </head>
 <body class="auth-page">
+<audio id="bgm" src="assets/audio/bgm.m4a?v=32k" preload="auto" playsinline webkit-playsinline></audio>
+<script>
+(function(){
+  var a=document.getElementById("bgm");
+  if(!a)return;
+  try{
+    if(localStorage.getItem("cc-bgm")==="off")return;
+    if(!(localStorage.getItem("cc-bgm")==="on"||sessionStorage.getItem("cc-bgm-playing")==="1"))return;
+    var t=parseFloat(sessionStorage.getItem("cc-bgm-t")||"0")||0;
+    var w=parseInt(sessionStorage.getItem("cc-bgm-wall")||"0",10);
+    if(w) t+=Math.min(6,Math.max(0,(Date.now()-w)/1000));
+    a.volume=0.42;
+    var go=function(){
+      try{
+        var d=a.duration;
+        if(isFinite(d)&&d>0) t=((t%d)+d)%d;
+        if(Math.abs((a.currentTime||0)-t)>0.15) a.currentTime=Math.max(0,t);
+      }catch(e){}
+      var p=a.play();
+      if(p&&p.catch)p.catch(function(){});
+    };
+    if(a.readyState>=1) go();
+    else a.addEventListener("loadedmetadata",go,{once:true});
+  }catch(e){}
+})();
+</script>
   <div class="auth-nav wrap">
     <a href="index.html">← 返回首页</a>
     <a href="login.html">已有通行码？登录</a>
@@ -271,14 +297,13 @@
     </form>
   </div>
 
-<audio id="bgm" src="assets/audio/bgm.m4a" preload="auto" playsinline webkit-playsinline></audio>
 <button id="bgmBtn" type="button" aria-label="背景音乐开关" title="背景音乐" aria-pressed="false">♪</button>
 
 <script src="js/util.js"></script>
 <script src="js/theme.js?v=bj-sun1"></script>
 <script src="js/data.js"></script>
 <script src="js/api.js"></script>
-<script src="js/bgm.js"></script>
+<script src="js/bgm.js?v=handoff1"></script>
 <script>
 CC.BGM.init({ mode: "button", toggleId: "bgmBtn", gestureKick: true });
 

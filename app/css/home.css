@@ -245,37 +245,25 @@ html{scroll-behavior:smooth}
 .sigil.casting .pupil{animation:constrict 760ms ease-out}
 @keyframes constrict{0%{transform:scale(1)}18%{transform:scale(.4)}100%{transform:scale(1)}}
 
-/* 外层持续浮动；按压只动内层，casting 时 pause 外层，避免跳回原点 */
+/* 外层持续浮动；按压只动内层，不打断浮动以免卡顿 */
 .mudra-float{
   display:block;width:100%;
   animation:idlefloat 3.6s ease-in-out infinite;
-  will-change:transform;
   backface-visibility:hidden;
   transform:translateZ(0);
 }
 .mudra{
   width:100%;height:auto;display:block;
   transform-origin:50% 58%;
-  will-change:transform;
   backface-visibility:hidden;
   transform:translateZ(0);
 }
 @keyframes idlefloat{0%,100%{transform:translate3d(0,0,0) scale(1)}
                      50%{transform:translate3d(0,-3px,0) scale(1.035)}}
 .core-cta:hover{filter:drop-shadow(0 0 30px rgba(157,107,255,1))}
-/* 不用 :active 强行 animation:none——会与 casting 的 press 抢同一帧，手感发涩 */
 
-/* 按压：暂停浮动 + 内层下沉回弹；涟漪/印台仍由 .casting 驱动 */
-.sigil.casting .mudra-float{animation-play-state:paused}
-.sigil.casting .mudra{
-  animation:press 760ms cubic-bezier(.25,.9,.3,1) both;
-}
-@keyframes press{
-  0%{transform:translate3d(0,0,0) scale(1)}
-  16%{transform:translate3d(0,2px,0) scale(.82)}
-  42%{transform:translate3d(0,-1px,0) scale(1.12)}
-  100%{transform:translate3d(0,0,0) scale(1)}
-}
+/* 按压由 WAAPI 驱动内层 .mudra；涟漪/印台仍用 .casting。
+   不暂停外层浮动，避免 animation-play-state 切暂停时卡一帧。 */
 .pad-ring{fill:none;stroke:var(--arcane);stroke-width:1.2;
   transform-box:view-box;transform-origin:240px 240px;
   animation:padpulse 3.6s ease-in-out infinite}

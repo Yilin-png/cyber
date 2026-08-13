@@ -187,13 +187,13 @@ async function main() {
         `<div class="comment"><div class="body" style="color:#ff8e8e">${esc(err.message)}</div></div>`;
     });
   }
-
-  CC.BGM.init({
-    mode: "button",
-    toggleId: "bgmBtn",
-    gestureKick: true
-  });
 }
+
+CC.BGM.init({
+  mode: "button",
+  toggleId: "bgmBtn",
+  gestureKick: true
+});
 
 main().catch(err => {
   $("#gSummary").textContent = "加载失败：" + err.message;
