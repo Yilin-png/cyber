@@ -4,22 +4,24 @@
 <script>
 (function(){
   try{
-    var k="cc-theme", purge="cc-theme-purged-v3";
-    if(!localStorage.getItem(purge)){
+    var k="cc-theme";
+    try{
       localStorage.removeItem(k);
       localStorage.removeItem("cc-lat");
       localStorage.removeItem("cc-lng");
-      localStorage.setItem(purge,"1");
-    }
-    var p=localStorage.getItem(k);
+    }catch(e){}
+    var p=null;
+    try{ p=sessionStorage.getItem(k); }catch(e){}
     if(p!=="light"&&p!=="dark") p=null;
     function day(){
       var lat=39.9042, lng=116.4074;
       var rad=Math.PI/180, dayMs=8.64e7, J1970=2440588, J2000=2451545, e=rad*23.4397;
       var now=new Date();
+      var ymd=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Shanghai",year:"numeric",month:"2-digit",day:"2-digit"}).format(now);
+      var noon=new Date(ymd+"T12:00:00+08:00");
       var toJ=function(d){return d/dayMs-0.5+J1970;};
       var fromJ=function(j){return new Date((j+0.5-J1970)*dayMs);};
-      var d=toJ(now)-J2000;
+      var d=toJ(noon)-J2000;
       var lw=-lng*rad, phi=lat*rad;
       var n=Math.round(d-0.0009-lw/(2*Math.PI));
       var ds=0.0009+lw/(2*Math.PI)+n;
@@ -37,8 +39,7 @@
       var Jrise=Jnoon-(Jset-Jnoon);
       return now>=fromJ(Jrise)&&now<fromJ(Jset);
     }
-    var light=p==="light"||(p!=="dark"&&day());
-    var t=light?"light":"dark";
+    var t=p||(day()?"light":"dark");
     var root=document.documentElement;
     root.dataset.theme=t;
     root.dataset.themePref=p||"auto";
@@ -274,7 +275,7 @@
 <button id="bgmBtn" type="button" aria-label="背景音乐开关" title="背景音乐" aria-pressed="false">♪</button>
 
 <script src="js/util.js"></script>
-<script src="js/theme.js"></script>
+<script src="js/theme.js?v=bj-sun1"></script>
 <script src="js/data.js"></script>
 <script src="js/api.js"></script>
 <script src="js/bgm.js"></script>
