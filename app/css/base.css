@@ -27,7 +27,13 @@ body{
   transition:color .22s ease;
 }
 
-#cc-view{min-height:100dvh}
+#cc-view{min-height:100dvh;position:relative}
+#cc-view > [data-cc-slot]{min-height:100dvh}
+#cc-view > [data-cc-slot][hidden]{display:none!important}
+#cc-void{
+  position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background-color:var(--void);
+}
 
 /* 斜体在中文环境下常回落宋体/衬线，统一关掉 */
 em,i,cite,dfn{font-style:normal;font-family:inherit}

@@ -41,29 +41,27 @@
     }
     var t=p||(day()?"light":"dark");
     var root=document.documentElement;
+    var c=t==="light"?"#F5F3FB":"#07060E";
     root.dataset.theme=t;
     root.dataset.themePref=p||"auto";
     root.style.colorScheme=t;
-    root.style.backgroundColor=t==="light"?"#F5F3FB":"#07060E";
+    root.style.backgroundColor=c;
+    var tm=document.createElement("meta");
+    tm.name="theme-color";
+    tm.content=c;
+    document.head.appendChild(tm);
   }catch(e){
     document.documentElement.dataset.theme="dark";
     document.documentElement.dataset.themePref="auto";
     document.documentElement.style.backgroundColor="#07060E";
+    document.documentElement.style.colorScheme="dark";
   }
 })();
 </script>
-<style id="cc-boot-bg">html,body{background-color:#07060E}html[data-theme="light"],html[data-theme="light"] body{background-color:#F5F3FB}</style>
+<style id="cc-boot-bg">html,body{background-color:#F5F3FB;color-scheme:light}html[data-theme="dark"],html[data-theme="dark"] body{background-color:#07060E;color-scheme:dark}</style>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="申请加入赛博法师 · 填写意向">
-<meta name="theme-color" content="#07060E">
-<script>
-(function(){
-  var t=document.documentElement.dataset.theme;
-  var m=document.querySelector('meta[name="theme-color"]');
-  if(m)m.setAttribute("content",t==="light"?"#F5F3FB":"#07060E");
-})();
-</script>
 <title>我想参加 • 赛博法师</title>
 <link rel="icon" href="assets/icons/favicon.svg?v=hex2" type="image/svg+xml">
 <link rel="icon" href="assets/icons/favicon.ico?v=hex2" sizes="any">
@@ -84,30 +82,56 @@
 <meta name="twitter:image" content="https://cyber-casters.com/assets/icons/og-image.png">
 <link rel="preload" href="assets/audio/bgm.m4a?v=32k" as="audio" type="audio/mp4">
 <link rel="preload" href="css/home.css" as="style">
-<link rel="stylesheet" href="css/tokens.css">
-<link rel="stylesheet" href="css/base.css?v=fab2">
+<link rel="stylesheet" href="css/tokens.css?v=cs1">
+<link rel="stylesheet" href="css/base.css?v=fab3">
 <link rel="stylesheet" href="css/auth.css?v=apply-layout">
 </head>
 <body class="auth-page">
 <audio id="bgm" src="assets/audio/bgm.m4a?v=32k" preload="auto" playsinline webkit-playsinline></audio>
 <script>
 (function(){
+  function appUrl(href){
+    if(!href||href.charAt(0)==="#"||href.indexOf("mailto:")===0||href.indexOf("tel:")===0)return null;
+    var u;try{u=new URL(href,location.href);}catch(err){return null;}
+    if(u.origin!==location.origin)return null;
+    var name=(u.pathname.replace(/\/+$/,"").split("/").pop()||"index.html");
+    if(!(u.pathname==="/"||name===""||name==="index.html"||/^(apply|login|gathering-001)\.html$/i.test(name)))return null;
+    return u;
+  }
+  function navTo(u,e){
+    e.preventDefault();
+    if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+    e.stopPropagation();
+    if(window.CC&&CC.BGM&&CC.BGM.go){CC.BGM.go(u.href);return;}
+    window.__ccPendingNav=u.href;
+  }
   document.addEventListener("click",function(e){
     if(e.defaultPrevented)return;
     if(e.button&&e.button!==0)return;
     if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
     var a=e.target.closest&&e.target.closest("a[href]");
     if(!a||a.target==="_blank"||a.hasAttribute("download"))return;
-    var href=a.getAttribute("href")||"";
-    if(!href||href.charAt(0)==="#"||href.indexOf("mailto:")===0||href.indexOf("tel:")===0)return;
-    var u;try{u=new URL(href,location.href);}catch(err){return;}
-    if(u.origin!==location.origin)return;
-    var name=(u.pathname.replace(/\/+$/,"").split("/").pop()||"index.html");
-    if(!(u.pathname==="/"||name===""||name==="index.html"||/^(apply|login|gathering-001)\.html$/i.test(name)))return;
-    e.preventDefault();
-    if(window.CC&&CC.BGM&&CC.BGM.go){CC.BGM.go(u.href);return;}
-    window.__ccPendingNav=u.href;
+    var u=appUrl(a.getAttribute("href")||"");
+    if(!u)return;
+    navTo(u,e);
   },true);
+  var touch0=null;
+  document.addEventListener("touchstart",function(e){
+    var t=e.changedTouches&&e.changedTouches[0];
+    var a=e.target.closest&&e.target.closest("a[href]");
+    touch0=t&&a?{x:t.clientX,y:t.clientY,a:a}:null;
+  },{capture:true,passive:true});
+  document.addEventListener("touchend",function(e){
+    if(!touch0)return;
+    var t=e.changedTouches&&e.changedTouches[0];
+    var start=touch0;touch0=null;
+    if(!t||Math.abs(t.clientX-start.x)>12||Math.abs(t.clientY-start.y)>12)return;
+    var a=start.a;
+    if(!a||a.target==="_blank"||a.hasAttribute("download"))return;
+    var u=appUrl(a.getAttribute("href")||"");
+    if(!u)return;
+    navTo(u,e);
+  },{capture:true,passive:false});
   var a=document.getElementById("bgm");
   if(!a)return;
   try{
@@ -236,7 +260,7 @@
 <script src="js/theme.js?v=bj-sun2"></script>
 <script src="js/data.js"></script>
 <script src="js/api.js"></script>
-<script src="js/bgm.js?v=handoff5"></script>
+<script src="js/bgm.js?v=handoff6"></script>
 <script>
 CC.BGM.init({ mode: "button", toggleId: "bgmBtn", gestureKick: true });
 

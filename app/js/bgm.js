@@ -19,7 +19,7 @@ CC.BGM = (function () {
   let navigating = false;
   let activeKey = "";
   let viewEl = null;
-  const pageStash = new Map();
+  const slots = new Map();
 
   function isAppUrl(url) {
     try {
@@ -155,9 +155,10 @@ CC.BGM = (function () {
     };
 
     const syncUi = () => {
-      const hint = document.querySelector(".core-hint");
+      const hint = (pageRoot() || document).querySelector(".core-hint");
       if (hint) hint.style.display = audio.paused ? "" : "none";
-      const btn = document.getElementById("bgmBtn") || document.getElementById("coreJoin");
+      const root = pageRoot() || document;
+      const btn = root.querySelector("#bgmBtn") || root.querySelector("#coreJoin");
       if (btn) {
         btn.classList.toggle("on", !audio.paused);
         btn.setAttribute("aria-pressed", String(!audio.paused));
@@ -304,8 +305,8 @@ CC.BGM = (function () {
       uiAbort = new AbortController();
       const { signal } = uiAbort;
       const mode = ui.mode || "button";
-      const toggle = ui.toggleId ? document.getElementById(ui.toggleId) : null;
-      const sigilEl = ui.sigilEl || document.getElementById("sigil");
+      const toggle = ui.toggleEl || (ui.toggleId ? (pageRoot() || document).querySelector("#" + ui.toggleId) : null);
+      const sigilEl = ui.sigilEl || (pageRoot() || document).querySelector("#sigil");
       syncUi();
       if (!toggle) return;
 
@@ -444,14 +445,16 @@ CC.BGM = (function () {
   }
 
   function bindPageBgm() {
-    const sigil = document.getElementById("sigil");
-    const core = document.getElementById("coreJoin");
+    const root = pageRoot() || document;
+    const sigil = root.querySelector("#sigil");
+    const core = root.querySelector("#coreJoin");
     if (sigil && core) {
-      init({ mode: "sigil", toggleId: "coreJoin", sigilEl: sigil, gestureKick: true });
+      init({ mode: "sigil", toggleEl: core, toggleId: "coreJoin", sigilEl: sigil, gestureKick: true });
       return;
     }
-    if (document.getElementById("bgmBtn")) {
-      init({ mode: "button", toggleId: "bgmBtn", gestureKick: true });
+    const btn = root.querySelector("#bgmBtn");
+    if (btn) {
+      init({ mode: "button", toggleEl: btn, toggleId: "bgmBtn", gestureKick: true });
     }
   }
 
@@ -495,7 +498,15 @@ CC.BGM = (function () {
     }
   }
 
-  const CHROME_IDS = new Set(["bgm", "themeBtn"]);
+  const CHROME_IDS = new Set(["bgm", "themeBtn", "cc-void"]);
+
+  function pageRoot() {
+    return slots.get(activeKey)?.el || null;
+  }
+
+  function themeBg() {
+    return document.documentElement.dataset.theme === "light" ? "#F5F3FB" : "#07060E";
+  }
 
   function currentWanted() {
     const wanted = new Set();
@@ -521,7 +532,20 @@ CC.BGM = (function () {
     });
   }
 
+  function ensureVoid() {
+    let el = document.getElementById("cc-void");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "cc-void";
+      el.setAttribute("aria-hidden", "true");
+      document.body.insertBefore(el, document.body.firstChild);
+    }
+    el.style.backgroundColor = themeBg();
+    return el;
+  }
+
   function ensureView() {
+    ensureVoid();
     if (viewEl && document.body.contains(viewEl)) return viewEl;
     viewEl = document.getElementById("cc-view");
     if (viewEl) return viewEl;
@@ -537,22 +561,55 @@ CC.BGM = (function () {
     return viewEl;
   }
 
-  function stashCurrent() {
+  function wrapInitial() {
     const view = ensureView();
-    if (!activeKey || !view.childNodes.length) return;
-    const frag = document.createDocumentFragment();
-    while (view.firstChild) frag.appendChild(view.firstChild);
-    pageStash.set(activeKey, {
-      frag,
-      scrollY: window.scrollY || 0,
-      title: document.title,
-      bodyClass: document.body.className,
-      wanted: currentWanted(),
-      pageStyles: currentPageStyles()
+    const key = pageName(location.href);
+    if (!view.querySelector(":scope > [data-cc-slot]")) {
+      const slot = document.createElement("div");
+      slot.dataset.ccSlot = key;
+      while (view.firstChild) slot.appendChild(view.firstChild);
+      view.appendChild(slot);
+    }
+    view.querySelectorAll(":scope > [data-cc-slot]").forEach((el) => {
+      const k = el.dataset.ccSlot;
+      if (!slots.has(k)) {
+        slots.set(k, {
+          el,
+          title: document.title,
+          bodyClass: document.body.className,
+          wanted: currentWanted(),
+          pageStyles: currentPageStyles(),
+          scrollY: 0,
+          hydrated: true
+        });
+      }
     });
+    activeKey = key;
+    showSlot(key);
+  }
+
+  function snapshot(key) {
+    const rec = slots.get(key);
+    if (!rec) return;
+    rec.title = document.title;
+    rec.bodyClass = document.body.className;
+    rec.wanted = currentWanted();
+    rec.pageStyles = currentPageStyles();
+    rec.scrollY = window.scrollY || 0;
+  }
+
+  function showSlot(key) {
+    const view = ensureView();
+    const next = view.querySelector(`:scope > [data-cc-slot="${key}"]`);
+    if (next) next.hidden = false;
+    view.querySelectorAll(":scope > [data-cc-slot]").forEach((el) => {
+      if (el !== next) el.hidden = true;
+    });
+    return !!next;
   }
 
   function hydrateChrome() {
+    ensureVoid();
     bindPageBgm();
     if (CC.Theme && typeof CC.Theme.apply === "function") {
       CC.Theme.apply(CC.Theme.readPref());
@@ -573,19 +630,15 @@ CC.BGM = (function () {
     html.style.scrollBehavior = prev;
   }
 
-  function restoreStash(key) {
-    const saved = pageStash.get(key);
-    if (!saved) return false;
-    const view = ensureView();
-    view.replaceChildren();
-    view.appendChild(saved.frag);
-    pageStash.delete(key);
-    document.title = saved.title || document.title;
-    document.body.className = saved.bodyClass || "";
-    if (saved.wanted) pruneStyles(saved.wanted);
-    restorePageStyles(saved.pageStyles);
+  function activate(key) {
+    const rec = slots.get(key);
+    if (!rec || !showSlot(key)) return false;
+    document.title = rec.title || document.title;
+    document.body.className = rec.bodyClass || "";
+    if (rec.wanted) pruneStyles(rec.wanted);
+    restorePageStyles(rec.pageStyles);
     activeKey = key;
-    scrollToY(saved.scrollY || 0);
+    scrollToY(rec.scrollY || 0);
     hydrateChrome();
     return true;
   }
@@ -615,14 +668,6 @@ CC.BGM = (function () {
           el.addEventListener("error", resolve, { once: true });
         })
       );
-      document.head.appendChild(el);
-    });
-    document.querySelectorAll("style[data-cc-page]").forEach((s) => s.remove());
-    doc.querySelectorAll("head style").forEach((s) => {
-      if (s.id === "cc-boot-bg") return;
-      const el = document.createElement("style");
-      el.dataset.ccPage = "1";
-      el.textContent = s.textContent;
       document.head.appendChild(el);
     });
     if (pending.length) await Promise.all(pending);
@@ -656,10 +701,10 @@ CC.BGM = (function () {
 
     persist();
 
-    if (pageStash.has(key)) {
-      if (!opts.pop) history.pushState({ cc: 1 }, "", url.href);
-      stashCurrent();
-      restoreStash(key);
+    if (slots.has(key) && slots.get(key).el) {
+      if (!opts.pop) history.pushState({ cc: 1, key }, "", url.href);
+      snapshot(activeKey);
+      activate(key);
       return;
     }
 
@@ -681,23 +726,44 @@ CC.BGM = (function () {
       incoming.querySelectorAll("script").forEach((s) => s.remove());
       incoming.querySelector("#bgm")?.remove();
       incoming.querySelector("#themeBtn")?.remove();
+      incoming.querySelector("#cc-void")?.remove();
+      incoming.querySelector("#cc-view")?.remove();
 
-      if (!opts.pop) history.pushState({ cc: 1 }, "", url.href);
+      const pageStyles = [];
+      doc.querySelectorAll("head style").forEach((s) => {
+        if (s.id === "cc-boot-bg") return;
+        pageStyles.push(s.textContent);
+      });
 
-      stashCurrent();
-      document.body.className = doc.body.className || "";
-      document.title = doc.title || document.title;
-      const view = ensureView();
-      view.replaceChildren(...Array.from(incoming.childNodes));
-      pruneStyles(wanted);
-      activeKey = key;
-      scrollToY(0);
+      if (!opts.pop) history.pushState({ cc: 1, key }, "", url.href);
+
+      snapshot(activeKey);
+
+      const slot = document.createElement("div");
+      slot.dataset.ccSlot = key;
+      slot.hidden = true;
+      slot.append(...Array.from(incoming.childNodes));
+      ensureView().appendChild(slot);
+
+      slots.set(key, {
+        el: slot,
+        title: doc.title || document.title,
+        bodyClass: doc.body.className || "",
+        wanted,
+        pageStyles,
+        scrollY: 0,
+        hydrated: false
+      });
+
+      activate(key);
 
       await runPageScripts(doc, url.href);
       if (gen !== navGen) return;
+      const rec = slots.get(key);
+      if (rec) rec.hydrated = true;
       hydrateChrome();
-    } catch (_) {
-      if (gen === navGen) location.href = url.href;
+    } catch (err) {
+      console.warn("cc-nav", err);
     } finally {
       if (gen === navGen) navigating = false;
     }
@@ -709,8 +775,10 @@ CC.BGM = (function () {
     try {
       history.scrollRestoration = "manual";
     } catch (_) {}
-    ensureView();
-    activeKey = pageName(location.href);
+    wrapInitial();
+    try {
+      history.replaceState({ cc: 1, key: activeKey }, "", location.href);
+    } catch (_) {}
     document.addEventListener(
       "click",
       (e) => {
@@ -743,8 +811,8 @@ CC.BGM = (function () {
       navigating = false;
       persist();
       if (key === activeKey) return;
-      stashCurrent();
-      if (restoreStash(key)) return;
+      snapshot(activeKey);
+      if (activate(key)) return;
       go(location.href, { pop: true });
     });
     if (window.__ccPendingNav) {

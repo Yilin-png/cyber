@@ -1,7 +1,12 @@
 /* 设计令牌：颜色 / 字体 / 字阶 —— 全站共用
    深浅色对齐 icons 两套底：黑底 (#07060E) 与白底 (#F5F3FB) */
 
-:root,
+:root{
+  /* 默认浅色画布：iOS 后退手势用根 color-scheme 填背后那一层。
+     若 :root 写 dark，浅色页一滑就透出黑底。 */
+  color-scheme:light;
+}
+
 [data-theme="dark"]{
   color-scheme:dark;
 
