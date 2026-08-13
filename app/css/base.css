@@ -8,6 +8,7 @@ html,body{overflow-x:clip}
 html{
   font-size:16px;
   -webkit-text-size-adjust:100%;
+  background-color:var(--void);
 }
 
 body{
@@ -146,25 +147,36 @@ footer a:hover{border-bottom:1px solid color-mix(in srgb, var(--cyan) 45%, trans
 /* 音频元素本身不占布局；换页时放在 body 顶部以便尽早续播 */
 #bgm{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
 
-/* ── 主题切换（与 BGM 浮钮同侧叠放） ── */
-#themeBtn{
+/* 右下角浮钮：主题 / 音乐同一尺寸、同一右边线，垂直叠放 */
+#themeBtn,
+#bgmBtn{
   position:fixed;
   right:max(18px, env(safe-area-inset-right));
-  bottom:calc(max(18px, env(safe-area-inset-bottom)) + 52px);
-  z-index:40;
-  width:42px;height:42px;border-radius:0;
+  z-index:50;
+  box-sizing:border-box;
+  width:42px;height:42px;padding:0;border-radius:0;
   border:1px solid var(--line);
   background:var(--panel-glass);
   color:var(--ash);
-  font-size:18px;line-height:1;
   cursor:pointer;
   backdrop-filter:blur(8px);
   display:inline-flex;align-items:center;justify-content:center;
+  line-height:1;
 }
-#themeBtn:hover{border-color:var(--cyan);color:var(--cyan)}
+#bgmBtn{
+  bottom:max(18px, env(safe-area-inset-bottom));
+  font-size:16px;
+}
+#themeBtn{
+  bottom:calc(max(18px, env(safe-area-inset-bottom)) + 52px);
+  font-size:18px;
+}
+#themeBtn:hover,
+#bgmBtn:hover{border-color:var(--cyan);color:var(--cyan)}
 #themeBtn[data-theme="light"]{color:var(--arcane);border-color:color-mix(in srgb, var(--arcane) 45%, transparent)}
-
-/* 首页无 BGM 浮钮时主题钮贴底 */
+#bgmBtn.on{
+  color:var(--cyan);border-color:color-mix(in srgb, var(--cyan) 55%, transparent);
+}
 body:not(:has(#bgmBtn)) #themeBtn{
   bottom:max(18px, env(safe-area-inset-bottom));
 }

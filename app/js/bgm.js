@@ -484,32 +484,39 @@ CC.BGM = (function () {
     }
   }
 
-  function syncHead(doc, base) {
+  function cssPathname(href, base) {
+    try {
+      return new URL(href, base).pathname;
+    } catch (_) {
+      return "";
+    }
+  }
+
+  async function prepareStyles(doc, base) {
     const wanted = new Set();
+    const pending = [];
     doc.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
       const href = link.getAttribute("href");
       if (!href) return;
       wanted.add(new URL(href, base).pathname);
     });
-    document.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
-      const path = new URL(l.href, location.href).pathname;
-      if (wanted.has(path) || /\/css\/(tokens|base|auth)\.css$/.test(path)) {
-        l.disabled = false;
-      } else {
-        l.disabled = true;
-      }
-    });
     wanted.forEach((path) => {
-      const exists = [...document.querySelectorAll('link[rel="stylesheet"]')].some(
-        (l) => new URL(l.href, location.href).pathname === path
+      let el = [...document.querySelectorAll('link[rel="stylesheet"]')].find(
+        (l) => cssPathname(l.href, location.href) === path
       );
-      if (exists) return;
-      const el = document.createElement("link");
+      if (el) {
+        el.disabled = false;
+        return;
+      }
+      el = document.createElement("link");
       el.rel = "stylesheet";
-      el.href = path.startsWith("/") ? path.replace(/^\/+/, "") : path;
-      /* path is pathname like /css/home.css — use relative css/home.css */
-      const file = path.split("/").pop();
-      el.href = "css/" + file;
+      el.href = "css/" + path.split("/").pop();
+      pending.push(
+        new Promise((resolve) => {
+          el.addEventListener("load", resolve, { once: true });
+          el.addEventListener("error", resolve, { once: true });
+        })
+      );
       document.head.appendChild(el);
     });
     document.querySelectorAll("style[data-cc-page]").forEach((s) => s.remove());
@@ -518,6 +525,19 @@ CC.BGM = (function () {
       el.dataset.ccPage = "1";
       el.textContent = s.textContent;
       document.head.appendChild(el);
+    });
+    if (pending.length) await Promise.all(pending);
+    return wanted;
+  }
+
+  function pruneStyles(wanted) {
+    document.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
+      const path = cssPathname(l.href, location.href);
+      if (wanted.has(path) || /\/css\/(tokens|base|auth)\.css$/.test(path)) {
+        l.disabled = false;
+      } else {
+        l.disabled = true;
+      }
     });
   }
 
@@ -541,7 +561,7 @@ CC.BGM = (function () {
       if (!res.ok) throw new Error("nav " + res.status);
       const html = await res.text();
       const doc = new DOMParser().parseFromString(html, "text/html");
-      syncHead(doc, url.href);
+      const wanted = await prepareStyles(doc, url.href);
       document.title = doc.title || document.title;
 
       const keep = ["bgm", "themeBtn"]
@@ -555,12 +575,16 @@ CC.BGM = (function () {
       incoming.querySelector("#themeBtn")?.remove();
 
       document.body.className = doc.body.className || "";
+      document.body.style.transition = "none";
       document.body.replaceChildren(...Array.from(incoming.childNodes));
       keep.forEach((el) => document.body.appendChild(el));
+      pruneStyles(wanted);
 
       if (!opts.pop) history.pushState({ cc: 1 }, "", url.href);
       window.scrollTo(0, 0);
 
+      await new Promise((r) => requestAnimationFrame(r));
+      document.body.style.transition = "";
       await runPageScripts(doc, url.href);
       bindPageBgm();
       if (CC.Theme && typeof CC.Theme.apply === "function") {

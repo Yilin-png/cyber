@@ -267,17 +267,6 @@ body.auth-page{
   opacity:.9;
 }
 
-#bgmBtn{
-  position:fixed;
-  right:max(18px, env(safe-area-inset-right));
-  bottom:max(18px, env(safe-area-inset-bottom));
-  z-index:40;
-  width:42px;height:42px;border-radius:0;
-  border:1px solid var(--line);background:var(--panel-glass);
-  color:var(--ash);font-size:16px;cursor:pointer;
-  backdrop-filter:blur(8px);
-}
-#bgmBtn:hover{border-color:var(--cyan);color:var(--cyan)}
 #bgmBtn.on{
   color:var(--cyan);border-color:color-mix(in srgb, var(--cyan) 55%, transparent);
 }
