@@ -609,8 +609,8 @@ html[data-theme="light"] .log-item.is-past::before{
 
 @media (max-width:720px){
   .about-list{grid-template-columns:1fr;grid-template-rows:none;grid-auto-flow:row;gap:0}
-  .about-item:nth-child(2){border-bottom:1px solid rgba(42,33,80,.5);padding-bottom:18px}
-  .about-item:last-child{border-bottom:none;padding-bottom:0}
+  .about-item{border-bottom:none;padding-bottom:18px}
+  .about-item:last-child{padding-bottom:0}
 }
 .about-no{
   font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);
