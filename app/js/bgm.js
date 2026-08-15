@@ -511,7 +511,7 @@ CC.BGM = (function () {
     "css/tokens.css?v=cs1",
     "css/base.css?v=process1",
     "css/home.css?v=about-gap1",
-    "css/auth.css?v=apply-layout",
+    "css/auth.css?v=apply-border1",
     "css/gathering.css?v=process1"
   ];
 
