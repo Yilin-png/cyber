@@ -617,22 +617,24 @@ html[data-theme="light"] .log-item.is-past::before{
 }
 .about-list{
   list-style:none;margin:0;padding:0;
-  display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;
-  grid-auto-flow:column;gap:0 36px;
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:20px 36px;
 }
 .about-item{
   display:grid;grid-template-columns:36px 1fr;gap:14px;
-  padding:18px 0;border-bottom:1px solid rgba(42,33,80,.5);
+  padding:0;border:0;
 }
-.about-item:nth-child(2),
-.about-item:nth-child(4){border-bottom:none;padding-bottom:0}
 
-@media (max-width:720px){
-  .about-list{grid-template-columns:1fr;grid-template-rows:none;grid-auto-flow:row;gap:0}
+@media (max-width:860px){
+  .about-list{
+    display:flex;flex-direction:column;
+    grid-template-columns:none;grid-template-rows:none;
+    gap:14px;
+  }
   .about-item,
   .about-item:nth-child(2),
-  .about-item:nth-child(4){border-bottom:none;padding-bottom:18px}
-  .about-item:last-child{padding-bottom:0}
+  .about-item:nth-child(4),
+  .about-item:last-child{padding:0;border:0}
 }
 .about-no{
   font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);

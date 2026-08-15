@@ -510,8 +510,8 @@ CC.BGM = (function () {
   const SPA_CSS = [
     "css/tokens.css?v=cs1",
     "css/base.css?v=process1",
-    "css/home.css?v=about-gap1",
-    "css/auth.css?v=apply-border1",
+    "css/home.css?v=about-gap2",
+    "css/auth.css?v=apply-border2",
     "css/gathering.css?v=process1"
   ];
 
