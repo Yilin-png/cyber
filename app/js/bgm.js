@@ -458,6 +458,13 @@ CC.BGM = (function () {
     }
   }
 
+  function execClassicScript(code, label) {
+    const el = document.createElement("script");
+    el.textContent = code + (label ? "\n//# sourceURL=" + label : "");
+    document.head.appendChild(el);
+    el.remove();
+  }
+
   async function runPageScripts(doc, base) {
     const scripts = [...doc.querySelectorAll("script")];
     for (const s of scripts) {
@@ -468,7 +475,7 @@ CC.BGM = (function () {
         if (/__ccPendingNav/.test(text) && /CC\.BGM\.go/.test(text)) continue;
         if (!text.trim()) continue;
         try {
-          new Function(text)();
+          execClassicScript(text, "cc-inline.js");
         } catch (err) {
           console.warn("cc-nav inline", err);
         }
@@ -483,9 +490,10 @@ CC.BGM = (function () {
           if (!r.ok) throw new Error(String(r.status));
           return r.text();
         });
-        new Function(code)();
+        execClassicScript(code, path.split("/").pop() || "cc-page.js");
       } catch (err) {
         console.warn("cc-nav script", path, err);
+        throw err;
       }
     }
   }
@@ -773,6 +781,7 @@ CC.BGM = (function () {
       hydrateChrome();
     } catch (err) {
       console.warn("cc-nav", err);
+      if (!opts.pop) location.href = url.href;
     } finally {
       if (gen === navGen) navigating = false;
       dropVeil();
