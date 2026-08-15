@@ -629,7 +629,9 @@ html[data-theme="light"] .log-item.is-past::before{
 
 @media (max-width:720px){
   .about-list{grid-template-columns:1fr;grid-template-rows:none;grid-auto-flow:row;gap:0}
-  .about-item{border-bottom:none;padding-bottom:18px}
+  .about-item,
+  .about-item:nth-child(2),
+  .about-item:nth-child(4){border-bottom:none;padding-bottom:18px}
   .about-item:last-child{padding-bottom:0}
 }
 .about-no{
