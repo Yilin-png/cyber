@@ -82,10 +82,10 @@
 <meta name="twitter:image" content="https://cyber-casters.com/assets/icons/og-image.png">
 <link rel="preload" href="assets/audio/bgm.m4a?v=32k" as="audio" type="audio/mp4">
 <link rel="stylesheet" href="css/tokens.css?v=cs1">
-<link rel="stylesheet" href="css/base.css?v=fab5">
-<link rel="stylesheet" href="css/home.css?v=about-div1">
+<link rel="stylesheet" href="css/base.css?v=process1">
+<link rel="stylesheet" href="css/home.css?v=process1">
 <link rel="stylesheet" href="css/auth.css?v=apply-layout">
-<link rel="stylesheet" href="css/gathering.css?v=fab1">
+<link rel="stylesheet" href="css/gathering.css?v=process1">
 </head>
 <body>
 <audio id="bgm" src="assets/audio/bgm.m4a?v=32k" preload="auto" playsinline webkit-playsinline></audio>
@@ -96,7 +96,7 @@
     var u;try{u=new URL(href,location.href);}catch(err){return null;}
     if(u.origin!==location.origin)return null;
     var name=(u.pathname.replace(/\/+$/,"").split("/").pop()||"index.html");
-    if(!(u.pathname==="/"||name===""||name==="index.html"||/^(apply|login|gathering-001)\.html$/i.test(name)))return null;
+    if(!(u.pathname==="/"||name===""||name==="index.html"||/^(apply|login|gathering-001|process)\.html$/i.test(name)))return null;
     return u;
   }
   function navTo(u,e){
@@ -406,7 +406,10 @@
 <main class="wrap">
   <section class="panel is-on" id="p-activity" role="tabpanel">
     <div class="panel-head">
-      <h2>活动记录</h2>
+      <div class="panel-head-row">
+        <h2>活动记录</h2>
+        <a class="process-jump" href="process.html">活动流程</a>
+      </div>
       <p>参加过当期的朋友登录后可看完整纪要并留言。</p>
     </div>
     <div class="log" id="logList"></div>
@@ -446,7 +449,7 @@
 <script src="js/theme.js?v=bj-sun2"></script>
 <script src="js/api.js"></script>
 <script src="js/data.js"></script>
-<script src="js/bgm.js?v=about-div1"></script>
+<script src="js/bgm.js?v=process1"></script>
 <script src="js/home.js"></script>
 </body>
 </html>

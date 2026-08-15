@@ -12,7 +12,7 @@ CC.BGM = (function () {
   };
   const VOL = 0.42;
   const FADE_MS = 280;
-  const APP_PAGES = /^(index|apply|login|gathering-001)\.html$/i;
+  const APP_PAGES = /^(index|apply|login|gathering-001|process)\.html$/i;
 
   let shared = null;
   let navInstalled = false;
@@ -501,10 +501,10 @@ CC.BGM = (function () {
   const CHROME_IDS = new Set(["bgm", "themeBtn", "cc-void", "cc-veil"]);
   const SPA_CSS = [
     "css/tokens.css?v=cs1",
-    "css/base.css?v=fab5",
-    "css/home.css?v=about-div1",
+    "css/base.css?v=process1",
+    "css/home.css?v=process1",
     "css/auth.css?v=apply-layout",
-    "css/gathering.css?v=fab1"
+    "css/gathering.css?v=process1"
   ];
 
   function pageRoot() {
