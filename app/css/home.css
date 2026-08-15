@@ -439,7 +439,7 @@ main.wrap{display:block;min-height:100svh}
 
 .panel-head{margin-bottom:34px;max-width:720px}
 .panel-head-row{
-  display:flex;align-items:center;justify-content:space-between;gap:12px 18px;flex-wrap:wrap;
+  display:flex;align-items:center;justify-content:flex-start;gap:12px;flex-wrap:wrap;
 }
 .panel-head h2{
   font-family:var(--font-display);font-size:var(--text-2xl);font-weight:700;letter-spacing:var(--track-title);
