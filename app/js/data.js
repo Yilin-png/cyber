@@ -1,5 +1,5 @@
 /* 赛博法师 · 站点公开内容 —— 不含敏感操作细节 */
-const DATA = {
+window.DATA = {
 
   pulse: { members: 340, gatherings: 7, spells: 62 },
   nextGathering: "2026.08.20 19:00",

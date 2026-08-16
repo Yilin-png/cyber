@@ -458,9 +458,13 @@ CC.BGM = (function () {
     }
   }
 
-  function execClassicScript(code, label) {
+  function execClassicScript(code, label, isolate) {
+    /* 注入脚本包进 IIFE，避免 home.js / gathering.js 的 const $ 撞名 */
+    const src = isolate === false
+      ? code
+      : "(function(){\n" + code + "\n})();";
     const el = document.createElement("script");
-    el.textContent = code + (label ? "\n//# sourceURL=" + label : "");
+    el.textContent = src + (label ? "\n//# sourceURL=" + label : "");
     document.head.appendChild(el);
     el.remove();
   }
@@ -484,7 +488,7 @@ CC.BGM = (function () {
       const abs = new URL(src, base);
       const path = abs.pathname;
       if (/\/js\/(util|theme|api|bgm)\.js$/.test(path)) continue;
-      if (/\/js\/data\.js$/.test(path) && typeof DATA !== "undefined") continue;
+      if (/\/js\/data\.js$/.test(path) && window.DATA) continue;
       try {
         const code = await fetch(abs.href, { credentials: "same-origin" }).then((r) => {
           if (!r.ok) throw new Error(String(r.status));
@@ -717,12 +721,19 @@ CC.BGM = (function () {
       return;
     }
     const key = pageName(url);
-    if (!opts.pop && key === pageName(location.href) && url.search === location.search) {
+    const rec0 = slots.get(key);
+    const ready = !!(rec0 && rec0.el && rec0.hydrated);
+    if (!opts.pop && key === pageName(location.href) && url.search === location.search && ready) {
       return;
     }
-    if (key === activeKey && !opts.pop) return;
+    if (key === activeKey && !opts.pop && ready) return;
 
     persist();
+
+    if (rec0 && rec0.el && !rec0.hydrated) {
+      rec0.el.remove();
+      slots.delete(key);
+    }
 
     if (slots.has(key) && slots.get(key).el) {
       if (!opts.pop) history.pushState({ cc: 1, key }, "", url.href);
@@ -781,7 +792,11 @@ CC.BGM = (function () {
       hydrateChrome();
     } catch (err) {
       console.warn("cc-nav", err);
-      if (!opts.pop) location.href = url.href;
+      if (!opts.pop) {
+        const same = pageName(location.href) === key && url.search === location.search;
+        if (same) location.reload();
+        else location.href = url.href;
+      }
     } finally {
       if (gen === navGen) navigating = false;
       dropVeil();
