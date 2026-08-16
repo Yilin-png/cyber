@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-cc-build="nav-utf8-1">
+<html lang="zh-CN" data-cc-build="nav-script-1">
 <head>
 <meta charset="utf-8">
 <script>
@@ -81,12 +81,12 @@
 <meta name="twitter:description" content="申请加入赛博法师 · 填写意向">
 <meta name="twitter:image" content="https://cyber-casters.com/assets/icons/og-image.png">
 <link rel="preload" href="assets/audio/bgm.m4a?v=32k" as="audio" type="audio/mp4">
-<link rel="preload" href="css/home.css?v=nav1" as="style">
+<link rel="preload" href="css/home.css?v=about-gap2" as="style">
 <link rel="stylesheet" href="css/tokens.css?v=cs1">
-<link rel="stylesheet" href="css/base.css?v=fab5">
-<link rel="stylesheet" href="css/home.css?v=nav1">
-<link rel="stylesheet" href="css/auth.css?v=apply-layout">
-<link rel="stylesheet" href="css/gathering.css?v=fab1">
+<link rel="stylesheet" href="css/base.css?v=process1">
+<link rel="stylesheet" href="css/home.css?v=about-gap2">
+<link rel="stylesheet" href="css/auth.css?v=apply-border2">
+<link rel="stylesheet" href="css/gathering.css?v=process1">
 </head>
 <body class="auth-page">
 <audio id="bgm" src="assets/audio/bgm.m4a?v=32k" preload="auto" playsinline webkit-playsinline></audio>
@@ -97,7 +97,7 @@
     var u;try{u=new URL(href,location.href);}catch(err){return null;}
     if(u.origin!==location.origin)return null;
     var name=(u.pathname.replace(/\/+$/,"").split("/").pop()||"index.html");
-    if(!(u.pathname==="/"||name===""||name==="index.html"||/^(apply|login|gathering-001)\.html$/i.test(name)))return null;
+    if(!(u.pathname==="/"||name===""||name==="index.html"||/^(apply|login|gathering-001|process)\.html$/i.test(name)))return null;
     return u;
   }
   function navTo(u,e){
@@ -174,8 +174,8 @@
       <div class="field">
         <label>是否参加最近一期（<span id="nextLabel">2026.08.20 19:00</span>）*</label>
         <div class="choice-row" role="radiogroup" aria-label="是否参加最近一期">
-          <label class="choice"><input type="radio" name="joinNext" value="参加" required>参加</label>
-          <label class="choice"><input type="radio" name="joinNext" value="不参加">不参加</label>
+          <label class="choice"><input type="radio" name="joinNext" value="参加" required><span class="choice-face">参加</span></label>
+          <label class="choice"><input type="radio" name="joinNext" value="不参加"><span class="choice-face">不参加</span></label>
         </div>
       </div>
 
@@ -222,12 +222,12 @@
       <div class="field">
         <label>想交流的方向（选填）</label>
         <div class="choice-row" id="topicChips">
-          <label class="choice topic"><input type="checkbox" value="信息整理">信息整理</label>
-          <label class="choice topic"><input type="checkbox" value="Skill 封装">Skill 封装</label>
-          <label class="choice topic"><input type="checkbox" value="知识库">知识库</label>
-          <label class="choice topic"><input type="checkbox" value="多 Agent">多 Agent</label>
-          <label class="choice topic"><input type="checkbox" value="会议纪要">会议纪要</label>
-          <label class="choice topic"><input type="checkbox" value="写作排版">写作排版</label>
+          <label class="choice topic"><input type="checkbox" value="信息整理"><span class="choice-face">信息整理</span></label>
+          <label class="choice topic"><input type="checkbox" value="Skill 封装"><span class="choice-face">Skill 封装</span></label>
+          <label class="choice topic"><input type="checkbox" value="知识库"><span class="choice-face">知识库</span></label>
+          <label class="choice topic"><input type="checkbox" value="多 Agent"><span class="choice-face">多 Agent</span></label>
+          <label class="choice topic"><input type="checkbox" value="会议纪要"><span class="choice-face">会议纪要</span></label>
+          <label class="choice topic"><input type="checkbox" value="写作排版"><span class="choice-face">写作排版</span></label>
         </div>
         <textarea id="topicExtra" maxlength="400" placeholder="也可手填，如 RAG、本地模型…"></textarea>
         <input type="hidden" name="message" id="message">
@@ -260,9 +260,9 @@
 
 <script src="js/util.js"></script>
 <script src="js/theme.js?v=bj-sun2"></script>
-<script src="js/data.js"></script>
+<script src="js/data.js?v=win1"></script>
 <script src="js/api.js"></script>
-<script src="js/bgm.js?v=handoff9"></script>
+<script src="js/bgm.js?v=nav3"></script>
 <script>
 CC.BGM.init({ mode: "button", toggleId: "bgmBtn", gestureKick: true });
 
@@ -279,6 +279,22 @@ const intentDates = document.getElementById("intentDates");
 const topicExtra = document.getElementById("topicExtra");
 const messageField = document.getElementById("message");
 const nextLabel = document.getElementById("nextLabel");
+
+function syncChoiceState(input) {
+  const label = input.closest(".choice");
+  if (!label) return;
+  if (input.type === "radio") {
+    document.querySelectorAll(`input[type="radio"][name="${input.name}"]`).forEach((el) => {
+      el.closest(".choice")?.classList.toggle("is-on", el.checked);
+    });
+    return;
+  }
+  label.classList.toggle("is-on", input.checked);
+}
+document.querySelectorAll(".choice input").forEach((el) => {
+  el.addEventListener("change", () => syncChoiceState(el));
+  if (el.checked) syncChoiceState(el);
+});
 
 /** DATA.nextGathering（如 2026.08.20 19:00）保持点分格式展示 */
 function formatNextFull(raw) {
