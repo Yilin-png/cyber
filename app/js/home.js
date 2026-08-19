@@ -2,6 +2,9 @@
 /* ---------- 渲染 ---------- */
 const $ = CC.$;
 const esc = CC.esc;
+const t = (k, vars) => (CC.I18N && CC.I18N.t(k, vars)) || k;
+const D = () => (CC.I18N && CC.I18N.data()) || window.DATA;
+const locItem = (g) => (CC.I18N && CC.I18N.localizeItem) ? CC.I18N.localizeItem(g) : g;
 
 $("#footNote").textContent = DATA.contact;
 
@@ -126,7 +129,7 @@ setManaUI(0);
 const nextEl = $("#nextMeet");
 if (nextEl && DATA.nextGathering){
   nextEl.innerHTML =
-    `<span class="nm-label">下一期</span>` +
+    `<span class="nm-label">${t("hero.next")}</span>` +
     `<span class="nm-dot" aria-hidden="true"></span>` +
     `<span class="nm-date">${esc(DATA.nextGathering)}</span>`;
 }
@@ -206,20 +209,22 @@ function renderCards(list) {
         ? `<div class="tags">${p.tags.map(t => `<span>${esc(t)}</span>`).join("")}</div>`
         : ""}
       ${href
-        ? `<a class="card-link" href="${esc(href)}"${linkAttrs}>${esc(p.linkText || "打开")}<span class="arrow" aria-hidden="true">→</span></a>`
+        ? `<a class="card-link" href="${esc(href)}"${linkAttrs}>${esc(p.linkText || t("open"))}<span class="arrow" aria-hidden="true">→</span></a>`
         : ""}
     </article>`;
   }).join("");
 }
 
 function renderActivity(items) {
+  const host = $("#logList");
+  if (!host) return;
   const sorted = [...(items || [])].sort((a, b) =>
     String(b.date || "").localeCompare(String(a.date || ""))
   );
-  $("#logList").innerHTML = sorted.map((a, i) => {
-    const upcoming = a.status === "upcoming" || a.label === "待举办";
+  host.innerHTML = sorted.map((a, i) => {
+    const upcoming = a.status === "upcoming" || a.label === "待举办" || a.label === t("upcoming");
     const href = upcoming ? "" : localPage(a.link || "");
-    const statusLabel = a.label || (upcoming ? "待举办" : "");
+    const statusLabel = a.label || (upcoming ? t("upcoming") : "");
     const statusHtml = statusLabel
       ? `<span class="status ${esc(a.status || (upcoming ? "upcoming" : ""))}">${esc(statusLabel)}</span>`
       : "";
@@ -228,9 +233,9 @@ function renderActivity(items) {
       : esc(a.title);
     const metaBits = [a.mode, a.place, a.time].filter(Boolean);
     const cta = href
-      ? `<a class="log-link" href="${esc(href)}">${esc(a.linkText || "阅读公开纪要")}<span class="arrow" aria-hidden="true">→</span></a>`
+      ? `<a class="log-link" href="${esc(href)}">${esc(a.linkText || t("readNotes"))}<span class="arrow" aria-hidden="true">→</span></a>`
       : (upcoming
-        ? `<a class="log-link" href="apply.html">申请参加<span class="arrow" aria-hidden="true">→</span></a>`
+        ? `<a class="log-link" href="apply.html">${t("applyJoin")}<span class="arrow" aria-hidden="true">→</span></a>`
         : "");
     return `
     <article class="log-item${upcoming ? " is-upcoming" : " is-past"}" ${i === 0 ? "data-latest" : ""} ${href ? `data-href="${esc(href)}"` : ""}>
@@ -259,8 +264,14 @@ if (logListEl && !logListEl.dataset.navBound) {
   });
 }
 
-renderActivity(DATA.activity);
-$("#artList").innerHTML = renderCards(DATA.artifacts);
+let activityItems = null;
+function paintLists() {
+  const src = activityItems || D().activity || [];
+  renderActivity(src.map(locItem));
+  const arts = $("#artList");
+  if (arts) arts.innerHTML = renderCards(D().artifacts || []);
+}
+paintLists();
 
 (async function syncActivity() {
   try {
@@ -274,13 +285,16 @@ $("#artList").innerHTML = renderCards(DATA.artifacts);
         mode: g.mode,
         place: g.place,
         status: g.status || (g.link ? "past" : "upcoming"),
-        label: upcoming ? "待举办" : "",
+        label: upcoming ? t("upcoming") : "",
         desc: g.summary,
         link: upcoming ? "" : localPage(g.link || ""),
-        linkText: upcoming ? "" : "阅读公开纪要"
+        linkText: upcoming ? "" : t("readNotes")
       };
     });
-    if (list.length) renderActivity(list);
+    if (list.length) {
+      activityItems = list;
+      renderActivity(list.map(locItem));
+    }
   } catch (_) {}
 })();
 
@@ -300,12 +314,12 @@ function sortedTools() {
 }
 
 function renderToolsPublic() {
-  const all = sortedTools();
+  const all = [...(D().tools || [])].sort((a, b) => String(a.sortKey || a.name).toLowerCase().localeCompare(String(b.sortKey || b.name).toLowerCase(), "en"));
   if (!all.length) {
-    return `<p class="toolkit-intro">集会上讨论过的工具将陆续以卡片形式收录于此。</p>`;
+    return `<p class="toolkit-intro">${t("toolkit.empty")}</p>`;
   }
 
-  const cats = (DATA.toolCats || [{ k: "all", name: "全部" }]).filter(c =>
+  const cats = (D().toolCats || [{ k: "all", name: t("cat.all") }]).filter(c =>
     c.k === "all" || all.some(t => t.cat === c.k)
   );
   if (!cats.some(c => c.k === toolCat)) toolCat = "all";
@@ -319,39 +333,39 @@ function renderToolsPublic() {
   const list = toolCat === "all" ? all : all.filter(t => t.cat === toolCat);
   const grid = list.length
     ? `<div class="grid">${renderCards(list)}</div>`
-    : `<p class="toolkit-intro">该分类下暂无工具。</p>`;
+    : `<p class="toolkit-intro">${t("toolkit.none")}</p>`;
 
-  return `<div class="filter-bar" role="group" aria-label="工具分类筛选">${chips}</div>${grid}`;
+  return `<div class="filter-bar" role="group" aria-label="${esc(t("toolkit.filter"))}">${chips}</div>${grid}`;
 }
 
 function renderSpellsMember() {
-  const FLAT = (DATA.spells || []).flatMap(g =>
+  const FLAT = (D().spells || []).flatMap(g =>
     g.items.map(s => ({
       name: s.t,
       status: s.k,
-      label: (SPELL_CATS.find(c => c.k === s.k) || {}).name || s.k,
+      label: t("spell." + s.k) || s.k,
       role: g.group,
       desc: s.d,
       tags: [g.group],
       link: localPage(s.u || g.src || ""),
-      linkText: g.src ? "出自纪要" : (s.u ? "前往" : "")
+      linkText: g.src ? t("fromNotes") : (s.u ? t("go") : "")
     }))
   );
   if (!FLAT.length) return "";
   return `
-    <h3 class="spell-cat">使用心得</h3>
+    <h3 class="spell-cat">${t("spells.title")}</h3>
     <div class="grid">${renderCards(FLAT)}</div>`;
 }
 
 function renderSpellsMemberLocked() {
   return `
-    <h3 class="spell-cat">使用心得</h3>
+    <h3 class="spell-cat">${t("spells.title")}</h3>
     <div class="lock-box">
-      <h2>使用心得需成员权限</h2>
-      <p>上面的工具卡片可自由查阅。具体使用心得请参会登录后查看。</p>
+      <h2>${t("spells.lockTitle")}</h2>
+      <p>${t("spells.lockBody")}</p>
       <div class="lock-actions">
-        <a class="btn btn-primary" href="login.html">成员登录</a>
-        <a class="btn btn-ghost" href="apply.html">申请加入</a>
+        <a class="btn btn-primary" href="login.html">${t("spells.login")}</a>
+        <a class="btn btn-ghost" href="apply.html">${t("spells.apply")}</a>
       </div>
     </div>`;
 }
@@ -379,8 +393,8 @@ if (spellListEl && !spellListEl.dataset.filterBound) {
   });
 }
 
-(function renderAbout() {
-  const about = DATA.about;
+function renderAbout() {
+  const about = D().about;
   const el = $("#aboutBlock");
   if (!el || !about) return;
   const items = (about.principles || []).map((p, i) => `
@@ -397,32 +411,38 @@ if (spellListEl && !spellListEl.dataset.filterBound) {
       <p>${esc(about.lead)}</p>
     </div>
     <ol class="about-list">${items}</ol>`;
-})();
+}
+renderAbout();
 
-$("#chanList").innerHTML = DATA.channels.map(c => {
-  const variant = c.variant === "ghost" ? "ghost" : "primary";
-  const body = c.type === "qr"
-    ? `<div class="qr-slot">${c.img ? `<img src="${esc(c.img)}" alt="${esc(c.name)}二维码">` : esc(c.alt||"").replace(/\n/g,"<br>")}</div>`
-    : `<a class="go go-${variant}" href="${esc(c.url)}">${esc(c.cta||"前往")}<span class="arrow" aria-hidden="true">→</span></a>`;
-  return `<div class="channel channel-${variant}">
-    ${c.kicker ? `<div class="channel-kicker">${esc(c.kicker)}</div>` : ""}
-    <h3>${esc(c.name)}</h3>
-    <div class="note">${esc(c.note||"")}</div>
-    ${body}
-  </div>`;
-}).join("") + (() => {
-  const w = DATA.wechatCommunity;
-  if (!w) return "";
-  return `<div class="wechat-card">
-    <div class="wechat-kicker">${esc(w.kicker || "COMMUNITY")}</div>
-    <div class="wechat-top">
-      <h3>${esc(w.title || "微信社群")}</h3>
-      ${w.status === "pending" ? `<span class="wechat-badge">待维护</span>` : ""}
-    </div>
-    <p>${esc(w.note || "")}</p>
-    <div class="wechat-slot" aria-hidden="true">二维码待维护</div>
-  </div>`;
-})();
+function renderChannels() {
+  const host = $("#chanList");
+  if (!host) return;
+  host.innerHTML = (D().channels || []).map(c => {
+    const variant = c.variant === "ghost" ? "ghost" : "primary";
+    const body = c.type === "qr"
+      ? `<div class="qr-slot">${c.img ? `<img src="${esc(c.img)}" alt="${esc(c.name)}">` : esc(c.alt||"").replace(/\n/g,"<br>")}</div>`
+      : `<a class="go go-${variant}" href="${esc(c.url)}">${esc(c.cta||t("go"))}<span class="arrow" aria-hidden="true">→</span></a>`;
+    return `<div class="channel channel-${variant}">
+      ${c.kicker ? `<div class="channel-kicker">${esc(c.kicker)}</div>` : ""}
+      <h3>${esc(c.name)}</h3>
+      <div class="note">${esc(c.note||"")}</div>
+      ${body}
+    </div>`;
+  }).join("") + (() => {
+    const w = D().wechatCommunity;
+    if (!w) return "";
+    return `<div class="wechat-card">
+      <div class="wechat-kicker">${esc(w.kicker || "COMMUNITY")}</div>
+      <div class="wechat-top">
+        <h3>${esc(w.title)}</h3>
+        ${w.status === "pending" ? `<span class="wechat-badge">${t("wechat.pending")}</span>` : ""}
+      </div>
+      <p>${esc(w.note || "")}</p>
+      <div class="wechat-slot" aria-hidden="true">${t("wechat.qr")}</div>
+    </div>`;
+  })();
+}
+renderChannels();
 
 /* 登录态：公开工具目录始终展示；使用心得按成员解锁 */
 renderSpellbook(false);
@@ -439,9 +459,9 @@ renderSpellbook(false);
 
     if (me.auth) {
       const who = me.admin
-        ? `${esc(me.user?.name || me.admin.username)}（管理）`
+        ? `${esc(me.user?.name || me.admin.username)}（${t("admin")}）`
         : esc(me.user.name);
-      foot.innerHTML = `${who} · <a href="gathering-001.html" style="color:var(--cyan)">我的纪要</a> · <a href="#" id="homeLogout" style="color:var(--cyan)">退出</a>`;
+      foot.innerHTML = `${who} · <a href="gathering-001.html" style="color:var(--cyan)">${t("myNotes")}</a> · <a href="#" id="homeLogout" style="color:var(--cyan)">${t("logout")}</a>`;
       const btn = document.getElementById("homeLogout");
       if (btn) btn.addEventListener("click", async e => {
         e.preventDefault();
@@ -450,7 +470,7 @@ renderSpellbook(false);
         location.reload();
       });
     } else {
-      foot.innerHTML = `${esc(DATA.contact)} · <a href="login.html" style="color:var(--cyan)">登录</a> · <a href="apply.html" style="color:var(--cyan)">申请</a>`;
+      foot.innerHTML = `${esc(DATA.contact)} · <a href="login.html" style="color:var(--cyan)">${t("login")}</a> · <a href="apply.html" style="color:var(--cyan)">${t("apply")}</a>`;
     }
   } catch (_) {
     renderSpellbook(false);
@@ -505,3 +525,22 @@ CC.BGM.init({
   sigilEl: $(".sigil"),
   gestureKick: true
 });
+
+function paintLang() {
+  if (CC.I18N && CC.I18N.applyDom) CC.I18N.applyDom(document);
+  const nextEl = $("#nextMeet");
+  if (nextEl && DATA.nextGathering) {
+    nextEl.innerHTML =
+      `<span class="nm-label">${t("hero.next")}</span>` +
+      `<span class="nm-dot" aria-hidden="true"></span>` +
+      `<span class="nm-date">${esc(DATA.nextGathering)}</span>`;
+  }
+  paintLists();
+  renderAbout();
+  renderChannels();
+  renderSpellbook(spellbookMember);
+}
+if (!document.documentElement.dataset.ccHomeLang) {
+  document.documentElement.dataset.ccHomeLang = "1";
+  document.addEventListener("cc:lang", paintLang);
+}

@@ -185,10 +185,21 @@ CC.Theme = (function () {
   function syncControls(mode, pref) {
     const auto = !pref;
     document.querySelectorAll("[data-theme-toggle]").forEach((btn) => {
-      btn.setAttribute("aria-label", `切换为${mode === "light" ? "深色" : "浅色"}`);
+      const darkWanted = mode === "light";
+      const aria = (CC.I18N && CC.I18N.t)
+        ? CC.I18N.t(darkWanted ? "theme.toDark" : "theme.toLight")
+        : `切换为${darkWanted ? "深色" : "浅色"}`;
+      btn.setAttribute("aria-label", aria);
+      const zh = { light: "浅色", dark: "深色" };
+      const en = { light: "Light", dark: "Dark" };
+      const pack = (document.documentElement.dataset.lang === "en") ? en : zh;
       btn.title = auto
-        ? `当前：${LABELS[mode]}（北京日出日落自动；点击可临时切换）`
-        : `当前：${LABELS[mode]}（临时；下次日出/日落恢复自动）`;
+        ? (document.documentElement.dataset.lang === "en"
+          ? `Now: ${pack[mode]} (Beijing sunrise/sunset; click to override)`
+          : `当前：${pack[mode]}（北京日出日落自动；点击可临时切换）`)
+        : (document.documentElement.dataset.lang === "en"
+          ? `Now: ${pack[mode]} (temporary until next sunrise/sunset)`
+          : `当前：${pack[mode]}（临时；下次日出/日落恢复自动）`);
       btn.dataset.theme = mode;
       btn.setAttribute("aria-pressed", mode === "light" ? "true" : "false");
       const icon = btn.querySelector("[data-theme-icon]");

@@ -1,5 +1,8 @@
 <!doctype html>
-<html lang="zh-CN" data-cc-build="nav-script-1">
+<html lang="zh-CN" data-cc-build="nav-i18n-1">
+<script>
+(function(){try{var q=location.search.match(/[?&]lang=(en|zh)\b/);var L=q?q[1]:(localStorage.getItem("cc-lang")||"zh");if(L!=="en"&&L!=="zh")L="zh";document.documentElement.dataset.lang=L;document.documentElement.lang=L==="en"?"en":"zh-CN";}catch(e){}})();
+</script>
 <head>
 <meta charset="utf-8">
 <script>
@@ -82,7 +85,7 @@
 <meta name="twitter:image" content="https://cyber-casters.com/assets/icons/og-image.png">
 <link rel="preload" href="assets/audio/bgm.m4a?v=32k" as="audio" type="audio/mp4">
 <link rel="stylesheet" href="css/tokens.css?v=cs1">
-<link rel="stylesheet" href="css/base.css?v=process1">
+<link rel="stylesheet" href="css/base.css?v=i18n1">
 <link rel="stylesheet" href="css/home.css?v=about-gap2">
 <link rel="stylesheet" href="css/auth.css?v=apply-border2">
 <link rel="stylesheet" href="css/gathering.css?v=process1">
@@ -380,25 +383,25 @@
 
  </div>
 
-  <p class="thesis">AI技巧交流会</p>
+  <p class="thesis" data-i18n="hero.thesis">AI技巧交流会</p>
   <p class="next-meet" id="nextMeet"></p>
-  <a class="join-cta" href="apply.html">我想参加</a>
-  <div class="scroll-hint" id="scrollHint" role="button" aria-label="点击进入内容区"><span>点击进入</span><span class="chev"></span></div>
+  <a class="join-cta" href="apply.html" data-i18n="hero.join">我想参加</a>
+  <div class="scroll-hint" id="scrollHint" role="button" data-i18n-aria="hero.enter" aria-label="点击进入内容区"><span data-i18n="hero.enter">点击进入</span><span class="chev"></span></div>
 </section>
 
 <div class="tabbar-outer">
   <nav class="tabbar" role="tablist" aria-label="站点分区">
     <button class="tab" role="tab" data-panel="activity" aria-selected="true">
-      活动记录<small>ACTIVITY</small>
+       <span data-i18n="tab.activity">活动记录</span><small>ACTIVITY</small>
     </button>
     <button class="tab" role="tab" data-panel="artifacts" aria-selected="false">
-      法器长廊<small>GALLERY</small>
+       <span data-i18n="tab.gallery">法器长廊</span><small>GALLERY</small>
     </button>
     <button class="tab" role="tab" data-panel="spells" aria-selected="false">
-      咒语手册<small>TOOLKIT</small>
+       <span data-i18n="tab.toolkit">咒语手册</span><small>TOOLKIT</small>
     </button>
     <button class="tab" role="tab" data-panel="guild" aria-selected="false">
-      关于我们<small>ABOUT</small>
+       <span data-i18n="tab.about">关于我们</span><small>ABOUT</small>
     </button>
   </nav>
 </div>
@@ -407,33 +410,33 @@
   <section class="panel is-on" id="p-activity" role="tabpanel">
     <div class="panel-head">
       <div class="panel-head-row">
-        <h2>活动记录</h2>
-        <a class="process-jump" href="process.html">活动流程</a>
+        <h2 data-i18n="tab.activity">活动记录</h2>
+        <a class="process-jump" href="process.html" data-i18n="activity.process">活动流程</a>
       </div>
-      <p>参加过当期的朋友登录后可看完整纪要并留言。</p>
+      <p data-i18n="activity.lead">参加过当期的朋友登录后可看完整纪要并留言。</p>
     </div>
     <div class="log" id="logList"></div>
   </section>
 
   <section class="panel" id="p-artifacts" role="tabpanel">
     <div class="panel-head">
-      <h2>法器长廊</h2>
-      <p>预留给成员的项目与个人网页。做好了可以申请挂上来。</p>
+      <h2 data-i18n="tab.gallery">法器长廊</h2>
+      <p data-i18n="gallery.lead">预留给成员的项目与个人网页。做好了可以申请挂上来。</p>
     </div>
     <div class="grid" id="artList"></div>
   </section>
 
   <section class="panel" id="p-spells" role="tabpanel">
     <div class="panel-head">
-      <h2>咒语手册</h2>
-      <p>收录集会上讨论过的工具与使用心得。</p>
+      <h2 data-i18n="tab.toolkit">咒语手册</h2>
+      <p data-i18n="toolkit.lead">收录集会上讨论过的工具与使用心得。</p>
     </div>
     <div id="spellList"></div>
   </section>
 
   <section class="panel" id="p-guild" role="tabpanel">
     <div class="panel-head">
-      <h2>关于我们</h2>
+      <h2 data-i18n="tab.about">关于我们</h2>
     </div>
     <div class="about" id="aboutBlock"></div>
     <div class="channels" id="chanList"></div>
@@ -441,15 +444,16 @@
 </main>
 
 <footer class="wrap">
-  <span>© 2026 赛博法师 • CYBER CASTERS</span>
+  <span data-i18n="footer.copy">© 2026 赛博法师 • CYBER CASTERS</span>
   <span id="footNote">CONTACT · cybercasters@gmail.com</span>
 </footer>
 
 <script src="js/util.js"></script>
 <script src="js/theme.js?v=bj-sun2"></script>
+<script src="js/i18n.js?v=1"></script>
 <script src="js/api.js"></script>
 <script src="js/data.js?v=win1"></script>
-<script src="js/bgm.js?v=nav3"></script>
-<script src="js/home.js"></script>
+<script src="js/bgm.js?v=nav4"></script>
+<script src="js/home.js?v=i18n1"></script>
 </body>
 </html>

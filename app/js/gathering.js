@@ -8,6 +8,7 @@ const PHOTOS = [
 const photoSrc = i => encodeURI(PHOTO_DIR + PHOTOS[i]);
 const $ = CC.$;
 const esc = CC.esc;
+const t = (k, vars) => (CC.I18N && CC.I18N.t(k, vars)) || k;
 
 function fmtTime(iso) {
   return CC.fmtChinaTime(iso);
@@ -18,16 +19,16 @@ function renderUserChip(me) {
   if (!me || !me.auth) {
     el.innerHTML = `
       <span class="who">NOTES · ${GATHERING_ID}</span>
-      <a href="login.html?next=gathering-001.html">登录</a>
-      <a href="apply.html">申请</a>`;
+      <a href="login.html?next=gathering-001.html">${t("login")}</a>
+      <a href="apply.html">${t("apply")}</a>`;
     return;
   }
   const label = me.admin
-    ? `${esc(me.user?.name || me.admin.username)}（管理）`
+    ? `${esc(me.user?.name || me.admin.username)}（${t("admin")}）`
     : esc(me.user.name);
   el.innerHTML = `
     <span class="who">${label}</span>
-    <button type="button" id="logoutBtn">退出</button>`;
+    <button type="button" id="logoutBtn">${t("logout")}</button>`;
   $("#logoutBtn").addEventListener("click", async () => {
     await CC.logout();
     try { await CC.api("/api/admin/logout", { method: "POST", body: "{}" }); } catch (_) {}
@@ -61,8 +62,8 @@ function wireLightbox() {
   const grid = document.getElementById("shotGrid");
   if (!grid) return;
   grid.innerHTML = PHOTOS.map((p, i) =>
-    `<button class="shot" data-i="${i}" aria-label="放大第 ${i + 1} 张">
-       <img src="${photoSrc(i)}" loading="lazy" alt="第一期现场 ${i + 1}">
+    `<button class="shot" data-i="${i}" aria-label="${esc(t("g.shot", { n: String(i + 1) }))}">
+       <img src="${photoSrc(i)}" loading="lazy" alt="${esc(t("g.shotAlt", { n: String(i + 1) }))}">
      </button>`
   ).join("");
 
@@ -94,7 +95,7 @@ async function loadComments() {
   const data = await CC.api(`/api/gatherings/${GATHERING_ID}/comments`);
   const list = $("#commentList");
   if (!data.comments.length) {
-    list.innerHTML = `<div class="comment"><div class="body" style="color:var(--ash)">还没有留言，来写第一条吧。</div></div>`;
+    list.innerHTML = `<div class="comment"><div class="body" style="color:var(--ash)">${t("g.commentEmpty")}</div></div>`;
     return;
   }
   list.innerHTML = data.comments.map(c => `
@@ -105,11 +106,14 @@ async function loadComments() {
 }
 
 function wireComments() {
-  $("#commentForm").addEventListener("submit", async e => {
+  const form = $("#commentForm");
+  if (!form || form.dataset.bound) return;
+  form.dataset.bound = "1";
+  form.addEventListener("submit", async e => {
     e.preventDefault();
     const msg = $("#commentMsg");
     msg.className = "form-msg";
-    msg.textContent = "发送中…";
+    msg.textContent = t("g.sending");
     const body = new FormData(e.target).get("body");
     try {
       await CC.api(`/api/gatherings/${GATHERING_ID}/comments`, {
@@ -118,7 +122,7 @@ function wireComments() {
       });
       e.target.reset();
       msg.className = "form-msg ok";
-      msg.textContent = "已发布";
+      msg.textContent = t("g.posted");
       await loadComments();
     } catch (err) {
       msg.className = "form-msg err";
@@ -136,14 +140,61 @@ function offlineGathering() {
     unlocked: false,
     auth: false,
     bodyHtml: null,
-    lockReason: "当前为静态预览，未连上站点服务。完整纪要请通过站点（npm start 后访问 localhost:3000）登录查看。"
+    lockReason: t("g.offline")
   };
+}
+
+let cachedGathering = null;
+let cachedMe = null;
+let gatheringWired = false;
+
+function paintGathering(data, me) {
+  renderUserChip(me);
+  const view = (CC.I18N && CC.I18N.localizeItem) ? CC.I18N.localizeItem(data) : data;
+  $("#gTitle").textContent = view.title;
+  $("#gMeta").textContent = `${view.date} · ${view.place} · ${view.mode}`;
+  $("#gSummary").textContent = view.summary;
+
+  const digest = $("#publicDigest");
+  const topics = view.topics || [];
+  if (topics.length) {
+    digest.hidden = false;
+    $("#digestCount").textContent = String(topics.length).padStart(2, "0");
+    $("#topicList").innerHTML = topics.map((tp) => `
+      <li class="topic-card">
+        <div class="card-top">
+          <h3 class="t-title">${esc(tp.title)}</h3>
+          <span class="t-no">${esc(tp.no)}</span>
+        </div>
+        <p class="t-blurb">${esc(tp.blurb || "")}</p>
+      </li>`).join("");
+  }
+
+  if (!data.unlocked) {
+    $("#lockPanel").hidden = false;
+    $("#fullPanel").hidden = true;
+    $("#lockReason").textContent = (CC.I18N && CC.I18N.isEn())
+      ? t("g.lockTitle")
+      : (data.lockReason || t("g.lockTitle"));
+    return Promise.resolve();
+  }
+  $("#lockPanel").hidden = true;
+  $("#fullPanel").hidden = false;
+  if (!gatheringWired) {
+    $("#docBody").innerHTML = data.bodyHtml || "";
+    buildToc();
+    wireLightbox();
+    wireComments();
+    gatheringWired = true;
+  }
+  return loadComments().catch((err) => {
+    $("#commentList").innerHTML =
+      `<div class="comment"><div class="body" style="color:#ff8e8e">${esc(err.message)}</div></div>`;
+  });
 }
 
 async function main() {
   const me = await CC.authMe().catch(() => ({ auth: false }));
-  renderUserChip(me);
-
   let data;
   try {
     data = await CC.api(`/api/gatherings/${GATHERING_ID}`);
@@ -151,42 +202,9 @@ async function main() {
     data = offlineGathering();
     if (!data) throw err;
   }
-  $("#gTitle").textContent = data.title;
-  $("#gMeta").textContent = `${data.date} · ${data.place} · ${data.mode}`;
-  $("#gSummary").textContent = data.summary;
-
-  /* 公开纪要：要点卡片网格，桌面端多列 */ /* digest-cards-v2 */
-  const digest = $("#publicDigest");
-  const topics = data.topics || [];
-  if (topics.length) {
-    digest.hidden = false;
-    $("#digestCount").textContent = String(topics.length).padStart(2, "0");
-    $("#topicList").innerHTML = topics.map(t => `
-      <li class="topic-card">
-        <div class="card-top">
-          <h3 class="t-title">${esc(t.title)}</h3>
-          <span class="t-no">${esc(t.no)}</span>
-        </div>
-        <p class="t-blurb">${esc(t.blurb || "")}</p>
-      </li>`).join("");
-  }
-
-  if (!data.unlocked) {
-    $("#lockPanel").hidden = false;
-    $("#fullPanel").hidden = true;
-    $("#lockReason").textContent = data.lockReason || "完整纪要仅对当期参会成员开放。";
-  } else {
-    $("#lockPanel").hidden = true;
-    $("#fullPanel").hidden = false;
-    $("#docBody").innerHTML = data.bodyHtml || "";
-    buildToc();
-    wireLightbox();
-    wireComments();
-    await loadComments().catch(err => {
-      $("#commentList").innerHTML =
-        `<div class="comment"><div class="body" style="color:#ff8e8e">${esc(err.message)}</div></div>`;
-    });
-  }
+  cachedGathering = data;
+  cachedMe = me;
+  await paintGathering(data, me);
 }
 
 CC.BGM.init({
@@ -196,5 +214,14 @@ CC.BGM.init({
 });
 
 main().catch(err => {
-  $("#gSummary").textContent = "加载失败：" + err.message;
+  $("#gSummary").textContent = t("g.fail") + err.message;
 });
+
+window.__ccGatheringPaint = main;
+if (!document.documentElement.dataset.ccGatheringLang) {
+  document.documentElement.dataset.ccGatheringLang = "1";
+  document.addEventListener("cc:lang", () => {
+    if (CC.I18N && CC.I18N.applyDom) CC.I18N.applyDom(document);
+    if (cachedGathering) paintGathering(cachedGathering, cachedMe);
+  });
+}

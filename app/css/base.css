@@ -170,7 +170,8 @@ footer a:hover{border-bottom:1px solid color-mix(in srgb, var(--cyan) 45%, trans
 /* 音频元素本身不占布局；换页时放在 body 顶部以便尽早续播 */
 #bgm{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
 
-/* 右下角浮钮：主题 / 音乐同一尺寸、同一右边线，垂直叠放 */
+/* 右下角浮钮：语言 / 主题 / 音乐同一尺寸、同一右边线，垂直叠放 */
+#langBtn,
 #themeBtn,
 #bgmBtn{
   position:fixed;
@@ -194,14 +195,27 @@ footer a:hover{border-bottom:1px solid color-mix(in srgb, var(--cyan) 45%, trans
   bottom:calc(max(18px, env(safe-area-inset-bottom)) + 52px);
   font-size:18px;
 }
+#langBtn{
+  bottom:calc(max(18px, env(safe-area-inset-bottom)) + 104px);
+  font-size:13px;
+  font-family:var(--font-mono);
+  letter-spacing:0.06em;
+  font-weight:600;
+  color:var(--cyan);
+}
 #themeBtn:hover,
-#bgmBtn:hover{border-color:var(--cyan);color:var(--cyan)}
+#bgmBtn:hover,
+#langBtn:hover{border-color:var(--cyan);color:var(--cyan)}
 #themeBtn[data-theme="light"]{color:var(--arcane);border-color:color-mix(in srgb, var(--arcane) 45%, transparent)}
+#langBtn[aria-pressed="true"]{color:var(--gold);border-color:color-mix(in srgb, var(--gold) 45%, transparent)}
 #bgmBtn.on{
   color:var(--cyan);border-color:color-mix(in srgb, var(--cyan) 55%, transparent);
 }
 body:not(:has(#bgmBtn)) #themeBtn{
   bottom:max(18px, env(safe-area-inset-bottom));
+}
+body:not(:has(#bgmBtn)) #langBtn{
+  bottom:calc(max(18px, env(safe-area-inset-bottom)) + 52px);
 }
 
 @media (prefers-reduced-motion:reduce){

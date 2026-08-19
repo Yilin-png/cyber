@@ -1,5 +1,8 @@
 <!doctype html>
-<html lang="zh-CN" data-cc-build="nav-script-1">
+<html lang="zh-CN" data-cc-build="nav-i18n-1">
+<script>
+(function(){try{var q=location.search.match(/[?&]lang=(en|zh)\b/);var L=q?q[1]:(localStorage.getItem("cc-lang")||"zh");if(L!=="en"&&L!=="zh")L="zh";document.documentElement.dataset.lang=L;document.documentElement.lang=L==="en"?"en":"zh-CN";}catch(e){}})();
+</script>
 <head>
 <meta charset="utf-8">
 <script>
@@ -83,7 +86,7 @@
 <link rel="preload" href="assets/audio/bgm.m4a?v=32k" as="audio" type="audio/mp4">
 <link rel="preload" href="css/home.css?v=about-gap2" as="style">
 <link rel="stylesheet" href="css/tokens.css?v=cs1">
-<link rel="stylesheet" href="css/base.css?v=process1">
+<link rel="stylesheet" href="css/base.css?v=i18n1">
 <link rel="stylesheet" href="css/home.css?v=about-gap2">
 <link rel="stylesheet" href="css/auth.css?v=apply-border2">
 <link rel="stylesheet" href="css/gathering.css?v=process1">
@@ -160,7 +163,7 @@
 
 <div class="topbar">
   <div class="topbar-in">
-    <a class="back" href="index.html">← 返回</a>
+    <a class="back" href="index.html" data-i18n="nav.back">← 返回</a>
     <div class="userchip">
       <span class="who">ACTIVITY PROCESS</span>
     </div>
@@ -170,88 +173,88 @@
 <div class="wrap">
   <header class="head">
     <span class="issue">PROCESS</span>
-    <h1>赛博法师 AI技巧分享会流程</h1>
-    <div class="meta">线下 · 8人左右 · 90–120分钟</div>
+    <h1 data-i18n="process.title">赛博法师 AI技巧分享会流程</h1>
+    <div class="meta" data-i18n="process.meta">线下 · 8人左右 · 90–120分钟</div>
   </header>
 
   <dl class="process-facts">
     <div class="process-fact">
-      <dt>会议主题</dt>
-      <dd>AI技巧分享与共创</dd>
+      <dt data-i18n="process.k.theme">会议主题</dt>
+      <dd data-i18n="process.v.theme">AI技巧分享与共创</dd>
     </div>
     <div class="process-fact">
-      <dt>参会人数</dt>
-      <dd>8人左右</dd>
+      <dt data-i18n="process.k.size">参会人数</dt>
+      <dd data-i18n="process.v.size">8人左右</dd>
     </div>
     <div class="process-fact">
-      <dt>预计时长</dt>
-      <dd>90–120分钟</dd>
+      <dt data-i18n="process.k.time">预计时长</dt>
+      <dd data-i18n="process.v.time">90–120分钟</dd>
     </div>
     <div class="process-fact">
-      <dt>会议形式</dt>
-      <dd>线下</dd>
+      <dt data-i18n="process.k.form">会议形式</dt>
+      <dd data-i18n="process.v.form">线下</dd>
     </div>
   </dl>
 
   <article class="doc process-doc">
     <section class="sec" id="prep">
-      <h2><i>01</i>会前准备</h2>
-      <p>每位参会人提前准备一个本人实际使用过、效果较好的AI技巧或完整方案。为避免给参会人带来压力，技巧和方案不限题材，亦无大小与高下之分，畅所欲言。</p>
-      <p>分享内容可参考“应用场景—具体做法—实际效果—适用边界”的结构准备，必要时可以准备一张截图、一个示例或现场演示。</p>
-      <p>由于可能涉及客户、项目、合同或其他敏感信息，除非征得分享人同意，不录屏、不拍照。</p>
+      <h2><i>01</i><span data-i18n="process.h.prep">会前准备</span></h2>
+      <p data-i18n="process.prep.1">每位参会人提前准备一个本人实际使用过、效果较好的AI技巧或完整方案。为避免给参会人带来压力，技巧和方案不限题材，亦无大小与高下之分，畅所欲言。</p>
+      <p data-i18n="process.prep.2">分享内容可参考“应用场景—具体做法—实际效果—适用边界”的结构准备，必要时可以准备一张截图、一个示例或现场演示。</p>
+      <p data-i18n="process.prep.3">由于可能涉及客户、项目、合同或其他敏感信息，除非征得分享人同意，不录屏、不拍照。</p>
     </section>
 
     <section class="sec" id="agenda">
-      <h2><i>02</i>会议议程</h2>
+      <h2><i>02</i><span data-i18n="process.h.agenda">会议议程</span></h2>
 
-      <h3>（一）开场及规则说明（5分钟）</h3>
-      <p>主持人简要说明本次分享会的目标和流程。如有新成员，快速介绍。</p>
+      <h3 data-i18n="process.a1.h">（一）开场及规则说明（5分钟）</h3>
+      <p data-i18n="process.a1.p">主持人简要说明本次分享会的目标和流程。如有新成员，快速介绍。</p>
 
-      <h3>（二）AI技巧或方案分享（60分钟）</h3>
-      <p>每位参会人依次分享一个实践效果最好的AI技巧或方案。建议按照以下结构展开：</p>
+      <h3 data-i18n="process.a2.h">（二）AI技巧或方案分享（60分钟）</h3>
+      <p data-i18n="process.a2.p">每位参会人依次分享一个实践效果最好的AI技巧或方案。建议按照以下结构展开：</p>
       <ul class="process-points">
-        <li><strong>应用场景：</strong>原来遇到了什么问题，为什么需要使用AI；</li>
-        <li><strong>具体做法：</strong>使用了什么工具、提示词、工作流或操作步骤；</li>
-        <li><strong>实际效果：</strong>在时间、质量、准确性或工作体验方面带来了什么改善，可提供数据或前后对比；</li>
-        <li><strong>适用边界：</strong>当前方案仍存在哪些不足、风险，或者不适用于哪些场景；</li>
-        <li><strong>复用入口：</strong>如果其他人想尝试，最先可以从哪一步开始。</li>
+        <li data-i18n="process.a2.1">应用场景：原来遇到了什么问题，为什么需要使用AI；</li>
+        <li data-i18n="process.a2.2">具体做法：使用了什么工具、提示词、工作流或操作步骤；</li>
+        <li data-i18n="process.a2.3">实际效果：在时间、质量、准确性或工作体验方面带来了什么改善，可提供数据或前后对比；</li>
+        <li data-i18n="process.a2.4">适用边界：当前方案仍存在哪些不足、风险，或者不适用于哪些场景；</li>
+        <li data-i18n="process.a2.5">复用入口：如果其他人想尝试，最先可以从哪一步开始。</li>
       </ul>
-      <p>其他参会人可以将问题或感兴趣的内容记录，或与分享人进行机动讨论。</p>
+      <p data-i18n="process.a2.p2">其他参会人可以将问题或感兴趣的内容记录，或与分享人进行机动讨论。</p>
 
-      <h3>（三）交叉评价与完善建议（45分钟）</h3>
-      <p>全部方案分享完成后，请每位参会人独立选择除本人以外“最想尝试”的一个方案。</p>
-      <p>建议使用以下表达结构：</p>
+      <h3 data-i18n="process.a3.h">（三）交叉评价与完善建议（45分钟）</h3>
+      <p data-i18n="process.a3.p1">全部方案分享完成后，请每位参会人独立选择除本人以外“最想尝试”的一个方案。</p>
+      <p data-i18n="process.a3.p2">建议使用以下表达结构：</p>
       <ul class="process-script">
-        <li>我最想尝试的是________的方案。</li>
-        <li>对我最有价值的地方是________。</li>
-        <li>我准备将它用于________场景。</li>
-        <li>我建议进一步增加、调整或验证________，因为________。</li>
+        <li data-i18n="process.a3.s1">我最想尝试的是________的方案。</li>
+        <li data-i18n="process.a3.s2">对我最有价值的地方是________。</li>
+        <li data-i18n="process.a3.s3">我准备将它用于________场景。</li>
+        <li data-i18n="process.a3.s4">我建议进一步增加、调整或验证________，因为________。</li>
       </ul>
-      <p>完善建议尽量落到具体动作，例如增加核验环节、明确适用条件、补充标准模板、简化操作步骤、设置效果指标或者加强数据安全控制，避免只提出“可以再优化”“可以更智能”等笼统意见。</p>
-      <p>被评价人可以作回应，说明是否采纳、需要进一步验证的事项或者必要的背景信息。</p>
+      <p data-i18n="process.a3.p3">完善建议尽量落到具体动作，例如增加核验环节、明确适用条件、补充标准模板、简化操作步骤、设置效果指标或者加强数据安全控制，避免只提出“可以再优化”“可以更智能”等笼统意见。</p>
+      <p data-i18n="process.a3.p4">被评价人可以作回应，说明是否采纳、需要进一步验证的事项或者必要的背景信息。</p>
 
-      <h3>（四）提问环节与总结（10分钟）</h3>
-      <p>主持人选择一至两个被多次提及、对多数人有价值的问题进行集中讨论，每位参会人亦可提出自己的问题。</p>
-      <p>对于被多次选择、具有较高复用价值方案的分享人，由全体参会人表达感谢，并由分享人发表感想。</p>
-      <p>建议使用以下表达结构：</p>
+      <h3 data-i18n="process.a4.h">（四）提问环节与总结（10分钟）</h3>
+      <p data-i18n="process.a4.p1">主持人选择一至两个被多次提及、对多数人有价值的问题进行集中讨论，每位参会人亦可提出自己的问题。</p>
+      <p data-i18n="process.a4.p2">对于被多次选择、具有较高复用价值方案的分享人，由全体参会人表达感谢，并由分享人发表感想。</p>
+      <p data-i18n="process.a4.p3">建议使用以下表达结构：</p>
       <ul class="process-script">
-        <li>我分享这个技巧的心态是________。</li>
-        <li>进一步的规划和期待是________。</li>
-        <li>目前需要获得的支持是________。</li>
-        <li>希望在座各位做________。</li>
+        <li data-i18n="process.a4.s1">我分享这个技巧的心态是________。</li>
+        <li data-i18n="process.a4.s2">进一步的规划和期待是________。</li>
+        <li data-i18n="process.a4.s3">目前需要获得的支持是________。</li>
+        <li data-i18n="process.a4.s4">希望在座各位做________。</li>
       </ul>
-      <p>主持人感谢全体参会人的分享，面对面建群，说明纪要预计发送时间，确定是否安排下一次会议。</p>
+      <p data-i18n="process.a4.p4">主持人感谢全体参会人的分享，面对面建群，说明纪要预计发送时间，确定是否安排下一次会议。</p>
     </section>
 
     <section class="sec" id="followup">
-      <h2><i>03</i>会后跟进</h2>
-      <p>记录人在会后形成简要纪要。参会人可在微信群内对当期内容再次讨论，回访收集各方案的实际尝试结果，分享同步最新的AI资讯。</p>
-      <p>经验证有效的方案可以进一步整理为AI操作指引、标准提示词或工作流模板，使会议成果逐步沉淀为可复用的知识。</p>
+      <h2><i>03</i><span data-i18n="process.h.follow">会后跟进</span></h2>
+      <p data-i18n="process.f.1">记录人在会后形成简要纪要。参会人可在微信群内对当期内容再次讨论，回访收集各方案的实际尝试结果，分享同步最新的AI资讯。</p>
+      <p data-i18n="process.f.2">经验证有效的方案可以进一步整理为AI操作指引、标准提示词或工作流模板，使会议成果逐步沉淀为可复用的知识。</p>
     </section>
   </article>
 
   <footer>
-    <span>© 2026 赛博法师 • CYBER CASTERS</span>
+    <span data-i18n="footer.copy">© 2026 赛博法师 • CYBER CASTERS</span>
     <span>ACTIVITY PROCESS</span>
   </footer>
 </div>
@@ -260,8 +263,9 @@
 
 <script src="js/util.js"></script>
 <script src="js/theme.js?v=bj-sun2"></script>
+<script src="js/i18n.js?v=1"></script>
 <script src="js/api.js"></script>
-<script src="js/bgm.js?v=nav3"></script>
+<script src="js/bgm.js?v=nav4"></script>
 <script>
 CC.BGM.init({ mode: "button", toggleId: "bgmBtn", gestureKick: true });
 </script>
