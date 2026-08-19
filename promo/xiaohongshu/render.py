@@ -21,72 +21,56 @@ PAPER = (236, 232, 250, 255)
 BODY = (185, 179, 212, 255)
 ASH = (142, 136, 174, 255)
 LINE = (42, 33, 80, 255)
+PANEL = (16, 12, 33, 230)
 FONT = "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc"
+APPLY = "cyber-casters.com/apply.html"
+PAD = 88 * SCALE
 
 
 def font(size: int):
     return ImageFont.truetype(FONT, size * SCALE)
 
 
-def lerp(a, b, t):
-    return a + (b - a) * t
-
-
 def canvas():
     img = Image.new("RGBA", (CW, CH), VOID)
     px = img.load()
-    # 中心紫青辉光
-    cx, cy = CW / 2, CH * 0.38
+    cx, cy = CW / 2, CH * 0.22
     for y in range(CH):
         for x in range(0, CW, 2):
-            dx = (x - cx) / (CW * 0.55)
-            dy = (y - cy) / (CH * 0.55)
+            dx = (x - cx) / (CW * 0.62)
+            dy = (y - cy) / (CH * 0.48)
             r2 = dx * dx + dy * dy
-            glow = max(0.0, 1.0 - r2)
-            glow *= glow
-            v = int(18 * glow)
-            p = int(28 * glow)
-            c = int(12 * glow)
+            glow = max(0.0, 1.0 - r2) ** 2
+            p = int(24 * glow)
+            c = int(10 * glow)
+            v = int(16 * glow)
             px[x, y] = (7 + p, 6 + c, 14 + v + p, 255)
             if x + 1 < CW:
                 px[x + 1, y] = px[x, y]
-    # 细颗粒
     rng = random.Random(32)
-    for _ in range(14000):
+    for _ in range(9000):
         x = rng.randrange(CW)
         y = rng.randrange(CH)
-        n = rng.randint(8, 22)
+        n = rng.randint(6, 18)
         r, g, b, a = px[x, y]
         px[x, y] = (min(255, r + n), min(255, g + n), min(255, b + n), a)
     return img
 
 
-def draw_frame(draw: ImageDraw.ImageDraw, pad=72):
-    p = pad * SCALE
-    # 外框
+def draw_frame(draw: ImageDraw.ImageDraw):
+    p = 56 * SCALE
     draw.rectangle([p, p, CW - p, CH - p], outline=LINE, width=2 * SCALE)
-    tick = 22 * SCALE
+    tick = 18 * SCALE
     for x, y, dx, dy in (
-        (p, p, 1, 0),
-        (p, p, 0, 1),
-        (CW - p, p, -1, 0),
-        (CW - p, p, 0, 1),
-        (p, CH - p, 1, 0),
-        (p, CH - p, 0, -1),
-        (CW - p, CH - p, -1, 0),
-        (CW - p, CH - p, 0, -1),
+        (p, p, 1, 0), (p, p, 0, 1),
+        (CW - p, p, -1, 0), (CW - p, p, 0, 1),
+        (p, CH - p, 1, 0), (p, CH - p, 0, -1),
+        (CW - p, CH - p, -1, 0), (CW - p, CH - p, 0, -1),
     ):
         draw.line([x, y, x + dx * tick, y + dy * tick], fill=CYAN, width=3 * SCALE)
 
 
-def draw_rings(draw: ImageDraw.ImageDraw, cx, cy, radii, color, width=1):
-    for r in radii:
-        bbox = [cx - r, cy - r, cx + r, cy + r]
-        draw.ellipse(bbox, outline=color, width=width * SCALE)
-
-
 def hexagram_mask(cx, cy, r):
-    """两三角 XOR，得到中空六芒星。"""
     up = [
         (cx, cy - r),
         (cx + r * 0.866, cy + r * 0.5),
@@ -101,45 +85,77 @@ def hexagram_mask(cx, cy, r):
     b = Image.new("L", (CW, CH), 0)
     ImageDraw.Draw(a).polygon(up, fill=255)
     ImageDraw.Draw(b).polygon(down, fill=255)
-    xor = ImageChops.difference(a, b)
-    return xor.filter(ImageFilter.SMOOTH)
+    return ImageChops.difference(a, b).filter(ImageFilter.SMOOTH)
 
 
-def paste_hexagram(base: Image.Image, cx, cy, r, color):
+def paste_hexagram(base: Image.Image, cx, cy, r, color=ARCANE):
     mask = hexagram_mask(cx, cy, r)
     layer = Image.new("RGBA", (CW, CH), (0, 0, 0, 0))
-    solid = Image.new("RGBA", (CW, CH), color)
-    layer.paste(solid, mask=mask)
-    # 顶点
+    layer.paste(Image.new("RGBA", (CW, CH), color), mask=mask)
     d = ImageDraw.Draw(layer)
-    pts = []
     for i in range(6):
         ang = math.radians(-90 + i * 60)
-        pts.append((cx + r * math.cos(ang), cy + r * math.sin(ang)))
-    for x, y in pts:
-        d.ellipse([x - 5 * SCALE, y - 5 * SCALE, x + 5 * SCALE, y + 5 * SCALE], fill=CYAN)
+        x = cx + r * math.cos(ang)
+        y = cy + r * math.sin(ang)
+        d.ellipse([x - 4 * SCALE, y - 4 * SCALE, x + 4 * SCALE, y + 4 * SCALE], fill=CYAN)
     return Image.alpha_composite(base, layer)
 
 
-def text_w(draw, s, fnt):
+def tw(draw, s, fnt):
     b = draw.textbbox((0, 0), s, font=fnt)
     return b[2] - b[0]
 
 
+def th(draw, s, fnt):
+    b = draw.textbbox((0, 0), s, font=fnt)
+    return b[3] - b[1]
+
+
 def center_text(draw, y, s, fnt, fill, tracking=0):
     if tracking:
-        w = sum(text_w(draw, ch, fnt) for ch in s) + tracking * (len(s) - 1)
+        w = sum(tw(draw, ch, fnt) for ch in s) + tracking * (len(s) - 1)
         x = (CW - w) / 2
         for ch in s:
             draw.text((x, y), ch, font=fnt, fill=fill)
-            x += text_w(draw, ch, fnt) + tracking
+            x += tw(draw, ch, fnt) + tracking
         return
-    w = text_w(draw, s, fnt)
-    draw.text(((CW - w) / 2, y), s, font=fnt, fill=fill)
+    draw.text(((CW - tw(draw, s, fnt)) / 2, y), s, font=fnt, fill=fill)
 
 
-def left_text(draw, x, y, s, fnt, fill):
-    draw.text((x * SCALE, y), s, font=fnt, fill=fill)
+def wrap(draw, text, fnt, max_w):
+    lines = []
+    for para in text.split("\n"):
+        line = ""
+        for ch in para:
+            trial = line + ch
+            if tw(draw, trial, fnt) <= max_w:
+                line = trial
+            else:
+                if line:
+                    lines.append(line)
+                line = ch
+        if line:
+            lines.append(line)
+    return lines
+
+
+def draw_wrapped(draw, x, y, text, fnt, fill, max_w, leading=1.35):
+    lines = wrap(draw, text, fnt, max_w)
+    lh = int(th(draw, "字", fnt) * leading)
+    for i, line in enumerate(lines):
+        draw.text((x, y + i * lh), line, font=fnt, fill=fill)
+    return y + len(lines) * lh
+
+
+def chip(draw, x, y, w, h, title, body):
+    draw.rounded_rectangle([x, y, x + w, y + h], radius=14 * SCALE, outline=LINE, width=2 * SCALE)
+    draw.text((x + 22 * SCALE, y + 16 * SCALE), title, font=font(20), fill=CYAN)
+    draw_wrapped(draw, x + 22 * SCALE, y + 50 * SCALE, body, font(22), PAPER, w - 44 * SCALE, 1.32)
+
+
+def footer_apply(draw, y=None):
+    y = y if y is not None else CH - 118 * SCALE
+    center_text(draw, y, "联系报名  ·  " + APPLY, font(22), CYAN)
 
 
 def finish(img: Image.Image, name: str):
@@ -156,22 +172,44 @@ def poster_cover():
     img = canvas()
     d = ImageDraw.Draw(img)
     draw_frame(d)
-    cx, cy = CW / 2, CH * 0.40
-    draw_rings(d, cx, cy, [210 * SCALE, 268 * SCALE, 340 * SCALE], (*CYAN[:3],), 1)
-    # 淡紫环
-    faint = Image.new("RGBA", (CW, CH), (0, 0, 0, 0))
-    fd = ImageDraw.Draw(faint)
-    draw_rings(fd, cx, cy, [180 * SCALE], ARCANE, 2)
-    img = Image.alpha_composite(img, faint)
-    img = paste_hexagram(img, cx, cy, 132 * SCALE, ARCANE)
+    img = paste_hexagram(img, CW - 168 * SCALE, 168 * SCALE, 48 * SCALE)
     d = ImageDraw.Draw(img)
 
-    center_text(d, 118 * SCALE, "GATHERING  002", font(22), CYAN, tracking=8 * SCALE)
-    center_text(d, 1080 * SCALE, "赛博法师", font(92), PAPER)
-    center_text(d, 1200 * SCALE, "CYBER CASTERS", font(28), ARCANE, tracking=10 * SCALE)
-    center_text(d, 1288 * SCALE, "深圳法律人的 AI 线下局", font(36), GOLD)
-    center_text(d, 1372 * SCALE, "第二期  ·  8人小局  ·  打开电脑", font(26), BODY)
-    center_text(d, 1488 * SCALE, "2026.08.20  19:00  ·  深圳", font(24), CYAN)
+    d.text((PAD, 108 * SCALE), "CYBER CASTERS", font=font(18), fill=CYAN)
+    d.text((PAD, 148 * SCALE), "赛博法师", font=font(56), fill=PAPER)
+    d.text((PAD, 228 * SCALE), "深圳法律人的 AI 技巧交流会", font=font(28), fill=GOLD)
+    d.text((PAD, 276 * SCALE), "每月一次 · 线下小局 · 打开电脑互相修炼", font=font(22), fill=BODY)
+
+    facts = [
+        ("频率", "每月一次，深圳线下"),
+        ("规模", "8 人左右，熟人小局"),
+        ("时长", "90–120 分钟"),
+        ("形式", "不讲课 / 不录屏 / 不变现"),
+        ("带什么", "一件真难事，或一个真技巧"),
+        ("结构", "场景 — 做法 — 效果 — 边界"),
+    ]
+    gap = 16 * SCALE
+    col_w = (CW - PAD * 2 - gap) // 2
+    row_h = 118 * SCALE
+    y0 = 340 * SCALE
+    for i, (t, b) in enumerate(facts):
+        col = i % 2
+        row = i // 2
+        chip(d, PAD + col * (col_w + gap), y0 + row * (row_h + gap), col_w, row_h, t, b)
+
+    y = y0 + 3 * (row_h + gap) + 8 * SCALE
+    d.text((PAD, y), "法律场景常聊", font=font(20), fill=GOLD)
+    tags = "文书格式  ·  Skill 封装  ·  本地转写脱敏  ·  知识库  ·  检索  ·  会议纪要  ·  Word/Markdown 效率账"
+    y = draw_wrapped(d, PAD, y + 40 * SCALE, tags, font(24), PAPER, CW - PAD * 2, 1.4)
+
+    y += 28 * SCALE
+    d.rounded_rectangle(
+        [PAD, y, CW - PAD, y + 168 * SCALE],
+        radius=16 * SCALE, outline=CYAN, width=3 * SCALE,
+    )
+    d.text((PAD + 28 * SCALE, y + 22 * SCALE), "联系报名", font=font(20), fill=GOLD)
+    d.text((PAD + 28 * SCALE, y + 58 * SCALE), APPLY, font=font(28), fill=PAPER)
+    d.text((PAD + 28 * SCALE, y + 108 * SCALE), "留下称呼、方向和方便的时段地点，审核后联系。", font=font(22), fill=BODY)
     finish(img, "01-cover.png")
 
 
@@ -179,30 +217,47 @@ def poster_who():
     img = canvas()
     d = ImageDraw.Draw(img)
     draw_frame(d)
-    center_text(d, 130 * SCALE, "WHO", font(20), CYAN, tracking=14 * SCALE)
-    center_text(d, 186 * SCALE, "写给谁", font(64), PAPER)
+    d.text((PAD, 108 * SCALE), "WHO", font=font(18), fill=CYAN)
+    d.text((PAD, 146 * SCALE), "写给深圳法律人", font=font(44), fill=PAPER)
+    d.text((PAD, 214 * SCALE), "已经在用 AI，但卡在文书、检索、脱敏和本地化。不是零基础科普。", font=font(22), fill=BODY)
 
     items = [
-        ("01", "律师 / 法律顾问", "检索、比对、文书结构，每天都在和文字较劲。"),
-        ("02", "公司法务 / 合规", "合同、制度、纪要要快，但不能把客户信息喂给云端。"),
-        ("03", "研究 / 仲裁 / 投行法务", "公开资料能采、能核、能接到自己的本地库。"),
-        ("04", "已经在用 AI", "不是零基础科普。带一件真事来，现场对照。"),
+        ("01  律师 / 法律顾问", [
+            "检索、比对、结构，每天都在和文字较劲",
+            "网上 Skill 很难套进自己的格式与严谨度",
+            "要的是能复用的做法，不是概念课",
+        ]),
+        ("02  公司法务 / 合规", [
+            "合同、制度、纪要要快，又不能把客户材料上云",
+            "脱敏发生在转写那一步，能本地就本地",
+            "制度与模板要能改、能核、能沉淀",
+        ]),
+        ("03  研究 / 仲裁 / 投行法务", [
+            "公开资料要能采、能核、接到自己的本地库",
+            "案例数据不开放，更要会自己搭工作流",
+            "日报、行研、知识库怎么串起来",
+        ]),
+        ("04  已经动手的人", [
+            "带一件 AI 没搞定的难事，或一个别人不知道的小技巧",
+            "现场打开电脑对照，同题异解",
+            "纪要只对参会成员开放",
+        ]),
     ]
-    y = 340 * SCALE
-    f_no = font(28)
-    f_t = font(36)
-    f_b = font(24)
-    for no, title, body in items:
-        d.rectangle(
-            [140 * SCALE, y, 160 * SCALE, y + 148 * SCALE],
-            fill=ARCANE,
+    y = 280 * SCALE
+    box_h = 268 * SCALE
+    for title, bullets in items:
+        d.rounded_rectangle(
+            [PAD, y, CW - PAD, y + box_h],
+            radius=14 * SCALE, outline=LINE, width=2 * SCALE,
         )
-        d.text((188 * SCALE, y + 8 * SCALE), no, font=f_no, fill=CYAN)
-        d.text((188 * SCALE, y + 44 * SCALE), title, font=f_t, fill=PAPER)
-        d.text((188 * SCALE, y + 96 * SCALE), body, font=f_b, fill=BODY)
-        y += 196 * SCALE
-
-    center_text(d, 1508 * SCALE, "深圳 · 线下 · 熟人小局", font(24), GOLD)
+        d.rectangle([PAD, y, PAD + 10 * SCALE, y + box_h], fill=ARCANE)
+        d.text((PAD + 28 * SCALE, y + 18 * SCALE), title, font=font(28), fill=PAPER)
+        by = y + 68 * SCALE
+        for b in bullets:
+            d.text((PAD + 28 * SCALE, by), "▸  " + b, font=font(22), fill=BODY)
+            by += 58 * SCALE
+        y += box_h + 16 * SCALE
+    footer_apply(d)
     finish(img, "02-who.png")
 
 
@@ -210,32 +265,24 @@ def poster_how():
     img = canvas()
     d = ImageDraw.Draw(img)
     draw_frame(d)
-    center_text(d, 130 * SCALE, "HOW", font(20), CYAN, tracking=14 * SCALE)
-    center_text(d, 186 * SCALE, "怎么开", font(64), PAPER)
-    center_text(d, 280 * SCALE, "不讲课  ·  不录屏  ·  不变现", font(26), GOLD)
+    d.text((PAD, 108 * SCALE), "HOW", font=font(18), fill=CYAN)
+    d.text((PAD, 146 * SCALE), "一个月一次，怎么开", font=font(42), fill=PAPER)
+    d.text((PAD, 210 * SCALE), "深圳线下  ·  8人左右  ·  90–120分钟  ·  不讲课 / 不录屏 / 不变现", font=font(20), fill=GOLD)
 
-    blocks = [
-        ("带一件真事", "一件 AI 没能替你搞定的难事，\n或一个你自己顺手、别人多半不知道的小技巧。"),
-        ("打开电脑", "同题异解，互相修炼。\n建议按「场景—做法—效果—边界」讲清楚。"),
-        ("八人左右", "90–120 分钟。先分享，再交叉评价，\n把能复用的沉淀成方法，而不是金句。"),
-        ("法律场景可谈", "文书格式、Skill 封装、本地转写脱敏、\n知识库与检索。敏感信息现场不外传。"),
+    rows = [
+        ("01 会前", "每人准备一个本人用过、有效果的技巧或方案。不限题材、不论大小。建议按「应用场景—具体做法—实际效果—适用边界」准备，可带一张截图或现场演示。涉及客户与合同，除非本人同意，不录屏、不拍照。"),
+        ("02 分享 60′", "依次讲：原来卡在哪、用了什么工具/提示词/工作流、时间与质量有何变化、哪里不能用、别人想试从哪一步开始。可机动提问。"),
+        ("03 交叉 45′", "每人选一个「最想尝试」的他人方案：最有价值的点、准备用在哪、建议补核验/模板/安全边界的哪一步。落到具体动作，不说「可以更智能」。"),
+        ("04 收束 10′", "集中讨论被多次提到的问题。有效方案会后整理成操作指引、提示词或工作流。参会人可继续在群里回访效果。"),
     ]
-    y = 360 * SCALE
-    for title, body in blocks:
-        d.line(
-            [160 * SCALE, y, 1082 * SCALE, y],
-            fill=LINE,
-            width=2 * SCALE,
-        )
-        d.text((160 * SCALE, y + 24 * SCALE), title, font=font(36), fill=CYAN)
-        d.multiline_text(
-            (160 * SCALE, y + 80 * SCALE),
-            body,
-            font=font(26),
-            fill=BODY,
-            spacing=10 * SCALE,
-        )
-        y += 260 * SCALE
+    y = 268 * SCALE
+    for title, body in rows:
+        d.text((PAD, y), title, font=font(26), fill=CYAN)
+        y = draw_wrapped(d, PAD, y + 42 * SCALE, body, font(22), PAPER, CW - PAD * 2, 1.38)
+        y += 28 * SCALE
+        d.line([PAD, y, CW - PAD, y], fill=LINE, width=2 * SCALE)
+        y += 22 * SCALE
+    footer_apply(d)
     finish(img, "03-how.png")
 
 
@@ -243,33 +290,35 @@ def poster_legal():
     img = canvas()
     d = ImageDraw.Draw(img)
     draw_frame(d)
-    cx, cy = CW / 2, 430 * SCALE
-    draw_rings(d, cx, cy, [150 * SCALE, 200 * SCALE], (*CYAN[:3],), 1)
-    img = paste_hexagram(img, cx, cy, 92 * SCALE, ARCANE)
-    d = ImageDraw.Draw(img)
+    d.text((PAD, 108 * SCALE), "FIELD NOTES", font=font(18), fill=CYAN)
+    d.text((PAD, 146 * SCALE), "法律场景，现场在聊这些", font=font(38), fill=PAPER)
+    d.text((PAD, 208 * SCALE), "不是公开课提纲。是深圳局里已经对照过的真问题。", font=font(22), fill=BODY)
 
-    center_text(d, 130 * SCALE, "NOTES  ·  001", font(20), CYAN, tracking=8 * SCALE)
-    center_text(d, 580 * SCALE, "第一期已经在聊这些", font(40), PAPER)
-
-    rows = [
-        ("Skill 封装", "法律研究的格式、审美、严谨度因人而异，\n网上的模板很难原样套用，得自己蒸馏。"),
-        ("文书效率账", "Markdown 更适 AI；非用 Word 不可时，\n选对工具，成本和错误率差一个数量级。"),
-        ("保密与本地化", "脱敏发生在转写那一步。\n能本地完成的，就不把原文送上云。"),
-        ("知识库 / 检索", "公开资料怎么采、怎么核、怎么接到本地。\n案例数据不开放，更要会自己搭工作流。"),
+    left = [
+        ("Skill 自己蒸馏", "法律研究的格式、审美、严谨度因人而异，网上模板很难原样套。经验写成 markdown，跨工具通用。"),
+        ("文书效率账", "Markdown 更适 AI。非用 Word 不可时，选对工具，成本和错误率可差一个数量级。"),
+        ("保密与本地化", "脱敏发生在转写那一步。能本地完成的，就不把原文送上云。"),
+        ("知识库 / 检索", "公开资料怎么采、怎么核、怎么接到本地。案例数据不开放，更要自己搭工作流。"),
     ]
-    y = 680 * SCALE
-    for i, (title, body) in enumerate(rows, 1):
-        no = f"{i:02d}"
-        d.text((160 * SCALE, y), no, font=font(22), fill=GOLD)
-        d.text((240 * SCALE, y - 4 * SCALE), title, font=font(32), fill=PAPER)
-        d.multiline_text(
-            (240 * SCALE, y + 48 * SCALE),
-            body,
-            font=font(24),
-            fill=BODY,
-            spacing=8 * SCALE,
-        )
-        y += 180 * SCALE
+    right = [
+        ("会议纪要", "录音、转写、结构化。先有结构，再交给可信模型整理。"),
+        ("提示词不够用", "真正难的是流程：核验环节、适用条件、标准模板、效果指标。"),
+        ("多 Agent / 协作", "瓶颈常在需求和测试，不在多开几个窗口。"),
+        ("可复用才算数", "会后把有效方案沉淀成指引，而不是金句。纪要仅参会成员可见。"),
+    ]
+    gap = 16 * SCALE
+    col_w = (CW - PAD * 2 - gap) // 2
+    box_h = 268 * SCALE
+    y0 = 268 * SCALE
+    for col, block in enumerate((left, right)):
+        y = y0
+        x = PAD + col * (col_w + gap)
+        for title, body in block:
+            d.rounded_rectangle([x, y, x + col_w, y + box_h], radius=12 * SCALE, outline=LINE, width=2 * SCALE)
+            d.text((x + 20 * SCALE, y + 16 * SCALE), title, font=font(24), fill=CYAN)
+            draw_wrapped(d, x + 20 * SCALE, y + 62 * SCALE, body, font(21), PAPER, col_w - 40 * SCALE, 1.36)
+            y += box_h + gap
+    footer_apply(d)
     finish(img, "04-legal.png")
 
 
@@ -277,20 +326,40 @@ def poster_apply():
     img = canvas()
     d = ImageDraw.Draw(img)
     draw_frame(d)
-    cx, cy = CW / 2, CH * 0.36
-    draw_rings(d, cx, cy, [220 * SCALE, 280 * SCALE], (*CYAN[:3],), 1)
-    img = paste_hexagram(img, cx, cy, 118 * SCALE, ARCANE)
+    img = paste_hexagram(img, CW - 156 * SCALE, 156 * SCALE, 42 * SCALE)
     d = ImageDraw.Draw(img)
 
-    center_text(d, 120 * SCALE, "JOIN", font(20), CYAN, tracking=16 * SCALE)
-    center_text(d, 980 * SCALE, "我想参加", font(72), PAPER)
-    center_text(d, 1100 * SCALE, "留下称呼与意向，审核后发通行码", font(26), BODY)
-    # 链接盒
-    box = [160 * SCALE, 1200 * SCALE, 1082 * SCALE, 1388 * SCALE]
-    d.rounded_rectangle(box, radius=18 * SCALE, outline=CYAN, width=3 * SCALE)
-    center_text(d, 1230 * SCALE, "报名页", font(22), GOLD)
-    center_text(d, 1284 * SCALE, "cyber-casters.com/apply.html", font(28), PAPER)
-    center_text(d, 1488 * SCALE, "2026.08.20  19:00  ·  深圳线下", font(24), CYAN)
+    d.text((PAD, 108 * SCALE), "JOIN", font=font(18), fill=CYAN)
+    d.text((PAD, 146 * SCALE), "一个月一次，联系报名", font=font(40), fill=PAPER)
+    d.text((PAD, 214 * SCALE), "深圳线下熟人小局。留下意向即可，不用等某一场通知。", font=font(22), fill=BODY)
+
+    steps = [
+        ("01", "打开报名页", APPLY),
+        ("02", "填写称呼", "昵称即可。建议留下手机、邮箱或微信，方便联系。"),
+        ("03", "写下意向", "方便的时段、地点（南山 / 福田 / 前海等），以及想交流的方向：信息整理、Skill、知识库、纪要、多 Agent。"),
+        ("04", "等待联系", "审核后组织者私下发登录名和通行码，用来看参会纪要。"),
+    ]
+    y = 276 * SCALE
+    for no, title, body in steps:
+        d.text((PAD, y), no, font=font(22), fill=GOLD)
+        d.text((PAD + 70 * SCALE, y - 4 * SCALE), title, font=font(28), fill=PAPER)
+        y = draw_wrapped(d, PAD + 70 * SCALE, y + 42 * SCALE, body, font(22), BODY, CW - PAD * 2 - 70 * SCALE, 1.36)
+        y += 26 * SCALE
+
+    box_y = y + 8 * SCALE
+    d.rounded_rectangle(
+        [PAD, box_y, CW - PAD, box_y + 220 * SCALE],
+        radius=16 * SCALE, outline=CYAN, width=3 * SCALE,
+    )
+    d.text((PAD + 28 * SCALE, box_y + 24 * SCALE), "报名页（也请贴到评论区）", font=font(20), fill=GOLD)
+    d.text((PAD + 28 * SCALE, box_y + 68 * SCALE), APPLY, font=font(30), fill=PAPER)
+    draw_wrapped(
+        d,
+        PAD + 28 * SCALE,
+        box_y + 122 * SCALE,
+        "每月一次，深圳。不讲课、不录屏、不变现。带一件真事来。",
+        font(22), BODY, CW - PAD * 2 - 56 * SCALE, 1.36,
+    )
     finish(img, "05-apply.png")
 
 
