@@ -12,7 +12,7 @@ CC.BGM = (function () {
   };
   const VOL = 0.42;
   const FADE_MS = 280;
-  const APP_PAGES = /^(index|apply|login|gathering-001)\.html$/i;
+  const APP_PAGES = /^(index|apply|login|gathering-001|process)\.html$/i;
 
   let shared = null;
   let navInstalled = false;
@@ -458,6 +458,17 @@ CC.BGM = (function () {
     }
   }
 
+  function execClassicScript(code, label, isolate) {
+    /* 注入脚本包进 IIFE，避免 home.js / gathering.js 的 const $ 撞名 */
+    const src = isolate === false
+      ? code
+      : "(function(){\n" + code + "\n})();";
+    const el = document.createElement("script");
+    el.textContent = src + (label ? "\n//# sourceURL=" + label : "");
+    document.head.appendChild(el);
+    el.remove();
+  }
+
   async function runPageScripts(doc, base) {
     const scripts = [...doc.querySelectorAll("script")];
     for (const s of scripts) {
@@ -468,7 +479,7 @@ CC.BGM = (function () {
         if (/__ccPendingNav/.test(text) && /CC\.BGM\.go/.test(text)) continue;
         if (!text.trim()) continue;
         try {
-          new Function(text)();
+          execClassicScript(text, "cc-inline.js");
         } catch (err) {
           console.warn("cc-nav inline", err);
         }
@@ -477,15 +488,16 @@ CC.BGM = (function () {
       const abs = new URL(src, base);
       const path = abs.pathname;
       if (/\/js\/(util|theme|api|bgm)\.js$/.test(path)) continue;
-      if (/\/js\/data\.js$/.test(path) && typeof DATA !== "undefined") continue;
+      if (/\/js\/data\.js$/.test(path) && window.DATA) continue;
       try {
         const code = await fetch(abs.href, { credentials: "same-origin" }).then((r) => {
           if (!r.ok) throw new Error(String(r.status));
           return r.text();
         });
-        new Function(code)();
+        execClassicScript(code, path.split("/").pop() || "cc-page.js");
       } catch (err) {
         console.warn("cc-nav script", path, err);
+        throw err;
       }
     }
   }
@@ -501,10 +513,10 @@ CC.BGM = (function () {
   const CHROME_IDS = new Set(["bgm", "themeBtn", "cc-void", "cc-veil"]);
   const SPA_CSS = [
     "css/tokens.css?v=cs1",
-    "css/base.css?v=fab5",
-    "css/home.css?v=nav1",
-    "css/auth.css?v=apply-layout",
-    "css/gathering.css?v=fab1"
+    "css/base.css?v=process1",
+    "css/home.css?v=about-gap2",
+    "css/auth.css?v=apply-border2",
+    "css/gathering.css?v=process1"
   ];
 
   function pageRoot() {
@@ -709,12 +721,19 @@ CC.BGM = (function () {
       return;
     }
     const key = pageName(url);
-    if (!opts.pop && key === pageName(location.href) && url.search === location.search) {
+    const rec0 = slots.get(key);
+    const ready = !!(rec0 && rec0.el && rec0.hydrated);
+    if (!opts.pop && key === pageName(location.href) && url.search === location.search && ready) {
       return;
     }
-    if (key === activeKey && !opts.pop) return;
+    if (key === activeKey && !opts.pop && ready) return;
 
     persist();
+
+    if (rec0 && rec0.el && !rec0.hydrated) {
+      rec0.el.remove();
+      slots.delete(key);
+    }
 
     if (slots.has(key) && slots.get(key).el) {
       if (!opts.pop) history.pushState({ cc: 1, key }, "", url.href);
@@ -773,6 +792,11 @@ CC.BGM = (function () {
       hydrateChrome();
     } catch (err) {
       console.warn("cc-nav", err);
+      if (!opts.pop) {
+        const same = pageName(location.href) === key && url.search === location.search;
+        if (same) location.reload();
+        else location.href = url.href;
+      }
     } finally {
       if (gen === navGen) navigating = false;
       dropVeil();
