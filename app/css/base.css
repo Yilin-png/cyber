@@ -29,6 +29,7 @@ body{
 
 #cc-view{min-height:100dvh;position:relative}
 #cc-view > [data-cc-slot]{display:none;min-height:100dvh}
+#cc-view > [data-cc-slot].is-on{display:block}
 #cc-view[data-show="index.html"] > [data-cc-slot="index.html"],
 #cc-view[data-show="apply.html"] > [data-cc-slot="apply.html"],
 #cc-view[data-show="login.html"] > [data-cc-slot="login.html"],
