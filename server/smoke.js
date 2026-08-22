@@ -89,6 +89,14 @@ function check(label, ok, extra = "") {
     { handle: approve.data.handle, passcode: approve.data.passcode });
   check("新账号可登录", login.status === 200 && login.data.ok, JSON.stringify(login.data.user || {}));
 
+  const memberJar = new Map();
+  await call("POST", "/api/auth/login",
+    { handle: approve.data.handle, passcode: approve.data.passcode }, {}, memberJar);
+  const g2as001 = await call("GET", "/api/gatherings/002", undefined, cookieHeader(memberJar), memberJar);
+  check("仅有第一期权限也可读已发布的第二期",
+    g2as001.status === 200 && g2as001.data.unlocked,
+    g2as001.data && g2as001.data.unlocked ? "unlocked" : String(g2as001.status));
+
   const caseLogin = await call("POST", "/api/auth/login",
     { handle: (approve.data.handle || "").toUpperCase(), passcode: approve.data.passcode });
   check("登录名大小写不敏感", caseLogin.status === 200);

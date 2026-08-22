@@ -76,7 +76,11 @@ function findUserByApp(db, appRow) {
 
 function canAccessGathering(user, gatheringId, session) {
   if (session && session.adminUser) return true;
-  return !!(user && Array.isArray(user.gatherings) && user.gatherings.includes(gatheringId));
+  if (!user || !Array.isArray(user.gatherings) || !user.gatherings.length) return false;
+  if (user.gatherings.includes(gatheringId)) return true;
+  const g = GATHERINGS.find((x) => x.id === gatheringId);
+  /* 已发布的往期纪要对现有成员开放，避免账号仍绑着旧期次时正文被锁住。 */
+  return !!(g && g.status === "past");
 }
 
 function secrets(env) {

@@ -442,7 +442,7 @@ renderSpellbook(false);
         ? `${esc(me.user?.name || me.admin.username)}（管理）`
         : esc(me.user.name);
       const ids = [...(me.admin ? ["001", "002"] : (me.user?.gatherings || []))].filter(Boolean).sort();
-      const notesHref = `gathering-${ids[ids.length - 1] || "002"}.html`;
+      const notesHref = `gathering-${me.admin || ids.length ? "002" : "001"}.html`;
       foot.innerHTML = `${who} · <a href="${notesHref}" style="color:var(--cyan)">我的纪要</a> · <a href="#" id="homeLogout" style="color:var(--cyan)">退出</a>`;
       const btn = document.getElementById("homeLogout");
       if (btn) btn.addEventListener("click", async e => {
