@@ -256,7 +256,7 @@ app.get("/", async (c) => {
 });
 
 /* 子页也走 Worker，强制 UTF-8，避免 fetch/SPA 切页中文乱码 */
-["/index.html", "/apply.html", "/login.html", "/gathering-001.html", "/admin.html"].forEach((p) => {
+["/index.html", "/apply.html", "/login.html", "/gathering-001.html", "/process.html", "/admin.html"].forEach((p) => {
   app.get(p, async (c) => {
     const asset = await assetResponse(c, p);
     return asset || c.text("Not Found", 404);

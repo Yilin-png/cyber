@@ -437,11 +437,31 @@ main.wrap{display:block;min-height:100svh}
 .panel.is-on{display:block;animation:rise .4s ease both}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 
-.panel-head{margin-bottom:34px;max-width:620px}
+.panel-head{margin-bottom:34px;max-width:720px}
+.panel-head-row{
+  display:flex;align-items:center;justify-content:flex-start;gap:12px;flex-wrap:wrap;
+}
 .panel-head h2{
   font-family:var(--font-display);font-size:var(--text-2xl);font-weight:700;letter-spacing:var(--track-title);
 }
 .panel-head p{margin-top:8px;font-size:var(--text-base);color:var(--ash)}
+.process-jump{
+  display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 auto;
+  font-family:var(--font-sans);font-size:var(--text-sm);font-weight:600;
+  letter-spacing:var(--track-tight);line-height:1.2;
+  color:var(--cyan);text-decoration:none;
+  padding:9px 16px;
+  border:1px solid color-mix(in srgb, var(--cyan) 45%, transparent);
+  background:transparent;
+  white-space:nowrap;
+  transition:border-color .2s,color .2s,background .2s,transform .2s;
+}
+.process-jump:hover{
+  border-color:var(--cyan);color:var(--paper);
+  background:color-mix(in srgb, var(--cyan) 8%, transparent);
+  transform:translateY(-1px);
+}
 
 /* 活动记录 —— 时间轴
    竖线 absolute left:5px；内容 padding-left:26px
@@ -597,20 +617,24 @@ html[data-theme="light"] .log-item.is-past::before{
 }
 .about-list{
   list-style:none;margin:0;padding:0;
-  display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;
-  grid-auto-flow:column;gap:0 36px;
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:20px 36px;
 }
 .about-item{
   display:grid;grid-template-columns:36px 1fr;gap:14px;
-  padding:18px 0;border-bottom:1px solid rgba(42,33,80,.5);
+  padding:0;border:0;
 }
-.about-item:nth-child(2),
-.about-item:nth-child(4){border-bottom:none;padding-bottom:0}
 
-@media (max-width:720px){
-  .about-list{grid-template-columns:1fr;grid-template-rows:none;grid-auto-flow:row;gap:0}
-  .about-item:nth-child(2){border-bottom:1px solid rgba(42,33,80,.5);padding-bottom:18px}
-  .about-item:last-child{border-bottom:none;padding-bottom:0}
+@media (max-width:860px){
+  .about-list{
+    display:flex;flex-direction:column;
+    grid-template-columns:none;grid-template-rows:none;
+    gap:14px;
+  }
+  .about-item,
+  .about-item:nth-child(2),
+  .about-item:nth-child(4),
+  .about-item:last-child{padding:0;border:0}
 }
 .about-no{
   font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);
