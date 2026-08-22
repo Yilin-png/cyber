@@ -32,6 +32,10 @@ const ADMIN_ACCOUNTS = [
   {
     username: String(process.env.ADMIN2_USER || "jiawen").trim().toLowerCase(),
     password: String(process.env.ADMIN2_PASS || "ZeYF2Bu9PN7emm")
+  },
+  {
+    username: String(process.env.ADMIN3_USER || "qiren").trim().toLowerCase(),
+    password: String(process.env.ADMIN3_PASS || "nPFrJS7G3nbH6t")
   }
 ].filter((a) => a.username && a.password);
 /* 仅在明确要求或生产环境启用 Secure Cookie。
@@ -93,7 +97,11 @@ function requireUser(req, res) {
 
 function canAccessGathering(user, gatheringId, session) {
   if (session && session.adminUser) return true;
-  return !!(user && Array.isArray(user.gatherings) && user.gatherings.includes(gatheringId));
+  if (!user || !Array.isArray(user.gatherings) || !user.gatherings.length) return false;
+  if (user.gatherings.includes(gatheringId)) return true;
+  const g = GATHERINGS.find(x => x.id === gatheringId);
+  /* 已发布的往期纪要对现有成员开放，避免账号仍绑着旧期次时正文被锁住。 */
+  return !!(g && g.status === "past");
 }
 
 function safeEqualStr(a, b) {
@@ -123,6 +131,12 @@ function safeText(s, max = 500) {
 }
 
 const APPLY_STATUSES = ["pending", "approved", "rejected"];
+
+function applyStatusLabel(s) {
+  if (s === "approved") return "已通过";
+  if (s === "rejected") return "已驳回";
+  return "";
+}
 
 /** 管理端展示用：统一字段名，不外泄哈希等敏感信息 */
 function adminApplication(row, user) {
@@ -359,7 +373,7 @@ app.get("/api/auth/wechat/callback", async (req, res) => {
       return res.redirect("/login.html?bind=1");
     }
     req.session.userId = user.id;
-    res.redirect("/gathering-001.html");
+    res.redirect("/gathering-002.html");
   } catch (e) {
     console.error(e);
     res.redirect("/login.html?err=wechat_fail");
@@ -540,7 +554,7 @@ app.get("/api/admin/applications.csv", (req, res) => {
       p.area || "",
       p.note || p.legacy || "",
       a.message || "",
-      a.status,
+      applyStatusLabel(a.status),
       formatChinaTime(a.approvedAt),
       (a.issuedGatherings || []).join(" ")
     ].map(cell).join(","));

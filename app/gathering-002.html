@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-cc-build="nav-script-1">
+<html lang="zh-CN" data-cc-build="nav-script-1" data-gathering-id="002">
 <head>
 <meta charset="utf-8">
 <script>
@@ -61,16 +61,16 @@
 </script>
 <style id="cc-boot-bg">html,body{background-color:#F5F3FB;color-scheme:light}html[data-theme="dark"],html[data-theme="dark"] body{background-color:#07060E;color-scheme:dark}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="赛博法师 AI技巧分享会流程：会前准备、会议议程与会后跟进。">
-<title>活动流程 | 赛博法师 • CYBER CASTERS</title>
+<meta name="description" content="赛博法师第二期集会纪要摘要：尽调报告交付、Skill 触发、工作流与硬约束写作。完整内容仅对参会成员开放。">
+<title>赛博法师 • 第二期AI交流会 | 赛博法师 • CYBER CASTERS</title>
 <link rel="icon" href="assets/icons/favicon.svg?v=hex2" type="image/svg+xml">
 <link rel="icon" href="assets/icons/favicon.ico?v=hex2" sizes="any">
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=hex2">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="赛博法师 CYBER CASTERS">
 <meta property="og:title" content="AI 技巧分享会">
-<meta property="og:description" content="赛博法师 AI技巧分享会流程：会前准备、会议议程与会后跟进。">
-<meta property="og:url" content="https://cyber-casters.com/process.html">
+<meta property="og:description" content="赛博法师第二期集会纪要摘要：尽调报告交付、Skill 触发、工作流与硬约束写作。">
+<meta property="og:url" content="https://cyber-casters.com/gathering-002.html">
 <meta property="og:image" content="https://cyber-casters.com/assets/icons/og-image.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="512">
@@ -78,7 +78,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="AI 技巧分享会">
-<meta name="twitter:description" content="赛博法师 AI技巧分享会流程：会前准备、会议议程与会后跟进。">
+<meta name="twitter:description" content="赛博法师第二期集会纪要摘要：尽调报告交付、Skill 触发、工作流与硬约束写作。">
 <meta name="twitter:image" content="https://cyber-casters.com/assets/icons/og-image.png">
 <link rel="preload" href="assets/audio/bgm.m4a?v=32k" as="audio" type="audio/mp4">
 <link rel="preload" href="css/home.css?v=about-gap2" as="style">
@@ -161,109 +161,87 @@
 <div class="topbar">
   <div class="topbar-in">
     <a class="back" href="index.html">← 返回</a>
-    <div class="userchip">
-      <span class="who">ACTIVITY PROCESS</span>
+    <div class="userchip" id="userChip">
+      <span class="who">MEETING NOTES · 002</span>
     </div>
   </div>
 </div>
 
 <div class="wrap">
+
   <header class="head">
-    <span class="issue">PROCESS</span>
-    <h1>赛博法师 AI技巧分享会流程</h1>
-    <div class="meta">线下 · 8人左右 · 90–120分钟</div>
+    <span class="issue">GATHERING 002</span>
+    <h1 id="gTitle">赛博法师 • 第二期AI交流会</h1>
+    <div class="meta" id="gMeta">2026.08.20 · 深圳 · 线下</div>
+    <div class="abstract" id="gSummary">加载中…</div>
   </header>
 
-  <dl class="process-facts">
-    <div class="process-fact">
-      <dt>会议主题</dt>
-      <dd>AI技巧分享与共创</dd>
+  <!-- 公开纪要：本期要点（无需登录） -->
+  <section class="public-digest" id="publicDigest" hidden>
+    <div class="digest-head">
+      <h2 class="digest-title">本期要点</h2>
+      <span class="digest-count"><i id="digestCount">00</i> ITEMS</span>
     </div>
-    <div class="process-fact">
-      <dt>参会人数</dt>
-      <dd>8人左右</dd>
+    <ol class="topic-list" id="topicList"></ol>
+    <p class="digest-note">逐步实操、对照表、现场照片与留言板，仅对当期参会成员开放。</p>
+  </section>
+
+  <!-- 未解锁：登录/申请门 -->
+  <div id="lockPanel" class="lock-box" hidden>
+    <h2>完整纪要需参会权限</h2>
+    <p id="lockReason">完整纪要仅对当期参会成员开放。</p>
+    <p>若你参加了本期，登录后可查看全文、现场照片，并在文末留言。</p>
+    <div class="lock-actions">
+      <a class="btn btn-primary" href="login.html?next=gathering-002.html">成员登录</a>
+      <a class="btn btn-ghost" href="apply.html">申请加入 / 报意向</a>
     </div>
-    <div class="process-fact">
-      <dt>预计时长</dt>
-      <dd>90–120分钟</dd>
+  </div>
+
+  <!-- 已解锁：目录 + 正文 + 评论 -->
+  <div id="fullPanel" hidden>
+    <div class="cols">
+      <nav class="toc" id="toc">
+        <h2>CONTENTS</h2>
+        <div class="toc-list" id="tocList"></div>
+      </nav>
+      <main class="doc">
+        <div id="docBody"></div>
+
+        <section class="comments" id="comments">
+          <h2>留言板</h2>
+          <p class="sub">仅本期参会成员可见。友善交流，勿传播敏感操作细节到场外。</p>
+          <div class="comment-list" id="commentList"></div>
+          <form class="comment-form" id="commentForm">
+            <textarea name="body" maxlength="1000" required placeholder="写下一句想法、补充或感谢…"></textarea>
+            <button class="btn btn-primary" type="submit">发布留言</button>
+            <div class="form-msg" id="commentMsg" aria-live="polite"></div>
+          </form>
+        </section>
+      </main>
     </div>
-    <div class="process-fact">
-      <dt>会议形式</dt>
-      <dd>线下</dd>
-    </div>
-  </dl>
-
-  <article class="doc process-doc">
-    <section class="sec" id="prep">
-      <h2><i>01</i>会前准备</h2>
-      <p>每位参会人提前准备一个本人实际使用过、效果较好的AI技巧或完整方案。为避免给参会人带来压力，技巧和方案不限题材，亦无大小与高下之分，畅所欲言。</p>
-      <p>分享内容可参考“应用场景—具体做法—实际效果—适用边界”的结构准备，必要时可以准备一张截图、一个示例或现场演示。</p>
-      <p>由于可能涉及客户、项目、合同或其他敏感信息，除非征得分享人同意，不录屏、不拍照。</p>
-    </section>
-
-    <section class="sec" id="agenda">
-      <h2><i>02</i>会议议程</h2>
-
-      <h3>（一）开场及规则说明（5分钟）</h3>
-      <p>主持人简要说明本次分享会的目标和流程。如有新成员，快速介绍。</p>
-
-      <h3>（二）AI技巧或方案分享（60分钟）</h3>
-      <p>每位参会人依次分享一个实践效果最好的AI技巧或方案。建议按照以下结构展开：</p>
-      <ul class="process-points">
-        <li><strong>应用场景：</strong>原来遇到了什么问题，为什么需要使用AI；</li>
-        <li><strong>具体做法：</strong>使用了什么工具、提示词、工作流或操作步骤；</li>
-        <li><strong>实际效果：</strong>在时间、质量、准确性或工作体验方面带来了什么改善，可提供数据或前后对比；</li>
-        <li><strong>适用边界：</strong>当前方案仍存在哪些不足、风险，或者不适用于哪些场景；</li>
-        <li><strong>复用入口：</strong>如果其他人想尝试，最先可以从哪一步开始。</li>
-      </ul>
-      <p>其他参会人可以将问题或感兴趣的内容记录，或与分享人进行机动讨论。</p>
-
-      <h3>（三）交叉评价与完善建议（45分钟）</h3>
-      <p>全部方案分享完成后，请每位参会人独立选择除本人以外“最想尝试”的一个方案。</p>
-      <p>建议使用以下表达结构：</p>
-      <ul class="process-script">
-        <li>我最想尝试的是________的方案。</li>
-        <li>对我最有价值的地方是________。</li>
-        <li>我准备将它用于________场景。</li>
-        <li>我建议进一步增加、调整或验证________，因为________。</li>
-      </ul>
-      <p>完善建议尽量落到具体动作，例如增加核验环节、明确适用条件、补充标准模板、简化操作步骤、设置效果指标或者加强数据安全控制，避免只提出“可以再优化”“可以更智能”等笼统意见。</p>
-      <p>被评价人可以作回应，说明是否采纳、需要进一步验证的事项或者必要的背景信息。</p>
-
-      <h3>（四）提问环节与总结（10分钟）</h3>
-      <p>主持人选择一至两个被多次提及、对多数人有价值的问题进行集中讨论，每位参会人亦可提出自己的问题。</p>
-      <p>对于被多次选择、具有较高复用价值方案的分享人，由全体参会人表达感谢，并由分享人发表感想。</p>
-      <p>建议使用以下表达结构：</p>
-      <ul class="process-script">
-        <li>我分享这个技巧的心态是________。</li>
-        <li>进一步的规划和期待是________。</li>
-        <li>目前需要获得的支持是________。</li>
-        <li>希望在座各位做________。</li>
-      </ul>
-      <p>主持人感谢全体参会人的分享，面对面建群，说明纪要预计发送时间，确定是否安排下一次会议。</p>
-    </section>
-
-    <section class="sec" id="followup">
-      <h2><i>03</i>会后跟进</h2>
-      <p>记录人在会后形成简要纪要。参会人可在微信群内对当期内容再次讨论，回访收集各方案的实际尝试结果，分享同步最新的AI资讯。</p>
-      <p>经验证有效的方案可以进一步整理为AI操作指引、标准提示词或工作流模板，使会议成果逐步沉淀为可复用的知识。</p>
-    </section>
-  </article>
+  </div>
 
   <footer>
     <span>© 2026 赛博法师 • CYBER CASTERS</span>
-    <span>ACTIVITY PROCESS</span>
+    <span>GATHERING 002 • MEMBERS ONLY</span>
   </footer>
 </div>
 
 <button id="bgmBtn" aria-label="背景音乐开关" title="背景音乐" aria-pressed="false">♪</button>
 
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="照片查看">
+  <button class="x" id="lbX" aria-label="关闭">✕</button>
+  <button class="prev" id="lbP" aria-label="上一张">‹</button>
+  <img id="lbImg" alt="现场照片">
+  <button class="next" id="lbN" aria-label="下一张">›</button>
+  <span class="idx" id="lbIdx"></span>
+</div>
+
 <script src="js/util.js"></script>
 <script src="js/theme.js?v=bj-sun2"></script>
 <script src="js/api.js"></script>
+<script src="js/gathering-data.js"></script>
 <script src="js/bgm.js?v=nav4"></script>
-<script>
-CC.BGM.init({ mode: "button", toggleId: "bgmBtn", gestureKick: true });
-</script>
+<script src="js/gathering.js?v=spa1"></script>
 </body>
 </html>

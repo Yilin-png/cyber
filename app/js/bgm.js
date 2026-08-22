@@ -12,7 +12,7 @@ CC.BGM = (function () {
   };
   const VOL = 0.42;
   const FADE_MS = 280;
-  const APP_PAGES = /^(index|apply|login|gathering-001|process)\.html$/i;
+  const APP_PAGES = /^(index|apply|login|gathering-\d+|process)\.html$/i;
 
   let shared = null;
   let navInstalled = false;
@@ -513,10 +513,10 @@ CC.BGM = (function () {
   const CHROME_IDS = new Set(["bgm", "themeBtn", "cc-void", "cc-veil"]);
   const SPA_CSS = [
     "css/tokens.css?v=cs1",
-    "css/base.css?v=process1",
+    "css/base.css?v=g002-spa",
     "css/home.css?v=about-gap2",
     "css/auth.css?v=apply-border2",
-    "css/gathering.css?v=process1"
+    "css/gathering.css?v=g002"
   ];
 
   function pageRoot() {
@@ -639,6 +639,7 @@ CC.BGM = (function () {
     });
     activeKey = key;
     showSlot(key);
+    syncGatheringAttr(key);
     ensureSpaCss();
   }
 
@@ -650,11 +651,21 @@ CC.BGM = (function () {
     rec.scrollY = window.scrollY || 0;
   }
 
+  function syncGatheringAttr(key) {
+    const html = document.documentElement;
+    const m = String(key || "").match(/^gathering-(\d+)\.html$/i);
+    if (m) html.dataset.gatheringId = m[1];
+    else html.removeAttribute("data-gathering-id");
+  }
+
   function showSlot(key) {
     const view = ensureView();
     const next = view.querySelector(`:scope > [data-cc-slot="${key}"]`);
     if (!next) return false;
     view.dataset.show = key;
+    view.querySelectorAll(":scope > [data-cc-slot]").forEach((el) => {
+      el.classList.toggle("is-on", el === next);
+    });
     return true;
   }
 
@@ -664,6 +675,7 @@ CC.BGM = (function () {
     if (veil) raiseVeil();
     document.title = rec.title || document.title;
     document.body.className = rec.bodyClass || "";
+    syncGatheringAttr(key);
     document.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
       l.disabled = false;
     });
@@ -701,6 +713,25 @@ CC.BGM = (function () {
     html.style.scrollBehavior = prev;
   }
 
+  /* 两期纪要共用 s01 / s02 这类 id。必须在当前槽里找锚点，不能用 document.getElementById。 */
+  function scrollToHash(hash, key) {
+    const id = String(hash || "").replace(/^#/, "");
+    if (!id) return false;
+    const root = slots.get(key || activeKey)?.el;
+    if (!root) return false;
+    let target = null;
+    try {
+      target = root.querySelector("#" + CSS.escape(id));
+    } catch (_) {
+      target = root.querySelector(`[id="${id.replace(/"/g, "")}"]`);
+    }
+    if (!target) return false;
+    requestAnimationFrame(() => {
+      target.scrollIntoView({ block: "start" });
+    });
+    return true;
+  }
+
   async function prepareStyles(doc, base) {
     await ensureSpaCss();
     const wanted = new Set();
@@ -724,9 +755,19 @@ CC.BGM = (function () {
     const rec0 = slots.get(key);
     const ready = !!(rec0 && rec0.el && rec0.hydrated);
     if (!opts.pop && key === pageName(location.href) && url.search === location.search && ready) {
+      if (url.hash) {
+        if (url.href !== location.href) history.pushState({ cc: 1, key }, "", url.href);
+        scrollToHash(url.hash, key);
+      }
       return;
     }
-    if (key === activeKey && !opts.pop && ready) return;
+    if (key === activeKey && !opts.pop && ready) {
+      if (url.hash) {
+        if (url.href !== location.href) history.pushState({ cc: 1, key }, "", url.href);
+        scrollToHash(url.hash, key);
+      }
+      return;
+    }
 
     persist();
 
@@ -739,6 +780,7 @@ CC.BGM = (function () {
       if (!opts.pop) history.pushState({ cc: 1, key }, "", url.href);
       snapshot(activeKey);
       activate(key);
+      scrollToHash(url.hash, key);
       return;
     }
 
@@ -790,6 +832,7 @@ CC.BGM = (function () {
       const rec = slots.get(key);
       if (rec) rec.hydrated = true;
       hydrateChrome();
+      scrollToHash(url.hash, key);
     } catch (err) {
       console.warn("cc-nav", err);
       if (!opts.pop) {
@@ -822,6 +865,22 @@ CC.BGM = (function () {
         const a = e.target.closest && e.target.closest("a[href]");
         if (!a || a.target === "_blank" || a.hasAttribute("download")) return;
         const href = a.getAttribute("href") || "";
+        if (href.startsWith("#") && href.length > 1) {
+          const root = slots.get(activeKey)?.el;
+          let target = null;
+          try {
+            target = root && root.querySelector("#" + CSS.escape(href.slice(1)));
+          } catch (_) {
+            target = null;
+          }
+          if (target) {
+            e.preventDefault();
+            e.stopPropagation();
+            try { history.pushState({ cc: 1, key: activeKey }, "", href); } catch (_) {}
+            target.scrollIntoView({ block: "start" });
+          }
+          return;
+        }
         if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) {
           return;
         }
@@ -854,6 +913,7 @@ CC.BGM = (function () {
       }
       snapshot(activeKey);
       if (activate(key, { veil: false })) {
+        scrollToHash(location.hash, key);
         dropVeil();
         return;
       }

@@ -83,10 +83,10 @@
 <link rel="preload" href="assets/audio/bgm.m4a?v=32k" as="audio" type="audio/mp4">
 <link rel="preload" href="css/home.css?v=about-gap2" as="style">
 <link rel="stylesheet" href="css/tokens.css?v=cs1">
-<link rel="stylesheet" href="css/base.css?v=process1">
+<link rel="stylesheet" href="css/base.css?v=g002-spa">
 <link rel="stylesheet" href="css/home.css?v=about-gap2">
 <link rel="stylesheet" href="css/auth.css?v=apply-border2">
-<link rel="stylesheet" href="css/gathering.css?v=process1">
+<link rel="stylesheet" href="css/gathering.css?v=g002">
 </head>
 <body class="auth-page">
 <audio id="bgm" src="assets/audio/bgm.m4a?v=32k" preload="auto" playsinline webkit-playsinline></audio>
@@ -97,7 +97,7 @@
     var u;try{u=new URL(href,location.href);}catch(err){return null;}
     if(u.origin!==location.origin)return null;
     var name=(u.pathname.replace(/\/+$/,"").split("/").pop()||"index.html");
-    if(!(u.pathname==="/"||name===""||name==="index.html"||/^(apply|login|gathering-001|process)\.html$/i.test(name)))return null;
+    if(!(u.pathname==="/"||name===""||name==="index.html"||/^(apply|login|gathering-\d+|process)\.html$/i.test(name)))return null;
     return u;
   }
   function navTo(u,e){
@@ -172,7 +172,7 @@
       </div>
 
       <div class="field">
-        <label>是否参加最近一期（<span id="nextLabel">2026.08.20 19:00</span>）*</label>
+        <label>是否参加最近一期（<span id="nextLabel">第三期 · 待定</span>）*</label>
         <div class="choice-row" role="radiogroup" aria-label="是否参加最近一期">
           <label class="choice"><input type="radio" name="joinNext" value="参加" required><span class="choice-face">参加</span></label>
           <label class="choice"><input type="radio" name="joinNext" value="不参加"><span class="choice-face">不参加</span></label>
@@ -262,7 +262,7 @@
 <script src="js/theme.js?v=bj-sun2"></script>
 <script src="js/data.js?v=win1"></script>
 <script src="js/api.js"></script>
-<script src="js/bgm.js?v=nav3"></script>
+<script src="js/bgm.js?v=nav4"></script>
 <script>
 CC.BGM.init({ mode: "button", toggleId: "bgmBtn", gestureKick: true });
 
@@ -345,7 +345,7 @@ function fillPeriodOptions(keepValue) {
   }
 }
 
-const nextRaw = (typeof DATA !== "undefined" && DATA.nextGathering) || "2026.08.20 19:00";
+const nextRaw = (typeof DATA !== "undefined" && DATA.nextGathering) || "第三期 · 待定";
 const nextFull = formatNextFull(nextRaw);
 nextLabel.textContent = nextFull;
 fillPeriodOptions();

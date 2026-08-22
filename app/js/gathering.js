@@ -1,13 +1,40 @@
 /* 纪要页：公开摘要 + 权限正文 + 评论 + 图库 */
-const GATHERING_ID = "001";
-const PHOTO_DIR = "assets/gatherings/001/";
-const PHOTOS = [
-  "01.jpg","02.jpg","03.jpg","04.jpg","05.jpg",
-  "06.jpg","07.jpg","08.jpg","09.jpg"
-];
+function pageGatheringId() {
+  /* SPA 只换 #cc-view 槽，不换 <html>。必须先读当前 URL，
+     否则从 002 切到 001（或反过来）仍会沿用首屏的 data-gathering-id。 */
+  const name = (location.pathname.replace(/\/+$/, "").split("/").pop() || "");
+  const fromPath = name.match(/gathering-(\d+)/i);
+  if (fromPath) return fromPath[1];
+  const fromAttr = document.documentElement.dataset.gatheringId;
+  if (fromAttr) return String(fromAttr);
+  return "001";
+}
+const GATHERING_ID = pageGatheringId();
+const GATHERING_PAGE = `gathering-${GATHERING_ID}.html`;
+document.documentElement.dataset.gatheringId = GATHERING_ID;
+const PHOTO_DIR = `assets/gatherings/${GATHERING_ID}/`;
+const DEFAULT_PHOTOS = {
+  "001": [
+    "01.jpg","02.jpg","03.jpg","04.jpg","05.jpg",
+    "06.jpg","07.jpg","08.jpg","09.jpg"
+  ]
+};
+const PHOTOS = Array.isArray(window.CC_GATHERING_PHOTOS)
+  ? window.CC_GATHERING_PHOTOS
+  : (DEFAULT_PHOTOS[GATHERING_ID] || []);
 const photoSrc = i => encodeURI(PHOTO_DIR + PHOTOS[i]);
-const $ = CC.$;
 const esc = CC.esc;
+
+function pageRoot() {
+  const slot = document.querySelector(`#cc-view > [data-cc-slot="${GATHERING_PAGE}"]`);
+  if (slot) return slot;
+  return document.getElementById("cc-view") || document;
+}
+
+/* 两期槽位都在 DOM 里时，id 会重复。查询必须限定当前期，不能走 document.querySelector。 */
+function $(sel) {
+  return pageRoot().querySelector(sel);
+}
 
 function fmtTime(iso) {
   return CC.fmtChinaTime(iso);
@@ -18,7 +45,7 @@ function renderUserChip(me) {
   if (!me || !me.auth) {
     el.innerHTML = `
       <span class="who">NOTES · ${GATHERING_ID}</span>
-      <a href="login.html?next=gathering-001.html">登录</a>
+      <a href="login.html?next=${GATHERING_PAGE}">登录</a>
       <a href="apply.html">申请</a>`;
     return;
   }
@@ -36,7 +63,10 @@ function renderUserChip(me) {
 }
 
 function buildToc() {
-  $("#tocList").innerHTML = [...document.querySelectorAll("#docBody .sec")].map(s => {
+  const docBody = $("#docBody");
+  const tocList = $("#tocList");
+  if (!docBody || !tocList) return;
+  tocList.innerHTML = [...docBody.querySelectorAll(".sec")].map(s => {
     const h = s.querySelector("h2");
     if (!h) return "";
     const num = h.querySelector("i");
@@ -44,8 +74,8 @@ function buildToc() {
     return `<a href="#${s.id}"><i>${num ? num.textContent : ""}</i>${esc(label)}</a>`;
   }).join("");
 
-  const links = [...document.querySelectorAll("#tocList a")];
-  const secs = [...document.querySelectorAll("#docBody .sec")];
+  const links = [...tocList.querySelectorAll("a")];
+  const secs = [...docBody.querySelectorAll(".sec")];
   if (!secs.length) return;
   const io = new IntersectionObserver(es => {
     es.forEach(e => {
@@ -58,16 +88,17 @@ function buildToc() {
 }
 
 function wireLightbox() {
-  const grid = document.getElementById("shotGrid");
+  const grid = $("#shotGrid");
   if (!grid) return;
   grid.innerHTML = PHOTOS.map((p, i) =>
     `<button class="shot" data-i="${i}" aria-label="放大第 ${i + 1} 张">
-       <img src="${photoSrc(i)}" loading="lazy" alt="第一期现场 ${i + 1}">
+       <img src="${photoSrc(i)}" loading="lazy" alt="第 ${GATHERING_ID} 期现场 ${i + 1}">
      </button>`
   ).join("");
 
   let cur = 0;
   const lb = $("#lb"), lbImg = $("#lbImg"), lbIdx = $("#lbIdx");
+  if (!lb || !lbImg || !lbIdx) return;
   function open(i) {
     cur = (i + PHOTOS.length) % PHOTOS.length;
     lbImg.src = photoSrc(cur);
@@ -75,7 +106,7 @@ function wireLightbox() {
       String(cur + 1).padStart(2, "0") + " / " + String(PHOTOS.length).padStart(2, "0");
     lb.classList.add("on");
   }
-  document.querySelectorAll(".shot").forEach(b =>
+  grid.querySelectorAll(".shot").forEach(b =>
     b.addEventListener("click", () => open(+b.dataset.i))
   );
   $("#lbX").addEventListener("click", () => lb.classList.remove("on"));
@@ -182,6 +213,11 @@ async function main() {
     buildToc();
     wireLightbox();
     wireComments();
+    const hash = (location.hash || "").replace(/^#/, "");
+    if (hash) {
+      const anchor = pageRoot().querySelector("#" + (window.CSS && CSS.escape ? CSS.escape(hash) : hash));
+      if (anchor) requestAnimationFrame(() => anchor.scrollIntoView({ block: "start" }));
+    }
     await loadComments().catch(err => {
       $("#commentList").innerHTML =
         `<div class="comment"><div class="body" style="color:#ff8e8e">${esc(err.message)}</div></div>`;

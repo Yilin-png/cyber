@@ -226,9 +226,9 @@ function renderActivity(items) {
     const titleInner = href
       ? `<a class="log-title" href="${esc(href)}">${esc(a.title)}</a>`
       : esc(a.title);
-    const metaBits = [a.mode, a.place, a.time].filter(Boolean);
+    const metaBits = [a.mode, a.place].filter(Boolean);
     const cta = href
-      ? `<a class="log-link" href="${esc(href)}">${esc(a.linkText || "阅读公开纪要")}<span class="arrow" aria-hidden="true">→</span></a>`
+      ? `<a class="log-link" href="${esc(href)}">${esc(a.linkText || "阅读纪要")}<span class="arrow" aria-hidden="true">→</span></a>`
       : (upcoming
         ? `<a class="log-link" href="apply.html">申请参加<span class="arrow" aria-hidden="true">→</span></a>`
         : "");
@@ -277,7 +277,7 @@ $("#artList").innerHTML = renderCards(DATA.artifacts);
         label: upcoming ? "待举办" : "",
         desc: g.summary,
         link: upcoming ? "" : localPage(g.link || ""),
-        linkText: upcoming ? "" : "阅读公开纪要"
+        linkText: upcoming ? "" : "阅读纪要"
       };
     });
     if (list.length) renderActivity(list);
@@ -441,7 +441,9 @@ renderSpellbook(false);
       const who = me.admin
         ? `${esc(me.user?.name || me.admin.username)}（管理）`
         : esc(me.user.name);
-      foot.innerHTML = `${who} · <a href="gathering-001.html" style="color:var(--cyan)">我的纪要</a> · <a href="#" id="homeLogout" style="color:var(--cyan)">退出</a>`;
+      const ids = [...(me.admin ? ["001", "002"] : (me.user?.gatherings || []))].filter(Boolean).sort();
+      const notesHref = `gathering-${me.admin || ids.length ? "002" : "001"}.html`;
+      foot.innerHTML = `${who} · <a href="${notesHref}" style="color:var(--cyan)">我的纪要</a> · <a href="#" id="homeLogout" style="color:var(--cyan)">退出</a>`;
       const btn = document.getElementById("homeLogout");
       if (btn) btn.addEventListener("click", async e => {
         e.preventDefault();

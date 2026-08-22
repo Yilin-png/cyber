@@ -89,6 +89,14 @@ function check(label, ok, extra = "") {
     { handle: approve.data.handle, passcode: approve.data.passcode });
   check("新账号可登录", login.status === 200 && login.data.ok, JSON.stringify(login.data.user || {}));
 
+  const memberJar = new Map();
+  await call("POST", "/api/auth/login",
+    { handle: approve.data.handle, passcode: approve.data.passcode }, {}, memberJar);
+  const g2as001 = await call("GET", "/api/gatherings/002", undefined, cookieHeader(memberJar), memberJar);
+  check("仅有第一期权限也可读已发布的第二期",
+    g2as001.status === 200 && g2as001.data.unlocked,
+    g2as001.data && g2as001.data.unlocked ? "unlocked" : String(g2as001.status));
+
   const caseLogin = await call("POST", "/api/auth/login",
     { handle: (approve.data.handle || "").toUpperCase(), passcode: approve.data.passcode });
   check("登录名大小写不敏感", caseLogin.status === 200);
@@ -127,8 +135,19 @@ function check(label, ok, extra = "") {
   check("CSV 转义公式注入",
     csvText.includes(`"'=1+1"`) && csvText.includes(`"'@SUM(A1)"`));
 
-  const demo = await call("POST", "/api/auth/login", { handle: "demo_caster", passcode: "CAST-DEMO" });
+  const gList = await call("GET", "/api/gatherings");
+  const g2 = (gList.data.gatherings || []).find(g => g.id === "002");
+  check("第二期公开为往期", !!(g2 && g2.status === "past" && (g2.topics || []).length >= 10),
+    g2 ? `topics=${(g2.topics || []).length}` : "missing");
+
+  const demoJar = new Map();
+  const demo = await call("POST", "/api/auth/login", { handle: "demo_caster", passcode: "CAST-DEMO" }, {}, demoJar);
   check("演示账号仍可登录", demo.status === 200);
+
+  const g2full = await call("GET", "/api/gatherings/002", undefined, cookieHeader(demoJar), demoJar);
+  check("演示账号可读第二期正文",
+    g2full.status === 200 && g2full.data.unlocked && /驾驶舱/.test(g2full.data.bodyHtml || ""),
+    g2full.data && g2full.data.unlocked ? "unlocked" : String(g2full.status));
 
   let limited = 0;
   for (let i = 0; i < 8; i++) {

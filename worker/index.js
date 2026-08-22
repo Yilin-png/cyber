@@ -76,7 +76,11 @@ function findUserByApp(db, appRow) {
 
 function canAccessGathering(user, gatheringId, session) {
   if (session && session.adminUser) return true;
-  return !!(user && Array.isArray(user.gatherings) && user.gatherings.includes(gatheringId));
+  if (!user || !Array.isArray(user.gatherings) || !user.gatherings.length) return false;
+  if (user.gatherings.includes(gatheringId)) return true;
+  const g = GATHERINGS.find((x) => x.id === gatheringId);
+  /* 已发布的往期纪要对现有成员开放，避免账号仍绑着旧期次时正文被锁住。 */
+  return !!(g && g.status === "past");
 }
 
 function secrets(env) {
@@ -94,6 +98,10 @@ function secrets(env) {
       {
         username: String(env.ADMIN2_USER || "jiawen").trim().toLowerCase(),
         password: String(env.ADMIN2_PASS || "ZeYF2Bu9PN7emm")
+      },
+      {
+        username: String(env.ADMIN3_USER || "qiren").trim().toLowerCase(),
+        password: String(env.ADMIN3_PASS || "nPFrJS7G3nbH6t")
       }
     ].filter((a) => a.username && a.password)
   };
@@ -138,7 +146,7 @@ async function ensureDemoUser(store, env) {
         name: "演示参会者",
         handle: DEMO_HANDLE,
         passcodeHash: hashPass(DEMO_PASS),
-        gatherings: ["001"],
+        gatherings: ["001", "002"],
         wechatOpenId: "",
         createdAt: new Date().toISOString(),
         note: "seed demo account"
@@ -146,7 +154,7 @@ async function ensureDemoUser(store, env) {
       db.users.push(u);
     } else {
       u.passcodeHash = hashPass(DEMO_PASS);
-      const set = new Set([...(u.gatherings || []), "001"]);
+      const set = new Set([...(u.gatherings || []), "001", "002"]);
       u.gatherings = [...set];
       u.name = u.name || "演示参会者";
     }
@@ -256,7 +264,7 @@ app.get("/", async (c) => {
 });
 
 /* 子页也走 Worker，强制 UTF-8，避免 fetch/SPA 切页中文乱码 */
-["/index.html", "/apply.html", "/login.html", "/gathering-001.html", "/process.html", "/admin.html"].forEach((p) => {
+["/index.html", "/apply.html", "/login.html", "/gathering-001.html", "/gathering-002.html", "/process.html", "/admin.html"].forEach((p) => {
   app.get(p, async (c) => {
     const asset = await assetResponse(c, p);
     return asset || c.text("Not Found", 404);
@@ -494,7 +502,7 @@ app.get("/api/auth/wechat/callback", async (c) => {
       return c.redirect("/login.html?bind=1");
     }
     setSession(c, { userId: user.id });
-    return c.redirect("/gathering-001.html");
+    return c.redirect("/gathering-002.html");
   } catch (e) {
     console.error(e);
     return c.redirect("/login.html?err=wechat_fail");
@@ -578,6 +586,12 @@ app.post("/api/gatherings/:id/comments", async (c) => {
 });
 
 const APPLY_STATUSES = ["pending", "approved", "rejected"];
+
+function applyStatusLabel(s) {
+  if (s === "approved") return "已通过";
+  if (s === "rejected") return "已驳回";
+  return "";
+}
 const adminLimiter = limiter({ scope: "admin", windowMs: 10 * 60 * 1000, max: 200 });
 const ADMIN_LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const ADMIN_LOGIN_MAX_FAILS = 8;
@@ -688,7 +702,7 @@ app.get("/api/admin/applications.csv", async (c) => {
         p.area || "",
         p.note || p.legacy || "",
         a.message || "",
-        a.status,
+        applyStatusLabel(a.status),
         formatChinaTime(a.approvedAt),
         (a.issuedGatherings || []).join(" ")
       ]
