@@ -28,7 +28,7 @@ window.DATA = {
       status: "past",
       desc: "第二期线下交流已举办。Cursor 里把尽调报告收成可交付 Word，Skill 分层与触发，从个人工作流到团队规范，再到驾驶舱式长项目和硬约束写作。",
       link: "gathering-002.html",
-      linkText: "阅读公开纪要"
+      linkText: "阅读纪要"
     },
     {
       date: "2026.07.24",
@@ -38,7 +38,7 @@ window.DATA = {
       status: "past",
       desc: "第一期线下交流。一件AI没能替你搞定的难事、一个你自己顺手、别人多半不知道的小技巧。打开电脑，同题异解，互相修炼。",
       link: "gathering-001.html",
-      linkText: "阅读公开纪要"
+      linkText: "阅读纪要"
     }
   ],
 

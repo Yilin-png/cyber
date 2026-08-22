@@ -228,7 +228,7 @@ function renderActivity(items) {
       : esc(a.title);
     const metaBits = [a.mode, a.place].filter(Boolean);
     const cta = href
-      ? `<a class="log-link" href="${esc(href)}">${esc(a.linkText || "阅读公开纪要")}<span class="arrow" aria-hidden="true">→</span></a>`
+      ? `<a class="log-link" href="${esc(href)}">${esc(a.linkText || "阅读纪要")}<span class="arrow" aria-hidden="true">→</span></a>`
       : (upcoming
         ? `<a class="log-link" href="apply.html">申请参加<span class="arrow" aria-hidden="true">→</span></a>`
         : "");
@@ -277,7 +277,7 @@ $("#artList").innerHTML = renderCards(DATA.artifacts);
         label: upcoming ? "待举办" : "",
         desc: g.summary,
         link: upcoming ? "" : localPage(g.link || ""),
-        linkText: upcoming ? "" : "阅读公开纪要"
+        linkText: upcoming ? "" : "阅读纪要"
       };
     });
     if (list.length) renderActivity(list);
