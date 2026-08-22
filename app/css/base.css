@@ -33,6 +33,7 @@ body{
 #cc-view[data-show="apply.html"] > [data-cc-slot="apply.html"],
 #cc-view[data-show="login.html"] > [data-cc-slot="login.html"],
 #cc-view[data-show="gathering-001.html"] > [data-cc-slot="gathering-001.html"],
+#cc-view[data-show="gathering-002.html"] > [data-cc-slot="gathering-002.html"],
 #cc-view[data-show="process.html"] > [data-cc-slot="process.html"]{display:block}
 #cc-void{
   position:fixed;inset:0;z-index:-1;pointer-events:none;

@@ -138,7 +138,7 @@ async function ensureDemoUser(store, env) {
         name: "演示参会者",
         handle: DEMO_HANDLE,
         passcodeHash: hashPass(DEMO_PASS),
-        gatherings: ["001"],
+        gatherings: ["001", "002"],
         wechatOpenId: "",
         createdAt: new Date().toISOString(),
         note: "seed demo account"
@@ -146,7 +146,7 @@ async function ensureDemoUser(store, env) {
       db.users.push(u);
     } else {
       u.passcodeHash = hashPass(DEMO_PASS);
-      const set = new Set([...(u.gatherings || []), "001"]);
+      const set = new Set([...(u.gatherings || []), "001", "002"]);
       u.gatherings = [...set];
       u.name = u.name || "演示参会者";
     }
@@ -256,7 +256,7 @@ app.get("/", async (c) => {
 });
 
 /* 子页也走 Worker，强制 UTF-8，避免 fetch/SPA 切页中文乱码 */
-["/index.html", "/apply.html", "/login.html", "/gathering-001.html", "/process.html", "/admin.html"].forEach((p) => {
+["/index.html", "/apply.html", "/login.html", "/gathering-001.html", "/gathering-002.html", "/process.html", "/admin.html"].forEach((p) => {
   app.get(p, async (c) => {
     const asset = await assetResponse(c, p);
     return asset || c.text("Not Found", 404);
@@ -494,7 +494,7 @@ app.get("/api/auth/wechat/callback", async (c) => {
       return c.redirect("/login.html?bind=1");
     }
     setSession(c, { userId: user.id });
-    return c.redirect("/gathering-001.html");
+    return c.redirect("/gathering-002.html");
   } catch (e) {
     console.error(e);
     return c.redirect("/login.html?err=wechat_fail");

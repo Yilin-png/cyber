@@ -2,7 +2,7 @@
 window.DATA = {
 
   pulse: { members: 340, gatherings: 7, spells: 62 },
-  nextGathering: "2026.08.20 19:00",
+  nextGathering: "第三期 · 待定",
   mana: 82,
 
   trending: [
@@ -26,9 +26,10 @@ window.DATA = {
       mode: "线下",
       place: "深圳",
       time: "19:00",
-      status: "upcoming",
-      label: "待举办",
-      desc: "第二期线下交流，待举办。时间 2026.08.20 19:00 · 深圳。欢迎申请参加，带上你最近踩过的坑，或一个顺手好用的小技巧。"
+      status: "past",
+      desc: "第二期线下交流已举办。Cursor 里把尽调报告收成可交付 Word，Skill 分层与触发，从个人工作流到团队规范，再到驾驶舱式长项目和硬约束写作。",
+      link: "gathering-002.html",
+      linkText: "阅读公开纪要"
     },
     {
       date: "2026.07.24",
@@ -264,6 +265,21 @@ window.DATA = {
     { group: "保密与本地化", src: "gathering-001.html#s04", items: [
       { k: "method", t: "脱敏发生在转写那一步", d: "语音转文字尽量本地完成，再交给可信模型做结构化纪要。" },
       { k: "exp", t: "本地识别够用", d: "准确率略低于云端，但后续提炼能纠回一部分。" }
+    ]},
+    { group: "尽调报告交付", src: "gathering-002.html#s02", items: [
+      { k: "method", t: "内容和格式拆成两条 Skill", d: "前端定稿一条，转 Word 一条；演示可以只测转换。" },
+      { k: "method", t: "MD → HTML → Word，再微调", d: "目录和合并表先走 HTML；列宽间距再在成品上改。" },
+      { k: "exp", t: "reference 交给模型改", d: "按 pandoc 映射规则改样式模板，不必自己从零点字体。" }
+    ]},
+    { group: "Skill 触发", src: "gathering-002.html#s08", items: [
+      { k: "pit", t: "中转会盖掉 settings", d: "钩子放到项目级；用户级配置被旧版覆盖时才不会静音。" },
+      { k: "method", t: "常用 Skill 放进强制扫描层", d: "只靠长 memory 里的触发词，模型会漏。每天真用的先搬过去。" },
+      { k: "method", t: "软约束要配检查点", d: "说明文件只是提醒。章节缺了就回头重做。" }
+    ]},
+    { group: "长项目怎么开", src: "gathering-002.html#s11", items: [
+      { k: "method", t: "主对话只做驾驶舱", d: "重活新开对话，权威文件当记忆，别指望自动压缩保真。" },
+      { k: "method", t: "工程目录是给模型的地图", d: "原料、简报、知识库分层；知识库只收摘要。" },
+      { k: "exp", t: "硬约束靠骨架不是靠提示词", d: "句级出处 + JSON Schema，长报告才能稳定。" }
     ]}
   ],
 

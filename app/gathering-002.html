@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-cc-build="nav-script-1">
+<html lang="zh-CN" data-cc-build="nav-script-1" data-gathering-id="002">
 <head>
 <meta charset="utf-8">
 <script>
@@ -60,17 +60,17 @@
 })();
 </script>
 <style id="cc-boot-bg">html,body{background-color:#F5F3FB;color-scheme:light}html[data-theme="dark"],html[data-theme="dark"] body{background-color:#07060E;color-scheme:dark}</style>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="参会成员登录 · 查阅当期完整纪要">
-<title>成员登录 · 赛博法师</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="赛博法师第二期集会纪要摘要：尽调报告交付、Skill 触发、工作流与硬约束写作。完整内容仅对参会成员开放。">
+<title>赛博法师 • 第二期AI交流会 | 赛博法师 • CYBER CASTERS</title>
 <link rel="icon" href="assets/icons/favicon.svg?v=hex2" type="image/svg+xml">
 <link rel="icon" href="assets/icons/favicon.ico?v=hex2" sizes="any">
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=hex2">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="赛博法师 CYBER CASTERS">
 <meta property="og:title" content="AI 技巧分享会">
-<meta property="og:description" content="参会成员登录 · 查阅当期完整纪要">
-<meta property="og:url" content="https://cyber-casters.com/login.html">
+<meta property="og:description" content="赛博法师第二期集会纪要摘要：尽调报告交付、Skill 触发、工作流与硬约束写作。">
+<meta property="og:url" content="https://cyber-casters.com/gathering-002.html">
 <meta property="og:image" content="https://cyber-casters.com/assets/icons/og-image.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="512">
@@ -78,7 +78,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="AI 技巧分享会">
-<meta name="twitter:description" content="参会成员登录 · 查阅当期完整纪要">
+<meta name="twitter:description" content="赛博法师第二期集会纪要摘要：尽调报告交付、Skill 触发、工作流与硬约束写作。">
 <meta name="twitter:image" content="https://cyber-casters.com/assets/icons/og-image.png">
 <link rel="preload" href="assets/audio/bgm.m4a?v=32k" as="audio" type="audio/mp4">
 <link rel="preload" href="css/home.css?v=about-gap2" as="style">
@@ -88,7 +88,7 @@
 <link rel="stylesheet" href="css/auth.css?v=apply-border2">
 <link rel="stylesheet" href="css/gathering.css?v=g002">
 </head>
-<body class="auth-page">
+<body>
 <audio id="bgm" src="assets/audio/bgm.m4a?v=32k" preload="auto" playsinline webkit-playsinline></audio>
 <script>
 (function(){
@@ -157,93 +157,91 @@
   }catch(e){}
 })();
 </script>
-  <div class="auth-nav wrap">
-    <a href="index.html">← 返回首页</a>
-    <a href="apply.html">还没有通行码？去申请</a>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <a class="back" href="index.html">← 返回</a>
+    <div class="userchip" id="userChip">
+      <span class="who">MEETING NOTES · 002</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <header class="head">
+    <span class="issue">GATHERING 002</span>
+    <h1 id="gTitle">赛博法师 • 第二期AI交流会</h1>
+    <div class="meta" id="gMeta">2026.08.20 · 深圳 · 线下</div>
+    <div class="abstract" id="gSummary">加载中…</div>
+  </header>
+
+  <!-- 公开纪要：本期要点（无需登录） -->
+  <section class="public-digest" id="publicDigest" hidden>
+    <div class="digest-head">
+      <h2 class="digest-title">本期要点</h2>
+      <span class="digest-count"><i id="digestCount">00</i> ITEMS</span>
+    </div>
+    <ol class="topic-list" id="topicList"></ol>
+    <p class="digest-note">逐步实操、对照表、现场照片与留言板，仅对当期参会成员开放。</p>
+  </section>
+
+  <!-- 未解锁：登录/申请门 -->
+  <div id="lockPanel" class="lock-box" hidden>
+    <h2>完整纪要需参会权限</h2>
+    <p id="lockReason">完整纪要仅对当期参会成员开放。</p>
+    <p>若你参加了本期，登录后可查看全文、现场照片，并在文末留言。</p>
+    <div class="lock-actions">
+      <a class="btn btn-primary" href="login.html?next=gathering-002.html">成员登录</a>
+      <a class="btn btn-ghost" href="apply.html">申请加入 / 报意向</a>
+    </div>
   </div>
 
-  <div class="wrap" style="flex:1">
-    <form class="auth-card" id="loginForm">
-      <h1>成员登录</h1>
-      <p class="lead">用申请时得到的<strong style="color:var(--paper)">登录名</strong>和组织者发放的<strong style="color:var(--paper)">通行码</strong>进入，即可查看自己参加过的期次完整纪要并留言。</p>
+  <!-- 已解锁：目录 + 正文 + 评论 -->
+  <div id="fullPanel" hidden>
+    <div class="cols">
+      <nav class="toc" id="toc">
+        <h2>CONTENTS</h2>
+        <div class="toc-list" id="tocList"></div>
+      </nav>
+      <main class="doc">
+        <div id="docBody"></div>
 
-      <div class="field">
-        <label>登录名 *</label>
-        <input name="handle" required maxlength="40" placeholder="申请成功后显示的登录名" autocomplete="username">
-      </div>
-      <div class="field">
-        <label>通行码 *</label>
-        <input name="passcode" required maxlength="32" placeholder="组织者私下告知" autocomplete="current-password">
-      </div>
-
-      <div class="btn-row">
-        <button class="btn btn-primary" type="submit">登录</button>
-        <a class="btn btn-ghost" href="apply.html">先去申请</a>
-      </div>
-      <div class="form-msg" id="msg" aria-live="polite"></div>
-      <p class="lead" style="margin-top:18px;margin-bottom:0;font-size:12px">
-        本地演示：登录名 <code style="color:var(--cyan)">demo_caster</code> /
-        通行码 <code style="color:var(--cyan)">CAST-DEMO</code>
-        · <button type="button" id="fillDemo" class="btn btn-ghost" style="padding:4px 10px;font-size:12px;margin-left:6px">一键填入</button>
-      </p>
-    </form>
+        <section class="comments" id="comments">
+          <h2>留言板</h2>
+          <p class="sub">仅本期参会成员可见。友善交流，勿传播敏感操作细节到场外。</p>
+          <div class="comment-list" id="commentList"></div>
+          <form class="comment-form" id="commentForm">
+            <textarea name="body" maxlength="1000" required placeholder="写下一句想法、补充或感谢…"></textarea>
+            <button class="btn btn-primary" type="submit">发布留言</button>
+            <div class="form-msg" id="commentMsg" aria-live="polite"></div>
+          </form>
+        </section>
+      </main>
+    </div>
   </div>
 
-<button id="bgmBtn" type="button" aria-label="背景音乐开关" title="背景音乐" aria-pressed="false">♪</button>
+  <footer>
+    <span>© 2026 赛博法师 • CYBER CASTERS</span>
+    <span>GATHERING 002 • MEMBERS ONLY</span>
+  </footer>
+</div>
+
+<button id="bgmBtn" aria-label="背景音乐开关" title="背景音乐" aria-pressed="false">♪</button>
+
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="照片查看">
+  <button class="x" id="lbX" aria-label="关闭">✕</button>
+  <button class="prev" id="lbP" aria-label="上一张">‹</button>
+  <img id="lbImg" alt="现场照片">
+  <button class="next" id="lbN" aria-label="下一张">›</button>
+  <span class="idx" id="lbIdx"></span>
+</div>
 
 <script src="js/util.js"></script>
 <script src="js/theme.js?v=bj-sun2"></script>
 <script src="js/api.js"></script>
+<script src="js/gathering-data.js"></script>
 <script src="js/bgm.js?v=nav3"></script>
-<script>
-CC.BGM.init({ mode: "button", toggleId: "bgmBtn", gestureKick: true });
-const params = new URLSearchParams(location.search);
-const msg = document.getElementById("msg");
-const handleInput = document.querySelector('input[name="handle"]');
-const passInput = document.querySelector('input[name="passcode"]');
-
-document.getElementById("fillDemo").addEventListener("click", () => {
-  handleInput.value = "demo_caster";
-  passInput.value = "CAST-DEMO";
-  msg.className = "form-msg";
-  msg.textContent = "已填入演示账号，点「登录」即可";
-});
-
-if (params.get("err")) {
-  msg.className = "form-msg err";
-  msg.textContent = "登录暂不可用，请稍后重试，或确认通行码是否正确。";
-}
-
-CC.authMe().then(me => {
-  if (me.auth) {
-    msg.className = "form-msg ok";
-    msg.textContent = `已登录为 ${me.user.name}，正在跳转…`;
-    CC.BGM.persist?.(document.getElementById("bgm"));
-    const next = params.get("next") || "gathering-002.html";
-    if (CC.BGM.go) CC.BGM.go(next);
-    else location.href = next;
-  }
-}).catch(() => {});
-
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  msg.className = "form-msg";
-  msg.textContent = "登录中…";
-  const fd = new FormData(e.target);
-  const body = Object.fromEntries(fd.entries());
-  try {
-    const data = await CC.api("/api/auth/login", { method: "POST", body: JSON.stringify(body) });
-    msg.className = "form-msg ok";
-    msg.textContent = `欢迎，${data.user.name}`;
-    CC.BGM.persist?.(document.getElementById("bgm"));
-    const next = params.get("next") || "gathering-002.html";
-    if (CC.BGM.go) CC.BGM.go(next);
-    else location.href = next;
-  } catch (err) {
-    msg.className = "form-msg err";
-    msg.textContent = err.message || "登录失败。请确认通过 http://localhost:3000 打开本页（不要直接双击 HTML）。";
-  }
-});
-</script>
+<script src="js/gathering.js"></script>
 </body>
 </html>

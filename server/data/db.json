@@ -7,7 +7,8 @@
       "handle": "demo_caster",
       "passcodeHash": "97a6a834cca92ef5:9a400a53c8caacc01b79dab901999d63b55b4f759bfd1a9f70e8e52e11305a08",
       "gatherings": [
-        "001"
+        "001",
+        "002"
       ],
       "wechatOpenId": "",
       "createdAt": "2026-08-08T04:29:13.423Z",

@@ -1,10 +1,23 @@
 /* 纪要页：公开摘要 + 权限正文 + 评论 + 图库 */
-const GATHERING_ID = "001";
-const PHOTO_DIR = "assets/gatherings/001/";
-const PHOTOS = [
-  "01.jpg","02.jpg","03.jpg","04.jpg","05.jpg",
-  "06.jpg","07.jpg","08.jpg","09.jpg"
-];
+function pageGatheringId() {
+  const fromAttr = document.documentElement.dataset.gatheringId;
+  if (fromAttr) return String(fromAttr);
+  const name = (location.pathname.replace(/\/+$/, "").split("/").pop() || "");
+  const m = name.match(/gathering-(\d+)/i);
+  return m ? m[1] : "001";
+}
+const GATHERING_ID = pageGatheringId();
+const GATHERING_PAGE = `gathering-${GATHERING_ID}.html`;
+const PHOTO_DIR = `assets/gatherings/${GATHERING_ID}/`;
+const DEFAULT_PHOTOS = {
+  "001": [
+    "01.jpg","02.jpg","03.jpg","04.jpg","05.jpg",
+    "06.jpg","07.jpg","08.jpg","09.jpg"
+  ]
+};
+const PHOTOS = Array.isArray(window.CC_GATHERING_PHOTOS)
+  ? window.CC_GATHERING_PHOTOS
+  : (DEFAULT_PHOTOS[GATHERING_ID] || []);
 const photoSrc = i => encodeURI(PHOTO_DIR + PHOTOS[i]);
 const $ = CC.$;
 const esc = CC.esc;
@@ -18,7 +31,7 @@ function renderUserChip(me) {
   if (!me || !me.auth) {
     el.innerHTML = `
       <span class="who">NOTES · ${GATHERING_ID}</span>
-      <a href="login.html?next=gathering-001.html">登录</a>
+      <a href="login.html?next=${GATHERING_PAGE}">登录</a>
       <a href="apply.html">申请</a>`;
     return;
   }
@@ -62,7 +75,7 @@ function wireLightbox() {
   if (!grid) return;
   grid.innerHTML = PHOTOS.map((p, i) =>
     `<button class="shot" data-i="${i}" aria-label="放大第 ${i + 1} 张">
-       <img src="${photoSrc(i)}" loading="lazy" alt="第一期现场 ${i + 1}">
+       <img src="${photoSrc(i)}" loading="lazy" alt="第 ${GATHERING_ID} 期现场 ${i + 1}">
      </button>`
   ).join("");
 

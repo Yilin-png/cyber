@@ -436,7 +436,10 @@ async function ensureGatheringCatalog() {
       status: g.status || ""
     }));
   } catch (_) {
-    gatheringCatalog = [{ id: "001", title: "赛博法师 • 第一期AI交流会", date: "2026.07.24", status: "past" }];
+    gatheringCatalog = [
+      { id: "002", title: "赛博法师 • 第二期AI交流会", date: "2026.08.20", status: "past" },
+      { id: "001", title: "赛博法师 • 第一期AI交流会", date: "2026.07.24", status: "past" }
+    ];
   }
   return gatheringCatalog;
 }

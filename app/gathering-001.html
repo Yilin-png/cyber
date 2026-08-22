@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-cc-build="nav-script-1">
+<html lang="zh-CN" data-cc-build="nav-script-1" data-gathering-id="001">
 <head>
 <meta charset="utf-8">
 <script>
@@ -83,10 +83,10 @@
 <link rel="preload" href="assets/audio/bgm.m4a?v=32k" as="audio" type="audio/mp4">
 <link rel="preload" href="css/home.css?v=about-gap2" as="style">
 <link rel="stylesheet" href="css/tokens.css?v=cs1">
-<link rel="stylesheet" href="css/base.css?v=process1">
+<link rel="stylesheet" href="css/base.css?v=g002">
 <link rel="stylesheet" href="css/home.css?v=about-gap2">
 <link rel="stylesheet" href="css/auth.css?v=apply-border2">
-<link rel="stylesheet" href="css/gathering.css?v=process1">
+<link rel="stylesheet" href="css/gathering.css?v=g002">
 </head>
 <body>
 <audio id="bgm" src="assets/audio/bgm.m4a?v=32k" preload="auto" playsinline webkit-playsinline></audio>
@@ -97,7 +97,7 @@
     var u;try{u=new URL(href,location.href);}catch(err){return null;}
     if(u.origin!==location.origin)return null;
     var name=(u.pathname.replace(/\/+$/,"").split("/").pop()||"index.html");
-    if(!(u.pathname==="/"||name===""||name==="index.html"||/^(apply|login|gathering-001|process)\.html$/i.test(name)))return null;
+    if(!(u.pathname==="/"||name===""||name==="index.html"||/^(apply|login|gathering-\d+|process)\.html$/i.test(name)))return null;
     return u;
   }
   function navTo(u,e){

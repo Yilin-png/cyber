@@ -17,7 +17,7 @@ function ensureDemoUser() {
       name: "演示参会者",
       handle: DEMO_HANDLE,
       passcodeHash: hashPass(DEMO_PASS),
-      gatherings: ["001"],
+      gatherings: ["001", "002"],
       wechatOpenId: "",
       createdAt: new Date().toISOString(),
       note: "seed demo account"
@@ -26,7 +26,7 @@ function ensureDemoUser() {
   } else {
     /* 每次启动重置演示通行码，避免本地库被改坏后无法登录 */
     user.passcodeHash = hashPass(DEMO_PASS);
-    const set = new Set([...(user.gatherings || []), "001"]);
+    const set = new Set([...(user.gatherings || []), "001", "002"]);
     user.gatherings = [...set];
     user.name = user.name || "演示参会者";
   }

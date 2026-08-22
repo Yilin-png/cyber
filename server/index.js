@@ -359,7 +359,7 @@ app.get("/api/auth/wechat/callback", async (req, res) => {
       return res.redirect("/login.html?bind=1");
     }
     req.session.userId = user.id;
-    res.redirect("/gathering-001.html");
+    res.redirect("/gathering-002.html");
   } catch (e) {
     console.error(e);
     res.redirect("/login.html?err=wechat_fail");

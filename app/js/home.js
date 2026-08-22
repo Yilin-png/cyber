@@ -441,7 +441,9 @@ renderSpellbook(false);
       const who = me.admin
         ? `${esc(me.user?.name || me.admin.username)}（管理）`
         : esc(me.user.name);
-      foot.innerHTML = `${who} · <a href="gathering-001.html" style="color:var(--cyan)">我的纪要</a> · <a href="#" id="homeLogout" style="color:var(--cyan)">退出</a>`;
+      const ids = [...(me.admin ? ["001", "002"] : (me.user?.gatherings || []))].filter(Boolean).sort();
+      const notesHref = `gathering-${ids[ids.length - 1] || "002"}.html`;
+      foot.innerHTML = `${who} · <a href="${notesHref}" style="color:var(--cyan)">我的纪要</a> · <a href="#" id="homeLogout" style="color:var(--cyan)">退出</a>`;
       const btn = document.getElementById("homeLogout");
       if (btn) btn.addEventListener("click", async e => {
         e.preventDefault();
