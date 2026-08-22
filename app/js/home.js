@@ -226,7 +226,7 @@ function renderActivity(items) {
     const titleInner = href
       ? `<a class="log-title" href="${esc(href)}">${esc(a.title)}</a>`
       : esc(a.title);
-    const metaBits = [a.mode, a.place, a.time].filter(Boolean);
+    const metaBits = [a.mode, a.place].filter(Boolean);
     const cta = href
       ? `<a class="log-link" href="${esc(href)}">${esc(a.linkText || "阅读公开纪要")}<span class="arrow" aria-hidden="true">→</span></a>`
       : (upcoming

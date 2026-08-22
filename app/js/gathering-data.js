@@ -4,7 +4,6 @@ window.CC_GATHERINGS = [
   {
     id: "002",
     date: "2026.08.20",
-    time: "19:00",
     title: "赛博法师 • 第二期AI交流会",
     mode: "线下",
     place: "深圳",
