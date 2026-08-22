@@ -113,7 +113,6 @@
     font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);
     padding:3px 8px;border:1px solid var(--line);display:inline-block;
   }
-  .st-pending{color:var(--gold);border-color:rgba(214,178,102,.5)}
   .st-approved{color:var(--cyan);border-color:rgba(63,224,208,.5)}
   .st-rejected{color:var(--ash)}
   .credential{
@@ -241,10 +240,9 @@
     </div>
 
     <div class="filter-bar" id="filterBar">
-      <button class="chip" type="button" data-status="pending" aria-pressed="true">待审核</button>
+      <button class="chip" type="button" data-status="" aria-pressed="true">全部</button>
       <button class="chip" type="button" data-status="approved" aria-pressed="false">已通过</button>
       <button class="chip" type="button" data-status="rejected" aria-pressed="false">已驳回</button>
-      <button class="chip" type="button" data-status="" aria-pressed="false">全部</button>
       <span class="spacer"></span>
       <button class="chip" type="button" id="csvBtn">导出 CSV</button>
     </div>
@@ -284,7 +282,7 @@ const adminName = document.getElementById("adminName");
 const loginForm = document.getElementById("loginForm");
 const loginBtn = document.getElementById("loginBtn");
 
-let status = "pending";
+let status = "";
 let authed = false;
 let gatheringCatalog = [];
 let permTargetId = null;
@@ -346,7 +344,7 @@ async function load() {
   try {
     const data = await CC.api("/api/admin/applications?" + params);
     const c = data.counts || {};
-    setMsg(`共 ${c.all || 0} 条报名　·　待审核 ${c.pending || 0}　已通过 ${c.approved || 0}　已驳回 ${c.rejected || 0}`);
+    setMsg(`共 ${c.all || 0} 条报名　·　已通过 ${c.approved || 0}　已驳回 ${c.rejected || 0}`);
     render(data.applications);
   } catch (err) {
     if (err.status === 403) {
@@ -406,15 +404,19 @@ function render(rows) {
             </td>
             <td data-label="报名意向">${renderIntent(a)}</td>
             <td data-label="状态">
-              <span class="status-pill st-${esc(a.status)}">${esc(a.status)}</span>
+              ${a.status === "approved" || a.status === "rejected"
+                ? `<span class="status-pill st-${esc(a.status)}">${a.status === "approved" ? "已通过" : "已驳回"}</span>`
+                : `<span class="muted">—</span>`}
               ${(a.gatherings || a.issuedGatherings || []).length
                 ? `<br><span class="muted">期次 ${esc((a.gatherings || a.issuedGatherings).join(","))}</span>` : ""}
               ${a.rejectReason ? `<br><span class="muted">${esc(a.rejectReason)}</span>` : ""}
             </td>
             <td data-label="操作">
               <div class="row-actions">
-                ${a.status === "pending"
+                ${a.status !== "approved"
                   ? `<button class="btn btn-primary" data-act="approve" data-id="${esc(a.id)}">批准</button>` : ""}
+                ${a.status !== "approved" && a.status !== "rejected"
+                  ? `<button class="btn btn-ghost" data-act="reject" data-id="${esc(a.id)}">驳回</button>` : ""}
                 ${a.status === "approved"
                   ? `<button class="btn btn-ghost" data-act="reissue" data-id="${esc(a.id)}">重发通行码</button>` : ""}
                 <button class="btn btn-ghost" data-act="permissions" data-id="${esc(a.id)}">权限</button>
@@ -451,7 +453,7 @@ async function openPermissions(id) {
   const catalog = await ensureGatheringCatalog();
   const selected = new Set(appRow.gatherings || appRow.issuedGatherings || []);
   document.getElementById("permSub").textContent =
-    `${appRow.name}（${appRow.handle}）· 当前状态 ${appRow.status}`;
+    `${appRow.name}（${appRow.handle}）${appRow.status === "approved" ? " · 已通过" : appRow.status === "rejected" ? " · 已驳回" : ""}`;
   document.getElementById("permList").innerHTML = catalog.map(g => `
     <label class="perm-item">
       <input type="checkbox" value="${esc(g.id)}" ${selected.has(g.id) ? "checked" : ""}>
@@ -474,6 +476,14 @@ const actions = {
       method: "POST", body: JSON.stringify({ gatherings: [] })
     });
     showCredential(data, "已批准");
+  },
+  async reject(id) {
+    if (!confirm("确定驳回这条报名？")) return false;
+    await CC.api(`/api/admin/applications/${id}/reject`, {
+      method: "POST", body: "{}"
+    });
+    setMsg("已驳回", "ok");
+    credentialBox.innerHTML = "";
   },
   async reissue(id) {
     if (!confirm("重发会作废旧通行码，确定？")) return;
@@ -524,7 +534,8 @@ tableWrap.addEventListener("click", async (e) => {
   const act = btn.dataset.act;
   btn.disabled = true;
   try {
-    await actions[act](btn.dataset.id);
+    const result = await actions[act](btn.dataset.id);
+    if (result === false) return;
     /* 打开权限弹层时不要立刻刷新，以免冲掉勾选状态 */
     if (act !== "permissions") await load();
   } catch (err) {

@@ -582,6 +582,12 @@ app.post("/api/gatherings/:id/comments", async (c) => {
 });
 
 const APPLY_STATUSES = ["pending", "approved", "rejected"];
+
+function applyStatusLabel(s) {
+  if (s === "approved") return "已通过";
+  if (s === "rejected") return "已驳回";
+  return "";
+}
 const adminLimiter = limiter({ scope: "admin", windowMs: 10 * 60 * 1000, max: 200 });
 const ADMIN_LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const ADMIN_LOGIN_MAX_FAILS = 8;
@@ -692,7 +698,7 @@ app.get("/api/admin/applications.csv", async (c) => {
         p.area || "",
         p.note || p.legacy || "",
         a.message || "",
-        a.status,
+        applyStatusLabel(a.status),
         formatChinaTime(a.approvedAt),
         (a.issuedGatherings || []).join(" ")
       ]

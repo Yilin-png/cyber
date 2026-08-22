@@ -128,6 +128,12 @@ function safeText(s, max = 500) {
 
 const APPLY_STATUSES = ["pending", "approved", "rejected"];
 
+function applyStatusLabel(s) {
+  if (s === "approved") return "已通过";
+  if (s === "rejected") return "已驳回";
+  return "";
+}
+
 /** 管理端展示用：统一字段名，不外泄哈希等敏感信息 */
 function adminApplication(row, user) {
   const issued = row.issuedGatherings || [];
@@ -544,7 +550,7 @@ app.get("/api/admin/applications.csv", (req, res) => {
       p.area || "",
       p.note || p.legacy || "",
       a.message || "",
-      a.status,
+      applyStatusLabel(a.status),
       formatChinaTime(a.approvedAt),
       (a.issuedGatherings || []).join(" ")
     ].map(cell).join(","));
