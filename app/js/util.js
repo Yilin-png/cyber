@@ -20,8 +20,7 @@ CC.fmtChinaTime = (iso, withSeconds = false) => {
       minute: "2-digit"
     };
     if (withSeconds) opts.second = "2-digit";
-    const loc = (document.documentElement.dataset.lang === "en") ? "en-GB" : "zh-CN";
-    return new Date(iso).toLocaleString(loc, opts);
+    return new Date(iso).toLocaleString("zh-CN", opts);
   } catch (_) {
     return String(iso);
   }

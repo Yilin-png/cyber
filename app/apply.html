@@ -1,8 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-cc-build="nav-i18n-1">
-<script>
-(function(){try{var q=location.search.match(/[?&]lang=(en|zh)\b/);var L=q?q[1]:(localStorage.getItem("cc-lang")||"zh");if(L!=="en"&&L!=="zh")L="zh";document.documentElement.dataset.lang=L;document.documentElement.lang=L==="en"?"en":"zh-CN";}catch(e){}})();
-</script>
+<html lang="zh-CN" data-cc-build="nav-script-1">
 <head>
 <meta charset="utf-8">
 <script>
@@ -86,7 +83,7 @@
 <link rel="preload" href="assets/audio/bgm.m4a?v=32k" as="audio" type="audio/mp4">
 <link rel="preload" href="css/home.css?v=about-gap2" as="style">
 <link rel="stylesheet" href="css/tokens.css?v=cs1">
-<link rel="stylesheet" href="css/base.css?v=i18n1">
+<link rel="stylesheet" href="css/base.css?v=process1">
 <link rel="stylesheet" href="css/home.css?v=about-gap2">
 <link rel="stylesheet" href="css/auth.css?v=apply-border2">
 <link rel="stylesheet" href="css/gathering.css?v=process1">
@@ -161,29 +158,29 @@
 })();
 </script>
   <div class="auth-nav wrap">
-    <a href="index.html" data-i18n="nav.home">← 返回首页</a>
-    <a href="login.html" data-i18n="nav.login">已有通行码？登录</a>
+    <a href="index.html">← 返回首页</a>
+    <a href="login.html">已有通行码？登录</a>
   </div>
 
   <div class="wrap" style="flex:1;display:flex;align-items:flex-start">
     <form class="auth-card" id="applyForm">
-      <h1 data-i18n="apply.title">我想参加 • 赛博法师</h1>
+      <h1>我想参加 • 赛博法师</h1>
 
       <div class="field">
-        <label data-i18n="apply.name">怎么称呼你 *</label>
-        <input name="name" required maxlength="40" data-i18n-placeholder="apply.namePh" placeholder="昵称即可" autocomplete="nickname">
+        <label>怎么称呼你 *</label>
+        <input name="name" required maxlength="40" placeholder="昵称即可" autocomplete="nickname">
       </div>
 
       <div class="field">
-        <label><span data-i18n="apply.joinNext">是否参加最近一期</span>（<span id="nextLabel">2026.08.20 19:00</span>）*</label>
-        <div class="choice-row" role="radiogroup" data-i18n-aria="apply.joinNext" aria-label="是否参加最近一期">
+        <label>是否参加最近一期（<span id="nextLabel">2026.08.20 19:00</span>）*</label>
+        <div class="choice-row" role="radiogroup" aria-label="是否参加最近一期">
           <label class="choice"><input type="radio" name="joinNext" value="参加" required><span class="choice-face">参加</span></label>
           <label class="choice"><input type="radio" name="joinNext" value="不参加"><span class="choice-face">不参加</span></label>
         </div>
       </div>
 
       <div class="field">
-        <label data-i18n="apply.intent">下期参加意向（选填）</label>
+        <label>下期参加意向（选填）</label>
         <div class="field-row">
           <select id="intentPeriod">
             <option value="" selected>日期</option>
@@ -211,19 +208,19 @@
             <option value="不限地点">不限地点</option>
           </select>
         </div>
-        <div class="hint" data-i18n="apply.intentHint">选填。日期会随最近一期滚动更新；有意向时选大概方便的日期、时段和地点即可</div>
+        <div class="hint">选填。日期会随最近一期滚动更新；有意向时选大概方便的日期、时段和地点即可</div>
       </div>
 
       <input type="hidden" name="intentDates" id="intentDates">
 
       <div class="field">
-        <label data-i18n="apply.contact">联系方式（选填）</label>
-        <input name="contact" maxlength="80" data-i18n-placeholder="apply.contactPh" placeholder="手机、邮箱或微信等">
-        <div class="hint" data-i18n="apply.contactHint">建议填写，方便组织者联系</div>
+        <label>联系方式（选填）</label>
+        <input name="contact" maxlength="80" placeholder="手机、邮箱或微信等">
+        <div class="hint">建议填写，方便组织者联系</div>
       </div>
 
       <div class="field">
-        <label data-i18n="apply.topics">想交流的方向（选填）</label>
+        <label>想交流的方向（选填）</label>
         <div class="choice-row" id="topicChips">
           <label class="choice topic"><input type="checkbox" value="信息整理"><span class="choice-face">信息整理</span></label>
           <label class="choice topic"><input type="checkbox" value="Skill 封装"><span class="choice-face">Skill 封装</span></label>
@@ -232,13 +229,13 @@
           <label class="choice topic"><input type="checkbox" value="会议纪要"><span class="choice-face">会议纪要</span></label>
           <label class="choice topic"><input type="checkbox" value="写作排版"><span class="choice-face">写作排版</span></label>
         </div>
-        <textarea id="topicExtra" maxlength="400" data-i18n-placeholder="apply.topic.extra" placeholder="也可手填，如 RAG、本地模型…"></textarea>
+        <textarea id="topicExtra" maxlength="400" placeholder="也可手填，如 RAG、本地模型…"></textarea>
         <input type="hidden" name="message" id="message">
       </div>
 
       <div class="field">
-        <label data-i18n="apply.note">补充说明（选填）</label>
-        <input id="intentNote" maxlength="80" data-i18n-placeholder="apply.notePh" placeholder="如：可推荐场地/其他特殊要求等">
+        <label>补充说明（选填）</label>
+        <input id="intentNote" maxlength="80" placeholder="如：可推荐场地/其他特殊要求等">
       </div>
 
       <div class="hp-field" aria-hidden="true">
@@ -247,14 +244,14 @@
       </div>
 
       <div class="btn-row">
-        <button class="btn btn-primary" type="submit" id="submitBtn" data-i18n="apply.submit">提交意向</button>
-        <a class="btn btn-ghost" href="login.html" data-i18n="apply.goLogin">去登录</a>
+        <button class="btn btn-primary" type="submit" id="submitBtn">提交意向</button>
+        <a class="btn btn-ghost" href="login.html">去登录</a>
       </div>
       <div class="form-msg" id="msg" aria-live="polite"></div>
       <div class="handle-card" id="handleCard" hidden>
-        <div class="handle-label" data-i18n="apply.handle">你的登录名</div>
+        <div class="handle-label">你的登录名</div>
         <div class="handle-value" id="handleValue"></div>
-        <div class="hint" data-i18n="apply.handleHint">请先记下它。审核通过后组织者会私下发通行码，两者搭配登录。</div>
+        <div class="hint">请先记下它。审核通过后组织者会私下发通行码，两者搭配登录。</div>
       </div>
     </form>
   </div>
@@ -263,10 +260,9 @@
 
 <script src="js/util.js"></script>
 <script src="js/theme.js?v=bj-sun2"></script>
-<script src="js/i18n.js?v=1"></script>
 <script src="js/data.js?v=win1"></script>
 <script src="js/api.js"></script>
-<script src="js/bgm.js?v=nav4"></script>
+<script src="js/bgm.js?v=nav3"></script>
 <script>
 CC.BGM.init({ mode: "button", toggleId: "bgmBtn", gestureKick: true });
 
@@ -333,17 +329,16 @@ function buildPeriodOptions(count = 6) {
 function fillPeriodOptions(keepValue) {
   const opts = buildPeriodOptions(6);
   const prev = keepValue || intentPeriod.value;
-  const datePh = (CC.I18N && CC.I18N.t("apply.date")) || "日期";
-  intentPeriod.innerHTML = '<option value="" selected>' + datePh + '</option>';
+  intentPeriod.innerHTML = '<option value="" selected>日期</option>';
   for (const label of opts) {
     const o = document.createElement("option");
     o.value = label;
-    o.textContent = (CC.I18N && CC.I18N.periodLabel(label)) || label;
+    o.textContent = label;
     intentPeriod.appendChild(o);
   }
   const flex = document.createElement("option");
   flex.value = "时间灵活";
-  flex.textContent = (CC.I18N && CC.I18N.mapSelect("时间灵活")) || "时间灵活";
+  flex.textContent = "时间灵活";
   intentPeriod.appendChild(flex);
   if (prev && [...intentPeriod.options].some((o) => o.value === prev)) {
     intentPeriod.value = prev;
@@ -354,10 +349,6 @@ const nextRaw = (typeof DATA !== "undefined" && DATA.nextGathering) || "2026.08.
 const nextFull = formatNextFull(nextRaw);
 nextLabel.textContent = nextFull;
 fillPeriodOptions();
-document.addEventListener("cc:lang", () => {
-  if (CC.I18N && CC.I18N.applyDom) CC.I18N.applyDom(document);
-  fillPeriodOptions(intentPeriod.value);
-});
 
 function selectedJoinNext() {
   const el = form.querySelector('input[name="joinNext"]:checked');
@@ -390,13 +381,13 @@ function composeIntent() {
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   msg.className = "form-msg";
-  msg.textContent = CC.I18N.t("apply.submitting");
+  msg.textContent = "提交中…";
   submitBtn.disabled = true;
 
   const composed = composeIntent();
   if (!composed) {
     msg.className = "form-msg err";
-    msg.textContent = CC.I18N.t("apply.needJoin");
+    msg.textContent = "请选择是否参加最近一期";
     submitBtn.disabled = false;
     return;
   }
@@ -409,7 +400,7 @@ form.addEventListener("submit", async (e) => {
   try {
     const data = await CC.api("/api/apply", { method: "POST", body: JSON.stringify(body) });
     msg.className = "form-msg ok";
-    msg.textContent = data.message || CC.I18N.t("apply.submitted");
+    msg.textContent = data.message || "已提交";
     if (data.handle) {
       handleValue.textContent = data.handle;
       handleCard.hidden = false;

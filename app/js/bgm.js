@@ -487,7 +487,7 @@ CC.BGM = (function () {
       }
       const abs = new URL(src, base);
       const path = abs.pathname;
-      if (/\/js\/(util|theme|api|bgm|i18n)\.js$/.test(path)) continue;
+      if (/\/js\/(util|theme|api|bgm)\.js$/.test(path)) continue;
       if (/\/js\/data\.js$/.test(path) && window.DATA) continue;
       try {
         const code = await fetch(abs.href, { credentials: "same-origin" }).then((r) => {
@@ -510,10 +510,10 @@ CC.BGM = (function () {
     }
   }
 
-  const CHROME_IDS = new Set(["bgm", "themeBtn", "langBtn", "cc-void", "cc-veil"]);
+  const CHROME_IDS = new Set(["bgm", "themeBtn", "cc-void", "cc-veil"]);
   const SPA_CSS = [
     "css/tokens.css?v=cs1",
-    "css/base.css?v=i18n1",
+    "css/base.css?v=process1",
     "css/home.css?v=about-gap2",
     "css/auth.css?v=apply-border2",
     "css/gathering.css?v=process1"
@@ -685,9 +685,6 @@ CC.BGM = (function () {
     if (CC.Theme && typeof CC.Theme.apply === "function") {
       CC.Theme.apply(CC.Theme.readPref());
     }
-    if (CC.I18N && typeof CC.I18N.apply === "function") {
-      CC.I18N.apply(CC.I18N.lang());
-    }
     const audio = document.getElementById("bgm");
     if (audio && audio.paused && shared?.shouldPlay()) shared.resume({ soft: true });
   }
@@ -765,7 +762,6 @@ CC.BGM = (function () {
       incoming.querySelectorAll("script").forEach((s) => s.remove());
       incoming.querySelector("#bgm")?.remove();
       incoming.querySelector("#themeBtn")?.remove();
-      incoming.querySelector("#langBtn")?.remove();
       incoming.querySelector("#cc-void")?.remove();
       incoming.querySelector("#cc-veil")?.remove();
       incoming.querySelector("#cc-view")?.remove();
