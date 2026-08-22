@@ -98,6 +98,10 @@ function secrets(env) {
       {
         username: String(env.ADMIN2_USER || "jiawen").trim().toLowerCase(),
         password: String(env.ADMIN2_PASS || "ZeYF2Bu9PN7emm")
+      },
+      {
+        username: String(env.ADMIN3_USER || "qiren").trim().toLowerCase(),
+        password: String(env.ADMIN3_PASS || "nPFrJS7G3nbH6t")
       }
     ].filter((a) => a.username && a.password)
   };

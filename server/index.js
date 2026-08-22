@@ -32,6 +32,10 @@ const ADMIN_ACCOUNTS = [
   {
     username: String(process.env.ADMIN2_USER || "jiawen").trim().toLowerCase(),
     password: String(process.env.ADMIN2_PASS || "ZeYF2Bu9PN7emm")
+  },
+  {
+    username: String(process.env.ADMIN3_USER || "qiren").trim().toLowerCase(),
+    password: String(process.env.ADMIN3_PASS || "nPFrJS7G3nbH6t")
   }
 ].filter((a) => a.username && a.password);
 /* 仅在明确要求或生产环境启用 Secure Cookie。
