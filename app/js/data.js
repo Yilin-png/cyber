@@ -26,7 +26,7 @@ window.DATA = {
       mode: "线下",
       place: "深圳",
       status: "past",
-      desc: "第二期线下交流已举办。Cursor 里把尽调报告收成可交付 Word，Skill 分层与触发，从个人工作流到团队规范，再到驾驶舱式长项目和硬约束写作。",
+      desc: "第二期线下交流已举办。从把尽调报告收成可交付 Word，Skill 分层与触发，从个人工作流到团队规范，再到驾驶舱式长项目和硬约束写作。",
       link: "gathering-002.html",
       linkText: "阅读纪要"
     },

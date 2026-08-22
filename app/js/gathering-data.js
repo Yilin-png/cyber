@@ -9,7 +9,7 @@ window.CC_GATHERINGS = [
     place: "深圳",
     status: "past",
     summary:
-      "第二期线下交流已举办。Cursor 里把尽调报告收成可交付 Word，Skill 分层与触发，从个人工作流到团队规范，再到驾驶舱式长项目和硬约束写作。",
+      "第二期线下交流已举办。从把尽调报告收成可交付 Word，Skill 分层与触发，从个人工作流到团队规范，再到驾驶舱式长项目和硬约束写作。",
     topics: [
       { no: "01", title: "Cursor 里迭代尽调 Skill", blurb: "图形界面整理 Skill；内容和格式拆开，两条链路再串。" },
       { no: "02", title: "Markdown 到 Word 的交付链", blurb: "先搭框架，再补表格与样式；reference 管映射。" },
