@@ -16,7 +16,7 @@ window.DATA = {
     "Semantic Chunking", "Knowledge Graph", "Multimodal", "Diffusion Models",
     "World Models", "Open Weights", "Edge Inference", "AI Alignment"
   ],
-  contact: "CONTACT · cybercasters@gmail.com",
+  contact: "CONTACT · info@cyber-casters.com",
 
   /* 活动记录：公开摘要可写充分；操作细节与全文仍需参会登录 */
   activity: [
