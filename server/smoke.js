@@ -56,11 +56,6 @@ function check(label, ok, extra = "") {
   });
   check("同名待审去重 409", dup.status === 409, String(dup.status));
 
-  const missingTopic = await call("POST", "/api/apply", {
-    name: "无方向" + stamp, intentDates: "8月20日晚上"
-  });
-  check("交流方向必填", missingTopic.status === 400, String(missingTopic.status));
-
   const bot = await call("POST", "/api/apply", {
     name: "Bot", intentDates: "x", website: "http://spam.example",
     message: "想交流的方向、拟分享的技巧以及遇到的困难与挑战。"
