@@ -319,7 +319,7 @@ window.DATA = {
   wechatCommunity: {
     title: "微信社群",
     kicker: "COMMUNITY",
-    status: "pending",
-    note: "群二维码待维护。需要加群可先报名留下联系方式。"
+    img: "assets/qr/wechat-community.jpg?v=1",
+    note: "微信扫码加入社群。"
   }
 };

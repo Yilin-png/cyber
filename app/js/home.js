@@ -413,6 +413,9 @@ $("#chanList").innerHTML = DATA.channels.map(c => {
 }).join("") + (() => {
   const w = DATA.wechatCommunity;
   if (!w) return "";
+  const qr = w.img
+    ? `<img src="${esc(w.img)}" alt="${esc(w.title || "微信社群")}二维码">`
+    : "二维码待维护";
   return `<div class="wechat-card">
     <div class="wechat-kicker">${esc(w.kicker || "COMMUNITY")}</div>
     <div class="wechat-top">
@@ -420,7 +423,7 @@ $("#chanList").innerHTML = DATA.channels.map(c => {
       ${w.status === "pending" ? `<span class="wechat-badge">待维护</span>` : ""}
     </div>
     <p>${esc(w.note || "")}</p>
-    <div class="wechat-slot" aria-hidden="true">二维码待维护</div>
+    <div class="wechat-slot${w.img ? " has-qr" : ""}"${w.img ? "" : ' aria-hidden="true"'}>${qr}</div>
   </div>`;
 })();
 
