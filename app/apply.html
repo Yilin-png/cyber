@@ -85,7 +85,7 @@
 <link rel="stylesheet" href="css/tokens.css?v=cs1">
 <link rel="stylesheet" href="css/base.css?v=g002-spa">
 <link rel="stylesheet" href="css/home.css?v=about-gap2">
-<link rel="stylesheet" href="css/auth.css?v=topic-req1">
+<link rel="stylesheet" href="css/auth.css?v=topic-ph1">
 <link rel="stylesheet" href="css/gathering.css?v=g002">
 </head>
 <body class="auth-page">
@@ -221,15 +221,7 @@
 
       <div class="field">
         <label>想交流的方向 *</label>
-        <div class="choice-row" id="topicChips">
-          <label class="choice topic"><input type="checkbox" value="信息整理"><span class="choice-face">信息整理</span></label>
-          <label class="choice topic"><input type="checkbox" value="Skill 封装"><span class="choice-face">Skill 封装</span></label>
-          <label class="choice topic"><input type="checkbox" value="知识库"><span class="choice-face">知识库</span></label>
-          <label class="choice topic"><input type="checkbox" value="多 Agent"><span class="choice-face">多 Agent</span></label>
-          <label class="choice topic"><input type="checkbox" value="会议纪要"><span class="choice-face">会议纪要</span></label>
-          <label class="choice topic"><input type="checkbox" value="写作排版"><span class="choice-face">写作排版</span></label>
-        </div>
-        <textarea id="topicExtra" maxlength="800" required>想交流的方向、拟分享的技巧以及遇到的困难与挑战。</textarea>
+        <textarea id="topicExtra" maxlength="800" required placeholder="想交流的方向、拟分享的技巧以及遇到的困难与挑战。"></textarea>
         <input type="hidden" name="message" id="message">
       </div>
 
@@ -356,12 +348,7 @@ function selectedJoinNext() {
 }
 
 function composeTopics() {
-  const picked = [...form.querySelectorAll('#topicChips input:checked')].map((el) => el.value);
-  const extra = topicExtra.value.trim();
-  if (!picked.length && !extra) return "";
-  if (!picked.length) return extra;
-  if (!extra) return picked.join("、");
-  return `${picked.join("、")}｜${extra}`;
+  return topicExtra.value.trim();
 }
 
 function composeIntent() {

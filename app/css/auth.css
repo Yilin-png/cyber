@@ -244,17 +244,6 @@ body.auth-page{
   padding:10px 12px;
   line-height:1.2;
 }
-#topicChips{
-  gap:6px;
-}
-.choice.topic{
-  flex:0 0 auto;
-}
-.choice.topic .choice-face{
-  padding:6px 9px;
-  font-size:11px;
-  letter-spacing:0.02em;
-}
 .choice input:checked + .choice-face,
 .choice.is-on .choice-face,
 .choice:has(input:checked) .choice-face{
@@ -278,18 +267,21 @@ body.auth-page{
   padding:0;border:0;background:transparent;box-shadow:none;
 }
 #topicExtra{
-  margin-top:10px;
   min-height:120px;
   height:120px;
   resize:vertical;
   line-height:1.45;
   padding:10px 12px;
 }
-#topicExtra::placeholder{
-  font-size:12px;
-  line-height:1.4;
+#topicExtra::placeholder,
+#topicExtra:focus::placeholder{
+  font-family:inherit;
+  font-size:inherit;
+  font-weight:inherit;
+  letter-spacing:inherit;
+  line-height:inherit;
   color:var(--ash);
-  opacity:.9;
+  opacity:1;
 }
 
 #bgmBtn.on{
