@@ -85,7 +85,7 @@
 <link rel="stylesheet" href="css/tokens.css?v=cs1">
 <link rel="stylesheet" href="css/base.css?v=g002-spa">
 <link rel="stylesheet" href="css/home.css?v=about-gap2">
-<link rel="stylesheet" href="css/auth.css?v=apply-border2">
+<link rel="stylesheet" href="css/auth.css?v=topic-req1">
 <link rel="stylesheet" href="css/gathering.css?v=g002">
 </head>
 <body class="auth-page">
@@ -220,7 +220,7 @@
       </div>
 
       <div class="field">
-        <label>想交流的方向（选填）</label>
+        <label>想交流的方向 *</label>
         <div class="choice-row" id="topicChips">
           <label class="choice topic"><input type="checkbox" value="信息整理"><span class="choice-face">信息整理</span></label>
           <label class="choice topic"><input type="checkbox" value="Skill 封装"><span class="choice-face">Skill 封装</span></label>
@@ -229,7 +229,7 @@
           <label class="choice topic"><input type="checkbox" value="会议纪要"><span class="choice-face">会议纪要</span></label>
           <label class="choice topic"><input type="checkbox" value="写作排版"><span class="choice-face">写作排版</span></label>
         </div>
-        <textarea id="topicExtra" maxlength="400" placeholder="也可手填，如 RAG、本地模型…"></textarea>
+        <textarea id="topicExtra" maxlength="800" required>想交流的方向、拟分享的技巧以及遇到的困难与挑战。</textarea>
         <input type="hidden" name="message" id="message">
       </div>
 
@@ -391,8 +391,16 @@ form.addEventListener("submit", async (e) => {
     submitBtn.disabled = false;
     return;
   }
+  const topics = composeTopics();
+  if (!topics) {
+    msg.className = "form-msg err";
+    msg.textContent = "请填写想交流的方向";
+    topicExtra.focus();
+    submitBtn.disabled = false;
+    return;
+  }
   intentDates.value = composed.slice(0, 200);
-  messageField.value = composeTopics().slice(0, 800);
+  messageField.value = topics.slice(0, 800);
 
   const body = Object.fromEntries(new FormData(form).entries());
   delete body.joinNext;

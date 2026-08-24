@@ -333,6 +333,9 @@ app.post("/api/apply", applyLimiter, async (c) => {
   if (name.length < 2) {
     return c.json({ error: "称呼太短了，写两个字以上吧" }, 400);
   }
+  if (!message) {
+    return c.json({ error: "请填写想交流的方向" }, 400);
+  }
 
   let handle;
   let rowId;
