@@ -226,6 +226,9 @@ app.post("/api/apply", applyLimiter, (req, res) => {
   if (name.length < 2) {
     return res.status(400).json({ error: "称呼太短了，写两个字以上吧" });
   }
+  if (!message) {
+    return res.status(400).json({ error: "请填写想交流的方向" });
+  }
 
   const db = load();
   const sameName = a => a.name === name && a.status === "pending";

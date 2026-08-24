@@ -16,7 +16,7 @@ window.DATA = {
     "Semantic Chunking", "Knowledge Graph", "Multimodal", "Diffusion Models",
     "World Models", "Open Weights", "Edge Inference", "AI Alignment"
   ],
-  contact: "CONTACT · cybercasters@gmail.com",
+  contact: "CONTACT · info@cyber-casters.com",
 
   /* 活动记录：公开摘要可写充分；操作细节与全文仍需参会登录 */
   activity: [
@@ -319,7 +319,7 @@ window.DATA = {
   wechatCommunity: {
     title: "微信社群",
     kicker: "COMMUNITY",
-    status: "pending",
-    note: "群二维码待维护。需要加群可先报名留下联系方式。"
+    img: "assets/qr/wechat-community.jpg?v=1",
+    note: "微信扫码加入社群。"
   }
 };

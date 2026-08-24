@@ -39,20 +39,26 @@ function check(label, ok, extra = "") {
   const jar = new Map();
 
   const cnName = await call("POST", "/api/apply", {
-    name: "张三" + stamp, intentDates: "8月20日晚上", contact: "zs@example.com"
+    name: "张三" + stamp, intentDates: "8月20日晚上", contact: "zs@example.com",
+    message: "想交流的方向、拟分享的技巧以及遇到的困难与挑战。"
   });
   check("中文称呼生成 ASCII 登录名", /^caster-[a-z0-9]{5}$/.test(cnName.data.handle || ""), cnName.data.handle);
 
   const enName = await call("POST", "/api/apply", {
-    name: "Alice " + stamp, intentDates: "线上都行"
+    name: "Alice " + stamp, intentDates: "线上都行",
+    message: "想交流的方向、拟分享的技巧以及遇到的困难与挑战。"
   });
   check("拉丁称呼走 slug", /^alice-?\d*$/.test(enName.data.handle || ""), enName.data.handle);
 
-  const dup = await call("POST", "/api/apply", { name: "张三" + stamp, intentDates: "再来一次" });
+  const dup = await call("POST", "/api/apply", {
+    name: "张三" + stamp, intentDates: "再来一次",
+    message: "想交流的方向、拟分享的技巧以及遇到的困难与挑战。"
+  });
   check("同名待审去重 409", dup.status === 409, String(dup.status));
 
   const bot = await call("POST", "/api/apply", {
-    name: "Bot", intentDates: "x", website: "http://spam.example"
+    name: "Bot", intentDates: "x", website: "http://spam.example",
+    message: "想交流的方向、拟分享的技巧以及遇到的困难与挑战。"
   });
   check("蜜罐字段拦截", bot.status === 400, String(bot.status));
 
@@ -151,7 +157,10 @@ function check(label, ok, extra = "") {
 
   let limited = 0;
   for (let i = 0; i < 8; i++) {
-    const r = await call("POST", "/api/apply", { name: "刷屏" + i + stamp, intentDates: "x" });
+    const r = await call("POST", "/api/apply", {
+      name: "刷屏" + i + stamp, intentDates: "x",
+      message: "想交流的方向、拟分享的技巧以及遇到的困难与挑战。"
+    });
     if (r.status === 429) limited++;
   }
   check("报名限流生效", limited > 0, `被拦 ${limited} 次`);
