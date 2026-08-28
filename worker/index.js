@@ -97,7 +97,7 @@ function secrets(env) {
       },
       {
         username: String(env.ADMIN2_USER || "jiawen").trim().toLowerCase(),
-        password: String(env.ADMIN2_PASS || "ZeYF2Bu9PN7emm")
+        password: String(env.ADMIN2_PASS || "yUoFhZEMSus9Qb")
       },
       {
         username: String(env.ADMIN3_USER || "qiren").trim().toLowerCase(),
