@@ -66,6 +66,17 @@ window.DATA = {
       linkText: "打开主页"
     },
     {
+      kind: "home",
+      name: "不加班廖律",
+      status: "live",
+      label: "个人主页",
+      role: "成员站点",
+      desc: "律师廖律的个人站点。今日看板、基金实务，以及 AI 怎么嵌进法律工作。",
+      tags: ["个人主页", "写作"],
+      link: "https://nootliao.com/",
+      linkText: "打开主页"
+    },
+    {
       kind: "wechat",
       name: "微信公众号",
       status: "soon",
