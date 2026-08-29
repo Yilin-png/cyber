@@ -78,12 +78,13 @@ window.DATA = {
     },
     {
       kind: "wechat",
-      name: "微信公众号",
-      status: "soon",
-      label: "待补充",
+      name: "不加班廖律",
+      status: "live",
+      label: "公众号",
       role: "成员公众号",
-      desc: "成员运营的公众号。发来主页链接，或二维码图，即可挂上。",
+      desc: "关注公众号「不加班廖律」。微信扫一扫即可。",
       tags: ["公众号"],
+      img: "assets/qr/wechat-nootliao.png?v=1",
       link: "",
       linkText: "打开公众号"
     },
