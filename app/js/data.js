@@ -56,13 +56,13 @@ window.DATA = {
   artifacts: [
     {
       kind: "home",
-      name: "个人主页",
-      status: "soon",
-      label: "待补充",
+      name: "IOVE",
+      status: "live",
+      label: "个人主页",
       role: "成员站点",
-      desc: "个人网站、博客或作品集。把链接发来后，这张卡会变成可点的入口。",
-      tags: ["个人主页"],
-      link: "",
+      desc: "摄影、小游戏和每日小件收在一个 Hub 里。有趣的地方，从这里推门进去。",
+      tags: ["个人主页", "作品集"],
+      link: "https://iove.lol/",
       linkText: "打开主页"
     },
     {
