@@ -78,13 +78,13 @@ window.DATA = {
     },
     {
       kind: "wechat",
-      name: "不加班廖律",
+      name: "像船在AI Coding",
       status: "live",
       label: "公众号",
       role: "成员公众号",
-      desc: "关注公众号「不加班廖律」。微信扫一扫即可。",
+      desc: "关注公众号「像船在AI Coding」。微信扫一扫即可。",
       tags: ["公众号"],
-      img: "assets/qr/wechat-nootliao.png?v=1",
+      img: "assets/qr/wechat-xiangchuan.png?v=1",
       link: "",
       linkText: "打开公众号"
     },
