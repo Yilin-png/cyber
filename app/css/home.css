@@ -560,6 +560,15 @@ html[data-theme="light"] .log-item.is-past::before{
   letter-spacing:var(--track-tight);color:var(--ash);margin-top:8px;
 }
 .card p{margin-top:11px;font-size:var(--text-base);color:var(--body);line-height:var(--leading-body)}
+.card-qr{
+  width:min(132px,100%);
+  aspect-ratio:1;
+  margin-top:16px;
+  padding:6px;
+  border:1px solid var(--line);
+  background:#fff;
+}
+.card-qr img{width:100%;height:100%;object-fit:contain;display:block}
 
 /* 咒语手册 · 分类筛选 */
 .filter-bar{

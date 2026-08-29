@@ -42,15 +42,61 @@ window.DATA = {
     }
   ],
 
-  /* 法器长廊：预留给成员项目 / 个人网页展示 */
+  /* 法器长廊：按类型挂成员入口。
+     kind: home | wechat | github | tool
+     收到 URL 后：填写 link，status 改为 live，label 改成类型名，
+     name 改成成员称呼或作品名。公众号也可再加 img 放二维码。 */
+  artifactCats: [
+    { k: "all",    name: "全部" },
+    { k: "home",   name: "个人主页" },
+    { k: "wechat", name: "公众号" },
+    { k: "github", name: "GitHub" },
+    { k: "tool",   name: "小工具" }
+  ],
   artifacts: [
     {
-      name: "征集中",
+      kind: "home",
+      name: "个人主页",
       status: "soon",
-      label: "即将开放",
-      role: "成员作品位",
-      desc: "用于展示成员的项目、工具或个人网页。做好了就可以申请挂上来。",
-      tags: ["项目", "网页"]
+      label: "待补充",
+      role: "成员站点",
+      desc: "个人网站、博客或作品集。把链接发来后，这张卡会变成可点的入口。",
+      tags: ["个人主页"],
+      link: "",
+      linkText: "打开主页"
+    },
+    {
+      kind: "wechat",
+      name: "微信公众号",
+      status: "soon",
+      label: "待补充",
+      role: "成员公众号",
+      desc: "成员运营的公众号。发来主页链接，或二维码图，即可挂上。",
+      tags: ["公众号"],
+      link: "",
+      linkText: "打开公众号"
+    },
+    {
+      kind: "github",
+      name: "GitHub",
+      status: "soon",
+      label: "待补充",
+      role: "代码仓库",
+      desc: "成员的 GitHub 主页或代表仓库。发来 github.com 链接即可。",
+      tags: ["GitHub"],
+      link: "",
+      linkText: "打开 GitHub"
+    },
+    {
+      kind: "tool",
+      name: "小工具",
+      status: "soon",
+      label: "待补充",
+      role: "成员工具",
+      desc: "成员做的小工具、演示页或在线服务。发来可访问的地址后挂上。",
+      tags: ["小工具"],
+      link: "",
+      linkText: "打开工具"
     }
   ],
 
