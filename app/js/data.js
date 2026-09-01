@@ -2,7 +2,7 @@
 window.DATA = {
 
   pulse: { members: 340, gatherings: 7, spells: 62 },
-  nextGathering: "第三期 · 待定",
+  nextGathering: "第三期 · 9.19 / 9.24",
   mana: 82,
 
   trending: [

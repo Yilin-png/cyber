@@ -244,6 +244,28 @@ body.auth-page{
   padding:10px 12px;
   line-height:1.2;
 }
+.choice-face-plan{
+  flex-direction:column;
+  align-items:center;
+  gap:5px;
+  padding:12px 12px 11px;
+  min-height:64px;
+}
+.choice-plan-when{
+  font-weight:600;
+  letter-spacing:var(--track-tight);
+}
+.choice-plan-where{
+  font-family:var(--font-mono);
+  font-size:var(--text-xs);
+  letter-spacing:var(--track-label);
+  color:var(--ash);
+}
+.choice input:checked + .choice-face .choice-plan-where,
+.choice.is-on .choice-plan-where,
+.choice:has(input:checked) .choice-plan-where{
+  color:var(--cyan);
+}
 .choice input:checked + .choice-face,
 .choice.is-on .choice-face,
 .choice:has(input:checked) .choice-face{

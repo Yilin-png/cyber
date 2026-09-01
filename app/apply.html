@@ -85,7 +85,7 @@
 <link rel="stylesheet" href="css/tokens.css?v=cs1">
 <link rel="stylesheet" href="css/base.css?v=g002-spa">
 <link rel="stylesheet" href="css/home.css?v=wxqr1">
-<link rel="stylesheet" href="css/auth.css?v=topic-ph1">
+<link rel="stylesheet" href="css/auth.css?v=g003p1">
 <link rel="stylesheet" href="css/gathering.css?v=g002">
 </head>
 <body class="auth-page">
@@ -172,7 +172,7 @@
       </div>
 
       <div class="field">
-        <label>是否参加最近一期（<span id="nextLabel">第三期 · 待定</span>）*</label>
+        <label>是否参加最近一期（<span id="nextLabel">第三期 · 9.19 / 9.24</span>）*</label>
         <div class="choice-row" role="radiogroup" aria-label="是否参加最近一期">
           <label class="choice"><input type="radio" name="joinNext" value="参加" required><span class="choice-face">参加</span></label>
           <label class="choice"><input type="radio" name="joinNext" value="不参加"><span class="choice-face">不参加</span></label>
@@ -180,35 +180,24 @@
       </div>
 
       <div class="field">
-        <label>下期参加意向（选填）</label>
-        <div class="field-row">
-          <select id="intentPeriod">
-            <option value="" selected>日期</option>
-          </select>
-          <select id="intentSlot">
-            <option value="" selected>时段</option>
-            <option value="工作日晚上">工作日晚上</option>
-            <option value="周末上午">周末上午</option>
-            <option value="周末下午">周末下午</option>
-            <option value="周末晚上">周末晚上</option>
-            <option value="周末全天">周末全天</option>
-            <option value="时间灵活">时间灵活</option>
-          </select>
-          <select id="intentArea">
-            <option value="" selected>地点</option>
-            <option value="南山·科技园">南山·科技园</option>
-            <option value="南山·后海/深圳湾">南山·后海/深圳湾</option>
-            <option value="福田·车公庙">福田·车公庙</option>
-            <option value="福田·CBD">福田·CBD</option>
-            <option value="罗湖">罗湖</option>
-            <option value="宝安·前海">宝安·前海</option>
-            <option value="龙华">龙华</option>
-            <option value="龙岗/坂田">龙岗/坂田</option>
-            <option value="香港">香港</option>
-            <option value="不限地点">不限地点</option>
-          </select>
+        <label>第三期方案（选填）</label>
+        <div class="choice-row" role="radiogroup" aria-label="第三期方案">
+          <label class="choice">
+            <input type="radio" name="intentPlan" value="919">
+            <span class="choice-face choice-face-plan">
+              <span class="choice-plan-when">9.19 下午</span>
+              <span class="choice-plan-where">香港 / 深圳</span>
+            </span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="intentPlan" value="924">
+            <span class="choice-face choice-face-plan">
+              <span class="choice-plan-when">9.24 晚上</span>
+              <span class="choice-plan-where">深圳</span>
+            </span>
+          </label>
         </div>
-        <div class="hint">选填。日期会随最近一期滚动更新；有意向时选大概方便的日期、时段和地点即可</div>
+        <div class="hint">选填。两套方案选一套；具体场地稍后通知。</div>
       </div>
 
       <input type="hidden" name="intentDates" id="intentDates">
@@ -252,9 +241,9 @@
 
 <script src="js/util.js"></script>
 <script src="js/theme.js?v=bj-sun2"></script>
-<script src="js/data.js?v=wxqr1"></script>
+<script src="js/data.js?v=g003p1"></script>
 <script src="js/api.js"></script>
-<script src="js/bgm.js?v=nav5"></script>
+<script src="js/bgm.js?v=g003p1"></script>
 <script>
 CC.BGM.init({ mode: "button", toggleId: "bgmBtn", gestureKick: true });
 
@@ -263,14 +252,16 @@ const msg = document.getElementById("msg");
 const submitBtn = document.getElementById("submitBtn");
 const handleCard = document.getElementById("handleCard");
 const handleValue = document.getElementById("handleValue");
-const intentPeriod = document.getElementById("intentPeriod");
-const intentSlot = document.getElementById("intentSlot");
-const intentArea = document.getElementById("intentArea");
 const intentNote = document.getElementById("intentNote");
 const intentDates = document.getElementById("intentDates");
 const topicExtra = document.getElementById("topicExtra");
 const messageField = document.getElementById("message");
 const nextLabel = document.getElementById("nextLabel");
+
+const INTENT_PLANS = {
+  "919": { period: "2026.09.19", slot: "下午", area: "香港 / 深圳" },
+  "924": { period: "2026.09.24", slot: "晚上", area: "深圳" }
+};
 
 function syncChoiceState(input) {
   const label = input.closest(".choice");
@@ -291,56 +282,14 @@ document.querySelectorAll(".choice input").forEach((el) => {
 /** DATA.nextGathering（如 2026.08.20 19:00）保持点分格式展示 */
 function formatNextFull(raw) {
   const m = String(raw || "").match(/(\d{4})\.(\d{2})\.(\d{2})(?:\s+(\d{2}):(\d{2}))?/);
-  if (!m) return raw || "近期线下";
+  if (!m) return raw || "第三期 · 9.19 / 9.24";
   const time = m[4] != null ? ` ${m[4]}:${m[5]}` : "";
   return `${m[1]}.${m[2]}.${m[3]}${time}`;
 }
 
-/** 从九月上旬起滚动生成「2026.09上旬/中旬/下旬」 */
-function buildPeriodOptions(count = 6) {
-  const bands = ["上旬", "中旬", "下旬"];
-  let y = 2026;
-  let m = 8; // 九月
-  let band = 0; // 上旬
-  const out = [];
-  for (let i = 0; i < count; i++) {
-    out.push(`${y}.${String(m + 1).padStart(2, "0")}${bands[band]}`);
-    band += 1;
-    if (band > 2) {
-      band = 0;
-      m += 1;
-      if (m > 11) {
-        m = 0;
-        y += 1;
-      }
-    }
-  }
-  return out;
-}
-
-function fillPeriodOptions(keepValue) {
-  const opts = buildPeriodOptions(6);
-  const prev = keepValue || intentPeriod.value;
-  intentPeriod.innerHTML = '<option value="" selected>日期</option>';
-  for (const label of opts) {
-    const o = document.createElement("option");
-    o.value = label;
-    o.textContent = label;
-    intentPeriod.appendChild(o);
-  }
-  const flex = document.createElement("option");
-  flex.value = "时间灵活";
-  flex.textContent = "时间灵活";
-  intentPeriod.appendChild(flex);
-  if (prev && [...intentPeriod.options].some((o) => o.value === prev)) {
-    intentPeriod.value = prev;
-  }
-}
-
-const nextRaw = (typeof DATA !== "undefined" && DATA.nextGathering) || "第三期 · 待定";
+const nextRaw = (typeof DATA !== "undefined" && DATA.nextGathering) || "第三期 · 9.19 / 9.24";
 const nextFull = formatNextFull(nextRaw);
 nextLabel.textContent = nextFull;
-fillPeriodOptions();
 
 function selectedJoinNext() {
   const el = form.querySelector('input[name="joinNext"]:checked');
@@ -354,14 +303,13 @@ function composeTopics() {
 function composeIntent() {
   const join = selectedJoinNext();
   if (!join) return "";
-  const period = intentPeriod.value;
-  const slot = intentSlot.value;
-  const area = intentArea.value;
+  const planEl = form.querySelector('input[name="intentPlan"]:checked');
+  const plan = planEl ? INTENT_PLANS[planEl.value] : null;
   const note = intentNote.value.trim();
   let base = `最近一期（${nextFull}）：${join}`;
-  if (period) base += `｜日期：${period}`;
-  if (slot) base += `｜时段：${slot}`;
-  if (area) base += `｜地点：${area}`;
+  if (plan) {
+    base += `｜日期：${plan.period}｜时段：${plan.slot}｜地点：${plan.area}`;
+  }
   return note ? `${base}｜补充：${note}` : base;
 }
 
@@ -391,6 +339,7 @@ form.addEventListener("submit", async (e) => {
 
   const body = Object.fromEntries(new FormData(form).entries());
   delete body.joinNext;
+  delete body.intentPlan;
 
   try {
     const data = await CC.api("/api/apply", { method: "POST", body: JSON.stringify(body) });
@@ -403,7 +352,7 @@ form.addEventListener("submit", async (e) => {
     }
     form.reset();
     nextLabel.textContent = nextFull;
-    fillPeriodOptions();
+    document.querySelectorAll(".choice input").forEach((el) => syncChoiceState(el));
   } catch (err) {
     msg.className = "form-msg err";
     msg.textContent = err.message;
