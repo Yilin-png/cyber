@@ -293,10 +293,13 @@ html:not(:has(#cc-view)){scroll-behavior:smooth}
   position:relative;
   margin:12px auto 0;
   display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  max-width:min(92vw, 34em);
+  flex-wrap:wrap;
   font-family:var(--font-sans);
   font-size:var(--text-sm);
   letter-spacing:var(--track-wide);
   color:var(--cyan);
+  text-align:center;
   animation:nmIn .9s .35s cubic-bezier(.2,.7,.3,1) both;
 }
 .next-meet .nm-label{
@@ -314,6 +317,27 @@ html:not(:has(#cc-view)){scroll-behavior:smooth}
   color:var(--cyan);
   text-shadow:0 0 12px rgba(63,224,208,.25);
   animation:nmShimmer 3.6s ease-in-out infinite;
+  display:inline-flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  justify-content:center;
+  gap:6px 10px;
+  line-height:1.45;
+}
+.next-meet .nm-when{
+  white-space:nowrap;
+}
+.next-meet .nm-where{
+  display:inline-flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  justify-content:center;
+  gap:4px 6px;
+}
+.next-meet .nm-or{
+  color:var(--ash);
+  font-size:var(--text-xs);
+  letter-spacing:var(--track-label);
 }
 .next-meet::after{
   content:"";
@@ -876,7 +900,32 @@ html[data-theme="light"] .log-item.is-past::before{
   .hero{justify-content:flex-start;padding-top:9svh}
   .hero-brand{margin-bottom:6vw}
   .thesis{margin-top:7vw}
-  .next-meet{margin-top:3vw}
+  .next-meet{
+    margin-top:3vw;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    max-width:min(88vw, 16.5rem);
+  }
+  .next-meet .nm-dot{display:none}
+  .next-meet .nm-date{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    line-height:1.5;
+  }
+  .next-meet .nm-where{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+  }
+  .next-meet .nm-or{
+    display:block;
+    line-height:1.2;
+  }
   .join-cta{margin-top:5vw}
   /* 下滑提示贴近标语，不再沉底 */
   .scroll-hint{position:static;transform:none;margin-top:9vw}

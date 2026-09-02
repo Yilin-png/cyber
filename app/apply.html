@@ -81,11 +81,11 @@
 <meta name="twitter:description" content="申请加入赛博法师 · 填写意向">
 <meta name="twitter:image" content="https://cyber-casters.com/assets/icons/og-image.png">
 <link rel="preload" href="assets/audio/bgm.m4a?v=32k" as="audio" type="audio/mp4">
-<link rel="preload" href="css/home.css?v=wxqr1" as="style">
+<link rel="preload" href="css/home.css?v=g003br" as="style">
 <link rel="stylesheet" href="css/tokens.css?v=cs1">
 <link rel="stylesheet" href="css/base.css?v=g002-spa">
-<link rel="stylesheet" href="css/home.css?v=wxqr1">
-<link rel="stylesheet" href="css/auth.css?v=topic-ph1">
+<link rel="stylesheet" href="css/home.css?v=g003br">
+<link rel="stylesheet" href="css/auth.css?v=g003br">
 <link rel="stylesheet" href="css/gathering.css?v=g002">
 </head>
 <body class="auth-page">
@@ -172,7 +172,12 @@
       </div>
 
       <div class="field">
-        <label>是否参加最近一期（<span id="nextLabel">第三期 · 9.19 下午 · 香港中环或深圳景田</span>）*</label>
+        <label>是否参加最近一期 *
+          <span class="next-detail" id="nextLabel">
+            <span class="nd-when">第三期 · 9.19 下午</span>
+            <span class="nd-where"><span class="nd-place">香港中环</span><span class="nd-or">或</span><span class="nd-place">深圳景田</span></span>
+          </span>
+        </label>
         <div class="choice-row" role="radiogroup" aria-label="是否参加最近一期">
           <label class="choice"><input type="radio" name="joinNext" value="参加" required><span class="choice-face">参加</span></label>
           <label class="choice"><input type="radio" name="joinNext" value="不参加"><span class="choice-face">不参加</span></label>
@@ -211,7 +216,7 @@
             <option value="不限地点">不限地点</option>
           </select>
         </div>
-        <div class="hint">选填。最近一期是 9.19 下午，香港中环或深圳景田。有意向时可选对应日期、时段和地点。</div>
+        <div class="hint">选填。最近一期是 9.19 下午 · 香港中环或深圳景田；更晚场次从十一假期后起算。</div>
       </div>
 
       <input type="hidden" name="intentDates" id="intentDates">
@@ -255,9 +260,9 @@
 
 <script src="js/util.js"></script>
 <script src="js/theme.js?v=bj-sun2"></script>
-<script src="js/data.js?v=g003hk2"></script>
+<script src="js/data.js?v=g003br"></script>
 <script src="js/api.js"></script>
-<script src="js/bgm.js?v=nav5"></script>
+<script src="js/bgm.js?v=g003br"></script>
 <script>
 CC.BGM.init({ mode: "button", toggleId: "bgmBtn", gestureKick: true });
 
@@ -299,12 +304,12 @@ function formatNextFull(raw) {
   return `${m[1]}.${m[2]}.${m[3]}${time}`;
 }
 
-/** 从九月上旬起滚动生成「2026.09上旬/中旬/下旬」 */
+/** 从十一假期后（2026.10中旬）起滚动生成「2026.10中旬/下旬…」 */
 function buildPeriodOptions(count = 6) {
   const bands = ["上旬", "中旬", "下旬"];
   let y = 2026;
-  let m = 8; // 九月
-  let band = 0; // 上旬
+  let m = 9; // 十月
+  let band = 1; // 中旬：上旬与国庆重叠，假期后起算
   const out = [];
   for (let i = 0; i < count; i++) {
     out.push(`${y}.${String(m + 1).padStart(2, "0")}${bands[band]}`);
@@ -322,7 +327,7 @@ function buildPeriodOptions(count = 6) {
 }
 
 function fillPeriodOptions(keepValue) {
-  const opts = ["2026.09.19", ...buildPeriodOptions(6)];
+  const opts = buildPeriodOptions(6);
   const prev = keepValue || intentPeriod.value;
   intentPeriod.innerHTML = '<option value="" selected>日期</option>';
   for (const label of opts) {
@@ -342,7 +347,25 @@ function fillPeriodOptions(keepValue) {
 
 const nextRaw = (typeof DATA !== "undefined" && DATA.nextGathering) || "第三期 · 9.19 下午 · 香港中环或深圳景田";
 const nextFull = formatNextFull(nextRaw);
-nextLabel.textContent = nextFull;
+
+function paintNextLabel() {
+  if (!nextLabel) return;
+  const esc = (window.CC && CC.esc) ? CC.esc : (s) => String(s);
+  const parts = (typeof DATA !== "undefined" && DATA.nextGatheringParts) || null;
+  if (parts && parts.places && parts.places.length) {
+    const whenText = `${parts.kicker} · ${parts.when}`;
+    const where = parts.places.map((p, i) =>
+      (i ? `<span class="nd-or">或</span>` : "") + `<span class="nd-place">${esc(p)}</span>`
+    ).join("");
+    nextLabel.innerHTML =
+      `<span class="nd-when">${esc(whenText)}</span>` +
+      `<span class="nd-where">${where}</span>`;
+    return;
+  }
+  nextLabel.textContent = nextFull;
+}
+
+paintNextLabel();
 fillPeriodOptions();
 
 function selectedJoinNext() {

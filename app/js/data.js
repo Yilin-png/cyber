@@ -3,6 +3,11 @@ window.DATA = {
 
   pulse: { members: 340, gatherings: 7, spells: 62 },
   nextGathering: "第三期 · 9.19 下午 · 香港中环或深圳景田",
+  nextGatheringParts: {
+    kicker: "第三期",
+    when: "9.19 下午",
+    places: ["香港中环", "深圳景田"]
+  },
   mana: 82,
 
   trending: [

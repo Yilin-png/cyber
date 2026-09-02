@@ -125,10 +125,24 @@ setManaUI(0);
 /* 标语下：下一期活动时间 */
 const nextEl = $("#nextMeet");
 if (nextEl && DATA.nextGathering){
-  nextEl.innerHTML =
-    `<span class="nm-label">下一期</span>` +
-    `<span class="nm-dot" aria-hidden="true"></span>` +
-    `<span class="nm-date">${esc(DATA.nextGathering)}</span>`;
+  const parts = DATA.nextGatheringParts;
+  if (parts && parts.places && parts.places.length) {
+    const where = parts.places.map((p, i) =>
+      (i ? `<span class="nm-or">或</span>` : "") + `<span class="nm-place">${esc(p)}</span>`
+    ).join("");
+    nextEl.innerHTML =
+      `<span class="nm-label">下一期</span>` +
+      `<span class="nm-dot" aria-hidden="true"></span>` +
+      `<span class="nm-date">` +
+        `<span class="nm-when">${esc(parts.kicker)} · ${esc(parts.when)}</span>` +
+        `<span class="nm-where">${where}</span>` +
+      `</span>`;
+  } else {
+    nextEl.innerHTML =
+      `<span class="nm-label">下一期</span>` +
+      `<span class="nm-dot" aria-hidden="true"></span>` +
+      `<span class="nm-date">${esc(DATA.nextGathering)}</span>`;
+  }
 }
 
 /* 终端活态：mana 快呼吸 + 人数高频跳变；首屏不可见时停 */
