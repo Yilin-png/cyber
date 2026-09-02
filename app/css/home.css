@@ -329,15 +329,15 @@ html:not(:has(#cc-view)){scroll-behavior:smooth}
 }
 .next-meet .nm-where{
   display:inline-flex;
-  flex-wrap:wrap;
+  flex-wrap:nowrap;
   align-items:baseline;
   justify-content:center;
-  gap:4px 6px;
+  gap:0;
+  white-space:nowrap;
 }
 .next-meet .nm-or{
   color:var(--ash);
-  font-size:var(--text-xs);
-  letter-spacing:var(--track-label);
+  margin:0 1px;
 }
 .next-meet::after{
   content:"";
@@ -917,14 +917,8 @@ html[data-theme="light"] .log-item.is-past::before{
     line-height:1.5;
   }
   .next-meet .nm-where{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:2px;
-  }
-  .next-meet .nm-or{
-    display:block;
-    line-height:1.2;
+    display:inline-flex;
+    flex-wrap:nowrap;
   }
   .join-cta{margin-top:5vw}
   /* 下滑提示贴近标语，不再沉底 */

@@ -126,9 +126,12 @@ setManaUI(0);
 const nextEl = $("#nextMeet");
 if (nextEl && DATA.nextGathering){
   const parts = DATA.nextGatheringParts;
-  if (parts && parts.places && parts.places.length) {
-    const where = parts.places.map((p, i) =>
-      (i ? `<span class="nm-or">或</span>` : "") + `<span class="nm-place">${esc(p)}</span>`
+  const coverPlaces = (parts && parts.coverPlaces && parts.coverPlaces.length)
+    ? parts.coverPlaces
+    : (parts && parts.places);
+  if (coverPlaces && coverPlaces.length) {
+    const where = coverPlaces.map((p, i) =>
+      (i ? `<span class="nm-or">/</span>` : "") + `<span class="nm-place">${esc(p)}</span>`
     ).join("");
     nextEl.innerHTML =
       `<span class="nm-label">下一期</span>` +
