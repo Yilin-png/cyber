@@ -6,7 +6,7 @@ window.DATA = {
   nextGatheringParts: {
     kicker: "第三期",
     when: "9.19 下午",
-    places: ["香港中环", "深圳景田"],
+    places: ["香港", "深圳"],
     coverPlaces: ["香港", "深圳"]
   },
   mana: 82,

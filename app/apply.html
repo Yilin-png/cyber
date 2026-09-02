@@ -85,7 +85,7 @@
 <link rel="stylesheet" href="css/tokens.css?v=cs1">
 <link rel="stylesheet" href="css/base.css?v=g002-spa">
 <link rel="stylesheet" href="css/home.css?v=g003cv">
-<link rel="stylesheet" href="css/auth.css?v=g003br">
+<link rel="stylesheet" href="css/auth.css?v=g003ln">
 <link rel="stylesheet" href="css/gathering.css?v=g002">
 </head>
 <body class="auth-page">
@@ -173,10 +173,7 @@
 
       <div class="field">
         <label>是否参加最近一期 *
-          <span class="next-detail" id="nextLabel">
-            <span class="nd-when">第三期 · 9.19 下午</span>
-            <span class="nd-where"><span class="nd-place">香港中环</span><span class="nd-or">或</span><span class="nd-place">深圳景田</span></span>
-          </span>
+          <span class="next-detail" id="nextLabel">第三期 · 9.19 下午 · 香港/深圳</span>
         </label>
         <div class="choice-row" role="radiogroup" aria-label="是否参加最近一期">
           <label class="choice"><input type="radio" name="joinNext" value="参加" required><span class="choice-face">参加</span></label>
@@ -202,9 +199,10 @@
           </select>
           <select id="intentArea">
             <option value="" selected>地点</option>
+            <option value="香港">香港</option>
+            <option value="深圳">深圳</option>
             <option value="香港中环">香港中环</option>
             <option value="深圳景田">深圳景田</option>
-            <option value="香港">香港</option>
             <option value="南山·科技园">南山·科技园</option>
             <option value="南山·后海/深圳湾">南山·后海/深圳湾</option>
             <option value="福田·车公庙">福田·车公庙</option>
@@ -216,7 +214,7 @@
             <option value="不限地点">不限地点</option>
           </select>
         </div>
-        <div class="hint">选填。最近一期是 9.19 下午 · 香港中环或深圳景田；更晚场次从十一假期后起算。</div>
+        <div class="hint">选填。最近一期是 9.19 下午 · 香港/深圳；更晚场次从十一假期后起算。</div>
       </div>
 
       <input type="hidden" name="intentDates" id="intentDates">
@@ -260,9 +258,9 @@
 
 <script src="js/util.js"></script>
 <script src="js/theme.js?v=bj-sun2"></script>
-<script src="js/data.js?v=g003cv2"></script>
+<script src="js/data.js?v=g003ln"></script>
 <script src="js/api.js"></script>
-<script src="js/bgm.js?v=g003cv"></script>
+<script src="js/bgm.js?v=g003ln"></script>
 <script>
 CC.BGM.init({ mode: "button", toggleId: "bgmBtn", gestureKick: true });
 
@@ -299,7 +297,7 @@ document.querySelectorAll(".choice input").forEach((el) => {
 /** DATA.nextGathering（如 2026.08.20 19:00）保持点分格式展示 */
 function formatNextFull(raw) {
   const m = String(raw || "").match(/(\d{4})\.(\d{2})\.(\d{2})(?:\s+(\d{2}):(\d{2}))?/);
-  if (!m) return raw || "第三期 · 9.19 下午 · 香港中环或深圳景田";
+  if (!m) return raw || "第三期 · 9.19 下午 · 香港/深圳";
   const time = m[4] != null ? ` ${m[4]}:${m[5]}` : "";
   return `${m[1]}.${m[2]}.${m[3]}${time}`;
 }
@@ -345,21 +343,17 @@ function fillPeriodOptions(keepValue) {
   }
 }
 
-const nextRaw = (typeof DATA !== "undefined" && DATA.nextGathering) || "第三期 · 9.19 下午 · 香港中环或深圳景田";
+const nextRaw = (typeof DATA !== "undefined" && DATA.nextGathering) || "第三期 · 9.19 下午 · 香港/深圳";
 const nextFull = formatNextFull(nextRaw);
 
 function paintNextLabel() {
   if (!nextLabel) return;
-  const esc = (window.CC && CC.esc) ? CC.esc : (s) => String(s);
   const parts = (typeof DATA !== "undefined" && DATA.nextGatheringParts) || null;
-  if (parts && parts.places && parts.places.length) {
-    const whenText = `${parts.kicker} · ${parts.when}`;
-    const where = parts.places.map((p, i) =>
-      (i ? `<span class="nd-or">或</span>` : "") + `<span class="nd-place">${esc(p)}</span>`
-    ).join("");
-    nextLabel.innerHTML =
-      `<span class="nd-when">${esc(whenText)}</span>` +
-      `<span class="nd-where">${where}</span>`;
+  const cities = (parts && parts.coverPlaces && parts.coverPlaces.length)
+    ? parts.coverPlaces
+    : (parts && parts.places);
+  if (parts && cities && cities.length) {
+    nextLabel.textContent = `${parts.kicker} · ${parts.when} · ${cities.join("/")}`;
     return;
   }
   nextLabel.textContent = nextFull;
