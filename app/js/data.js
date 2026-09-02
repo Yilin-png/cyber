@@ -2,7 +2,7 @@
 window.DATA = {
 
   pulse: { members: 340, gatherings: 7, spells: 62 },
-  nextGathering: "第三期 · 9.19 下午 · 香港中环或深圳景田",
+  nextGathering: "第三期 · 9.19 下午 · 香港/深圳",
   nextGatheringParts: {
     kicker: "第三期",
     when: "9.19 下午",
