@@ -125,10 +125,27 @@ setManaUI(0);
 /* 标语下：下一期活动时间 */
 const nextEl = $("#nextMeet");
 if (nextEl && DATA.nextGathering){
-  nextEl.innerHTML =
-    `<span class="nm-label">下一期</span>` +
-    `<span class="nm-dot" aria-hidden="true"></span>` +
-    `<span class="nm-date">${esc(DATA.nextGathering)}</span>`;
+  const parts = DATA.nextGatheringParts;
+  const coverPlaces = (parts && parts.coverPlaces && parts.coverPlaces.length)
+    ? parts.coverPlaces
+    : (parts && parts.places);
+  if (coverPlaces && coverPlaces.length) {
+    const where = coverPlaces.map((p, i) =>
+      (i ? `<span class="nm-or">/</span>` : "") + `<span class="nm-place">${esc(p)}</span>`
+    ).join("");
+    nextEl.innerHTML =
+      `<span class="nm-label">下一期</span>` +
+      `<span class="nm-dot" aria-hidden="true"></span>` +
+      `<span class="nm-date">` +
+        `<span class="nm-when">${esc(parts.kicker)} · ${esc(parts.when)}</span>` +
+        `<span class="nm-where">${where}</span>` +
+      `</span>`;
+  } else {
+    nextEl.innerHTML =
+      `<span class="nm-label">下一期</span>` +
+      `<span class="nm-dot" aria-hidden="true"></span>` +
+      `<span class="nm-date">${esc(DATA.nextGathering)}</span>`;
+  }
 }
 
 /* 终端活态：mana 快呼吸 + 人数高频跳变；首屏不可见时停 */
@@ -205,6 +222,9 @@ function renderCards(list) {
       ${p.tags && p.tags.length
         ? `<div class="tags">${p.tags.map(t => `<span>${esc(t)}</span>`).join("")}</div>`
         : ""}
+      ${p.img
+        ? `<div class="card-qr"><img src="${esc(p.img)}" alt="${esc(p.name)}"></div>`
+        : ""}
       ${href
         ? `<a class="card-link" href="${esc(href)}"${linkAttrs}>${esc(p.linkText || "打开")}<span class="arrow" aria-hidden="true">→</span></a>`
         : ""}
@@ -260,7 +280,48 @@ if (logListEl && !logListEl.dataset.navBound) {
 }
 
 renderActivity(DATA.activity);
-$("#artList").innerHTML = renderCards(DATA.artifacts);
+
+let artifactCat = "all";
+
+function renderArtifacts() {
+  const all = DATA.artifacts || [];
+  const cats = (DATA.artifactCats || [{ k: "all", name: "全部" }]).filter(c =>
+    c.k === "all" || all.some(a => a.kind === c.k)
+  );
+  if (!cats.some(c => c.k === artifactCat)) artifactCat = "all";
+
+  const chips = cats.length > 1
+    ? cats.map(c => {
+        const n = c.k === "all" ? all.length : all.filter(a => a.kind === c.k).length;
+        return `<button type="button" class="filter-chip" data-kind="${esc(c.k)}"
+          aria-pressed="${c.k === artifactCat}">${esc(c.name)}<span class="n">${n}</span></button>`;
+      }).join("")
+    : "";
+
+  const list = artifactCat === "all" ? all : all.filter(a => a.kind === artifactCat);
+  const grid = list.length
+    ? `<div class="grid">${renderCards(list)}</div>`
+    : `<p class="toolkit-intro">该分类下暂无法器。</p>`;
+
+  $("#artList").innerHTML =
+    (chips ? `<div class="filter-bar" role="group" aria-label="法器类型筛选">${chips}</div>` : "") +
+    grid;
+}
+
+const artListEl = $("#artList");
+if (artListEl && !artListEl.dataset.filterBound) {
+  artListEl.dataset.filterBound = "1";
+  artListEl.addEventListener("click", e => {
+    const chip = e.target.closest(".filter-chip");
+    if (!chip) return;
+    const kind = chip.dataset.kind;
+    if (!kind || kind === artifactCat) return;
+    artifactCat = kind;
+    renderArtifacts();
+  });
+}
+
+renderArtifacts();
 
 (async function syncActivity() {
   try {

@@ -81,11 +81,11 @@
 <meta name="twitter:description" content="申请加入赛博法师 · 填写意向">
 <meta name="twitter:image" content="https://cyber-casters.com/assets/icons/og-image.png">
 <link rel="preload" href="assets/audio/bgm.m4a?v=32k" as="audio" type="audio/mp4">
-<link rel="preload" href="css/home.css?v=wxqr1" as="style">
+<link rel="preload" href="css/home.css?v=gal1" as="style">
 <link rel="stylesheet" href="css/tokens.css?v=cs1">
 <link rel="stylesheet" href="css/base.css?v=g002-spa">
-<link rel="stylesheet" href="css/home.css?v=wxqr1">
-<link rel="stylesheet" href="css/auth.css?v=topic-ph1">
+<link rel="stylesheet" href="css/home.css?v=gal1">
+<link rel="stylesheet" href="css/auth.css?v=g003ph2">
 <link rel="stylesheet" href="css/gathering.css?v=g002">
 </head>
 <body class="auth-page">
@@ -172,7 +172,9 @@
       </div>
 
       <div class="field">
-        <label>是否参加最近一期（<span id="nextLabel">第三期 · 待定</span>）*</label>
+        <label>是否参加最近一期 *
+          <span class="next-detail" id="nextLabel">第三期 · 9.19 下午 · 香港/深圳</span>
+        </label>
         <div class="choice-row" role="radiogroup" aria-label="是否参加最近一期">
           <label class="choice"><input type="radio" name="joinNext" value="参加" required><span class="choice-face">参加</span></label>
           <label class="choice"><input type="radio" name="joinNext" value="不参加"><span class="choice-face">不参加</span></label>
@@ -187,6 +189,7 @@
           </select>
           <select id="intentSlot">
             <option value="" selected>时段</option>
+            <option value="下午">下午</option>
             <option value="工作日晚上">工作日晚上</option>
             <option value="周末上午">周末上午</option>
             <option value="周末下午">周末下午</option>
@@ -196,6 +199,7 @@
           </select>
           <select id="intentArea">
             <option value="" selected>地点</option>
+            <option value="香港">香港</option>
             <option value="南山·科技园">南山·科技园</option>
             <option value="南山·后海/深圳湾">南山·后海/深圳湾</option>
             <option value="福田·车公庙">福田·车公庙</option>
@@ -204,11 +208,10 @@
             <option value="宝安·前海">宝安·前海</option>
             <option value="龙华">龙华</option>
             <option value="龙岗/坂田">龙岗/坂田</option>
-            <option value="香港">香港</option>
             <option value="不限地点">不限地点</option>
           </select>
         </div>
-        <div class="hint">选填。日期会随最近一期滚动更新；有意向时选大概方便的日期、时段和地点即可</div>
+        <div class="hint">选填。最近一期是 9.19 下午 · 香港/深圳；更晚场次从十一假期后起算。</div>
       </div>
 
       <input type="hidden" name="intentDates" id="intentDates">
@@ -252,9 +255,9 @@
 
 <script src="js/util.js"></script>
 <script src="js/theme.js?v=bj-sun2"></script>
-<script src="js/data.js?v=wxqr1"></script>
+<script src="js/data.js?v=gal1"></script>
 <script src="js/api.js"></script>
-<script src="js/bgm.js?v=nav5"></script>
+<script src="js/bgm.js?v=gal1"></script>
 <script>
 CC.BGM.init({ mode: "button", toggleId: "bgmBtn", gestureKick: true });
 
@@ -291,17 +294,17 @@ document.querySelectorAll(".choice input").forEach((el) => {
 /** DATA.nextGathering（如 2026.08.20 19:00）保持点分格式展示 */
 function formatNextFull(raw) {
   const m = String(raw || "").match(/(\d{4})\.(\d{2})\.(\d{2})(?:\s+(\d{2}):(\d{2}))?/);
-  if (!m) return raw || "近期线下";
+  if (!m) return raw || "第三期 · 9.19 下午 · 香港/深圳";
   const time = m[4] != null ? ` ${m[4]}:${m[5]}` : "";
   return `${m[1]}.${m[2]}.${m[3]}${time}`;
 }
 
-/** 从九月上旬起滚动生成「2026.09上旬/中旬/下旬」 */
+/** 从十一假期后（2026.10中旬）起滚动生成「2026.10中旬/下旬…」 */
 function buildPeriodOptions(count = 6) {
   const bands = ["上旬", "中旬", "下旬"];
   let y = 2026;
-  let m = 8; // 九月
-  let band = 0; // 上旬
+  let m = 9; // 十月
+  let band = 1; // 中旬：上旬与国庆重叠，假期后起算
   const out = [];
   for (let i = 0; i < count; i++) {
     out.push(`${y}.${String(m + 1).padStart(2, "0")}${bands[band]}`);
@@ -337,9 +340,23 @@ function fillPeriodOptions(keepValue) {
   }
 }
 
-const nextRaw = (typeof DATA !== "undefined" && DATA.nextGathering) || "第三期 · 待定";
+const nextRaw = (typeof DATA !== "undefined" && DATA.nextGathering) || "第三期 · 9.19 下午 · 香港/深圳";
 const nextFull = formatNextFull(nextRaw);
-nextLabel.textContent = nextFull;
+
+function paintNextLabel() {
+  if (!nextLabel) return;
+  const parts = (typeof DATA !== "undefined" && DATA.nextGatheringParts) || null;
+  const cities = (parts && parts.coverPlaces && parts.coverPlaces.length)
+    ? parts.coverPlaces
+    : (parts && parts.places);
+  if (parts && cities && cities.length) {
+    nextLabel.textContent = `${parts.kicker} · ${parts.when} · ${cities.join("/")}`;
+    return;
+  }
+  nextLabel.textContent = nextFull;
+}
+
+paintNextLabel();
 fillPeriodOptions();
 
 function selectedJoinNext() {

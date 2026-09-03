@@ -293,10 +293,13 @@ html:not(:has(#cc-view)){scroll-behavior:smooth}
   position:relative;
   margin:12px auto 0;
   display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  max-width:min(92vw, 34em);
+  flex-wrap:wrap;
   font-family:var(--font-sans);
   font-size:var(--text-sm);
   letter-spacing:var(--track-wide);
   color:var(--cyan);
+  text-align:center;
   animation:nmIn .9s .35s cubic-bezier(.2,.7,.3,1) both;
 }
 .next-meet .nm-label{
@@ -314,6 +317,27 @@ html:not(:has(#cc-view)){scroll-behavior:smooth}
   color:var(--cyan);
   text-shadow:0 0 12px rgba(63,224,208,.25);
   animation:nmShimmer 3.6s ease-in-out infinite;
+  display:inline-flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  justify-content:center;
+  gap:6px 10px;
+  line-height:1.45;
+}
+.next-meet .nm-when{
+  white-space:nowrap;
+}
+.next-meet .nm-where{
+  display:inline-flex;
+  flex-wrap:nowrap;
+  align-items:baseline;
+  justify-content:center;
+  gap:0;
+  white-space:nowrap;
+}
+.next-meet .nm-or{
+  color:var(--ash);
+  margin:0 1px;
 }
 .next-meet::after{
   content:"";
@@ -560,6 +584,15 @@ html[data-theme="light"] .log-item.is-past::before{
   letter-spacing:var(--track-tight);color:var(--ash);margin-top:8px;
 }
 .card p{margin-top:11px;font-size:var(--text-base);color:var(--body);line-height:var(--leading-body)}
+.card-qr{
+  width:min(132px,100%);
+  aspect-ratio:1;
+  margin-top:16px;
+  padding:6px;
+  border:1px solid var(--line);
+  background:#fff;
+}
+.card-qr img{width:100%;height:100%;object-fit:contain;display:block}
 
 /* 咒语手册 · 分类筛选 */
 .filter-bar{
@@ -876,7 +909,26 @@ html[data-theme="light"] .log-item.is-past::before{
   .hero{justify-content:flex-start;padding-top:9svh}
   .hero-brand{margin-bottom:6vw}
   .thesis{margin-top:7vw}
-  .next-meet{margin-top:3vw}
+  .next-meet{
+    margin-top:3vw;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    max-width:min(88vw, 16.5rem);
+  }
+  .next-meet .nm-dot{display:none}
+  .next-meet .nm-date{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    line-height:1.5;
+  }
+  .next-meet .nm-where{
+    display:inline-flex;
+    flex-wrap:nowrap;
+  }
   .join-cta{margin-top:5vw}
   /* 下滑提示贴近标语，不再沉底 */
   .scroll-hint{position:static;transform:none;margin-top:9vw}
