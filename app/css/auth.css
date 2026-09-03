@@ -59,6 +59,7 @@
   letter-spacing:inherit;
   line-height:inherit;
   color:var(--ash);
+  -webkit-text-fill-color:var(--ash);
   opacity:1;
 }
 .btn-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
