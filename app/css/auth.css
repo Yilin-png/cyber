@@ -208,6 +208,15 @@ body.auth-page{
   padding-left:8px;
   padding-right:20px;
 }
+@media (max-width:640px){
+  .field-row{
+    grid-template-columns:1.1fr 1fr;
+    gap:8px;
+  }
+  .field-row #intentArea{
+    grid-column:1 / -1;
+  }
+}
 .field .next-detail{
   display:block;
   margin-top:8px;

@@ -515,7 +515,7 @@ CC.BGM = (function () {
     "css/tokens.css?v=cs1",
     "css/base.css?v=g002-spa",
     "css/home.css?v=g003cv",
-    "css/auth.css?v=g003ln",
+    "css/auth.css?v=g003ln2",
     "css/gathering.css?v=g002"
   ];
 
