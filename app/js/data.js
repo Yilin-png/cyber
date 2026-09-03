@@ -48,15 +48,70 @@ window.DATA = {
     }
   ],
 
-  /* 法器长廊：预留给成员项目 / 个人网页展示 */
+  /* 法器长廊：成员主页 / 公众号 / GitHub / 小工具 */
+  artifactCats: [
+    { k: "all",    name: "全部" },
+    { k: "home",   name: "个人主页" },
+    { k: "wechat", name: "公众号" },
+    { k: "github", name: "GitHub" },
+    { k: "tool",   name: "小工具" }
+  ],
   artifacts: [
     {
-      name: "征集中",
+      kind: "home",
+      name: "IOVE",
+      status: "live",
+      label: "个人主页",
+      role: "成员站点",
+      desc: "摄影、小游戏和每日小件收在一个 Hub 里。有趣的地方，从这里推门进去。",
+      tags: ["个人主页", "作品集"],
+      link: "https://iove.lol/",
+      linkText: "打开主页"
+    },
+    {
+      kind: "home",
+      name: "不加班廖律",
+      status: "live",
+      label: "个人主页",
+      role: "成员站点",
+      desc: "律师廖律的个人站点。今日看板、基金实务，以及 AI 怎么嵌进法律工作。",
+      tags: ["个人主页", "写作"],
+      link: "https://nootliao.com/",
+      linkText: "打开主页"
+    },
+    {
+      kind: "wechat",
+      name: "像船在AI Coding",
+      status: "live",
+      label: "公众号",
+      role: "成员公众号",
+      desc: "关注公众号「像船在AI Coding」。微信扫一扫即可。",
+      tags: ["公众号"],
+      img: "assets/qr/wechat-xiangchuan.png?v=1",
+      link: "",
+      linkText: "打开公众号"
+    },
+    {
+      kind: "github",
+      name: "GitHub",
       status: "soon",
-      label: "即将开放",
-      role: "成员作品位",
-      desc: "用于展示成员的项目、工具或个人网页。做好了就可以申请挂上来。",
-      tags: ["项目", "网页"]
+      label: "待补充",
+      role: "代码仓库",
+      desc: "成员的 GitHub 主页或代表仓库。发来 github.com 链接即可。",
+      tags: ["GitHub"],
+      link: "",
+      linkText: "打开 GitHub"
+    },
+    {
+      kind: "tool",
+      name: "小工具",
+      status: "soon",
+      label: "待补充",
+      role: "成员工具",
+      desc: "成员做的小工具、演示页或在线服务。发来可访问的地址后挂上。",
+      tags: ["小工具"],
+      link: "",
+      linkText: "打开工具"
     }
   ],
 

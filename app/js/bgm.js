@@ -514,7 +514,7 @@ CC.BGM = (function () {
   const SPA_CSS = [
     "css/tokens.css?v=cs1",
     "css/base.css?v=g002-spa",
-    "css/home.css?v=g003cv",
+    "css/home.css?v=gal1",
     "css/auth.css?v=g003ph2",
     "css/gathering.css?v=g002"
   ];
