@@ -211,7 +211,7 @@
             <option value="不限地点">不限地点</option>
           </select>
         </div>
-        <div class="hint">选填。最近一期是 10.23 晚上六点半 · 深圳。</div>
+        <div class="hint">选填。</div>
       </div>
 
       <input type="hidden" name="intentDates" id="intentDates">
@@ -299,12 +299,12 @@ function formatNextFull(raw) {
   return `${m[1]}.${m[2]}.${m[3]}${time}`;
 }
 
-/** 从十一假期后（2026.10中旬）起滚动生成「2026.10中旬/下旬…」 */
+/** 从十一月起算（最早 2026-11-01），滚动生成「2026.11上旬/中旬/下旬…」 */
 function buildPeriodOptions(count = 6) {
   const bands = ["上旬", "中旬", "下旬"];
   let y = 2026;
-  let m = 9; // 十月
-  let band = 1; // 中旬：上旬与国庆重叠，假期后起算
+  let m = 10; // 十一月
+  let band = 0; // 上旬
   const out = [];
   for (let i = 0; i < count; i++) {
     out.push(`${y}.${String(m + 1).padStart(2, "0")}${bands[band]}`);
