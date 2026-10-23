@@ -173,7 +173,7 @@
 
       <div class="field">
         <label>是否参加最近一期 *
-          <span class="next-detail" id="nextLabel">第三期 · 9.19 下午 · 香港/深圳</span>
+          <span class="next-detail" id="nextLabel">第三期 · 10.23 晚上六点半 · 深圳</span>
         </label>
         <div class="choice-row" role="radiogroup" aria-label="是否参加最近一期">
           <label class="choice"><input type="radio" name="joinNext" value="参加" required><span class="choice-face">参加</span></label>
@@ -211,7 +211,7 @@
             <option value="不限地点">不限地点</option>
           </select>
         </div>
-        <div class="hint">选填。最近一期是 9.19 下午 · 香港/深圳；更晚场次从十一假期后起算。</div>
+        <div class="hint">选填。</div>
       </div>
 
       <input type="hidden" name="intentDates" id="intentDates">
@@ -255,7 +255,7 @@
 
 <script src="js/util.js"></script>
 <script src="js/theme.js?v=bj-sun2"></script>
-<script src="js/data.js?v=gal1"></script>
+<script src="js/data.js?v=qrsquare"></script>
 <script src="js/api.js"></script>
 <script src="js/bgm.js?v=gal1"></script>
 <script>
@@ -294,17 +294,17 @@ document.querySelectorAll(".choice input").forEach((el) => {
 /** DATA.nextGathering（如 2026.08.20 19:00）保持点分格式展示 */
 function formatNextFull(raw) {
   const m = String(raw || "").match(/(\d{4})\.(\d{2})\.(\d{2})(?:\s+(\d{2}):(\d{2}))?/);
-  if (!m) return raw || "第三期 · 9.19 下午 · 香港/深圳";
+  if (!m) return raw || "第三期 · 10.23 晚上六点半 · 深圳";
   const time = m[4] != null ? ` ${m[4]}:${m[5]}` : "";
   return `${m[1]}.${m[2]}.${m[3]}${time}`;
 }
 
-/** 从十一假期后（2026.10中旬）起滚动生成「2026.10中旬/下旬…」 */
+/** 从十一月起算（最早 2026-11-01），滚动生成「2026.11上旬/中旬/下旬…」 */
 function buildPeriodOptions(count = 6) {
   const bands = ["上旬", "中旬", "下旬"];
   let y = 2026;
-  let m = 9; // 十月
-  let band = 1; // 中旬：上旬与国庆重叠，假期后起算
+  let m = 10; // 十一月
+  let band = 0; // 上旬
   const out = [];
   for (let i = 0; i < count; i++) {
     out.push(`${y}.${String(m + 1).padStart(2, "0")}${bands[band]}`);
@@ -340,7 +340,7 @@ function fillPeriodOptions(keepValue) {
   }
 }
 
-const nextRaw = (typeof DATA !== "undefined" && DATA.nextGathering) || "第三期 · 9.19 下午 · 香港/深圳";
+const nextRaw = (typeof DATA !== "undefined" && DATA.nextGathering) || "第三期 · 10.23 晚上六点半 · 深圳";
 const nextFull = formatNextFull(nextRaw);
 
 function paintNextLabel() {
