@@ -380,7 +380,7 @@ window.DATA = {
   wechatCommunity: {
     title: "微信社群",
     kicker: "COMMUNITY",
-    img: "assets/qr/wechat-community.png?v=1030",
+    img: "assets/qr/wechat-community.png?v=square",
     note: "微信扫码加入社群。"
   }
 };
