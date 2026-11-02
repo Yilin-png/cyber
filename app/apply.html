@@ -1,104 +1,379 @@
-<!doctype html>
-<html lang="zh-CN">
-<head>
+<!DOCTYPE html><html lang="zh-CN" data-cc-build="nav-script-1" data-edition="b03"><head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="申请加入赛博法师 · 填写意向">
-<meta name="theme-color" content="#07060E">
-<title>申请加入 · 赛博法师</title>
-<link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="css/tokens.css">
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/auth.css">
-<style>
-  /* 蜜罐：仅机器人会看到并填写 */
-  .hp-field{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
-  .handle-card{
-    margin-top:18px;padding:16px 18px;
-    border:1px solid rgba(63,224,208,.35);
-    background:linear-gradient(135deg,rgba(16,12,33,.72),rgba(16,12,33,.24));
-  }
-  .handle-label{
-    font-family:var(--font-mono);font-size:var(--text-xs);
-    letter-spacing:var(--track-label);color:var(--gold);
-  }
-  .handle-value{
-    font-family:var(--font-mono);font-size:var(--text-lg);
-    color:var(--cyan);margin:6px 0 8px;user-select:all;word-break:break-all;
-  }
-</style>
-</head>
-<body class="auth-page">
-  <div class="auth-nav wrap">
-    <a href="index.html">← 返回首页</a>
-    <a href="login.html">已有通行码？登录</a>
-  </div>
-
-  <div class="wrap" style="flex:1;display:flex;align-items:flex-start">
-    <form class="auth-card" id="applyForm">
-      <h1>我想参加</h1>
-      <p class="lead">留下称呼和意向时间；通过后你会得到<strong style="color:var(--paper)">登录名</strong>和<strong style="color:var(--paper)">通行码</strong>，用来看纪要。</p>
-
-      <div class="field">
-        <label>怎么称呼你 *</label>
-        <input name="name" required maxlength="40" placeholder="昵称即可">
-      </div>
-      <div class="field">
-        <label>意向参与时间 *</label>
-        <input name="intentDates" required maxlength="120" placeholder="如：下期线上 / 8 月深圳线下均可">
-      </div>
-      <div class="field">
-        <label>联系方式（选填）</label>
-        <input name="contact" maxlength="80" placeholder="手机、邮箱或微信等联系方式，方便通知">
-        <div class="hint">建议填写，方便组织者联系</div>
-      </div>
-      <div class="field">
-        <label>想交流的方向（选填）</label>
-        <textarea name="message" maxlength="800" placeholder="一句话就好，比如日常写材料、做纪要、折腾本地知识库…"></textarea>
-      </div>
-
-      <div class="hp-field" aria-hidden="true">
-        <label>Website</label>
-        <input name="website" tabindex="-1" autocomplete="off">
-      </div>
-
-      <div class="btn-row">
-        <button class="btn btn-primary" type="submit" id="submitBtn">提交意向</button>
-        <a class="btn btn-ghost" href="login.html">去登录</a>
-      </div>
-      <div class="form-msg" id="msg" aria-live="polite"></div>
-      <div class="handle-card" id="handleCard" hidden>
-        <div class="handle-label">你的登录名</div>
-        <div class="handle-value" id="handleValue"></div>
-        <div class="hint">请先记下它。审核通过后组织者会私下发通行码，两者搭配登录。</div>
-      </div>
-    </form>
-  </div>
-
-<script src="js/api.js"></script>
 <script>
-const form = document.getElementById("applyForm");
-const msg = document.getElementById("msg");
-const submitBtn = document.getElementById("submitBtn");
-const handleCard = document.getElementById("handleCard");
-const handleValue = document.getElementById("handleValue");
+(function(){
+  try{
+    var k="cc-theme";
+    try{
+      localStorage.removeItem(k);
+      localStorage.removeItem("cc-lat");
+      localStorage.removeItem("cc-lng");
+    }catch(e){}
+    var p=null;
+    try{ p=sessionStorage.getItem(k); }catch(e){}
+    if(p!=="light"&&p!=="dark") p=null;
+    function day(){
+      var lat=39.9042, lng=116.4074;
+      var rad=Math.PI/180, dayMs=8.64e7, J1970=2440588, J2000=2451545, e=rad*23.4397;
+      var now=new Date();
+      var ymd=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Shanghai",year:"numeric",month:"2-digit",day:"2-digit"}).format(now);
+      var noon=new Date(ymd+"T12:00:00+08:00");
+      var toJ=function(d){return d/dayMs-0.5+J1970;};
+      var fromJ=function(j){return new Date((j+0.5-J1970)*dayMs);};
+      var d=toJ(noon)-J2000;
+      var lw=-lng*rad, phi=lat*rad;
+      var n=Math.round(d-0.0009-lw/(2*Math.PI));
+      var ds=0.0009+lw/(2*Math.PI)+n;
+      var M=rad*(357.5291+0.98560028*ds);
+      var C=rad*(1.9148*Math.sin(M)+0.02*Math.sin(2*M)+0.0003*Math.sin(3*M));
+      var L=M+C+rad*102.9372+Math.PI;
+      var dec=Math.asin(Math.sin(L)*Math.sin(e));
+      var Jnoon=J2000+ds+0.0053*Math.sin(M)-0.0069*Math.sin(2*L);
+      var h0=-0.833*rad;
+      var cosH=(Math.sin(h0)-Math.sin(phi)*Math.sin(dec))/(Math.cos(phi)*Math.cos(dec));
+      if(cosH>1) return false; if(cosH<-1) return true;
+      var w=Math.acos(cosH);
+      var a=0.0009+(w+lw)/(2*Math.PI)+n;
+      var Jset=J2000+a+0.0053*Math.sin(M)-0.0069*Math.sin(2*L);
+      var Jrise=Jnoon-(Jset-Jnoon);
+      return now>=fromJ(Jrise)&&now<fromJ(Jset);
+    }
+    var t=p||"light";
+    var root=document.documentElement;
+    var c=t==="light"?"#f2efe8":"#0e171e";
+    root.dataset.theme=t;
+    root.dataset.themePref=p||"auto";
+    root.style.colorScheme=t;
+    root.style.backgroundColor=c;
+    var tm=document.createElement("meta");
+    tm.name="theme-color";
+    tm.content=c;
+    document.head.appendChild(tm);
+  }catch(e){
+    document.documentElement.dataset.theme="dark";
+    document.documentElement.dataset.themePref="auto";
+    document.documentElement.style.backgroundColor="#0e171e";
+    document.documentElement.style.colorScheme="dark";
+  }
+})();
+</script>
+<style id="cc-boot-bg">html,body{background-color:#f2efe8;color-scheme:light}html[data-theme="dark"],html[data-theme="dark"] body{background-color:#0e171e;color-scheme:dark}</style>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="申请加入赛博法师 · 填写意向">
+<title>我想参加 • 赛博法师</title>
+<link rel="icon" href="assets/icons/favicon.svg?v=hex2" type="image/svg+xml">
+<link rel="icon" href="assets/icons/favicon.ico?v=hex2" sizes="any">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=hex2">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="赛博法师 CYBER CASTERS">
+<meta property="og:title" content="AI 技巧分享会">
+<meta property="og:description" content="申请加入赛博法师 · 填写意向">
+<meta property="og:url" content="https://cyber-casters.com/apply.html">
+<meta property="og:image" content="https://cyber-casters.com/assets/icons/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:locale" content="zh_CN">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="AI 技巧分享会">
+<meta name="twitter:description" content="申请加入赛博法师 · 填写意向">
+<meta name="twitter:image" content="https://cyber-casters.com/assets/icons/og-image.png">
+<link rel="preload" href="assets/audio/bgm.m4a?v=32k" as="audio" type="audio/mp4">
+
+<link rel="stylesheet" href="css/tokens.css?v=cs1">
+<link rel="stylesheet" href="css/base.css?v=g002-spa">
+
+<link rel="stylesheet" href="css/auth.css?v=g003ph2">
+<link rel="stylesheet" href="css/gathering.css?v=g002">
+<link rel="stylesheet" href="css/nature-theme.css">
+<link rel="stylesheet" href="css/nature-pages.css">
+<link rel="stylesheet" href="css/refinements.css"><script src="js/i18n.js"></script>
+<link rel="stylesheet" href="css/expedition.css?v=b03-playful1"></head>
+<body class="auth-page nature-subpage apply-page edition-b03">
+<audio id="bgm" src="assets/audio/bgm.m4a?v=32k" preload="auto" playsinline="" webkit-playsinline=""></audio>
+<script>
+(function(){
+  function appUrl(href){
+    if(!href||href.charAt(0)==="#"||href.indexOf("mailto:")===0||href.indexOf("tel:")===0)return null;
+    var u;try{u=new URL(href,location.href);}catch(err){return null;}
+    if(u.origin!==location.origin)return null;
+    var name=(u.pathname.replace(/\/+$/,"").split("/").pop()||"index.html");
+    if(!(u.pathname==="/"||name===""||name==="index.html"||/^(apply|login|gathering-\d+|process)\.html$/i.test(name)))return null;
+    return u;
+  }
+  function navTo(u,e){
+    e.preventDefault();
+    if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+    e.stopPropagation();
+    if(window.CC&&CC.BGM&&CC.BGM.go){CC.BGM.go(u.href);return;}
+    window.__ccPendingNav=u.href;
+  }
+  document.addEventListener("click",function(e){
+    if(e.defaultPrevented)return;
+    if(e.button&&e.button!==0)return;
+    if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+    var a=e.target.closest&&e.target.closest("a[href]");
+    if(!a||a.target==="_blank"||a.hasAttribute("download"))return;
+    var u=appUrl(a.getAttribute("href")||"");
+    if(!u)return;
+    navTo(u,e);
+  },true);
+  var touch0=null;
+  document.addEventListener("touchstart",function(e){
+    var t=e.changedTouches&&e.changedTouches[0];
+    var a=e.target.closest&&e.target.closest("a[href]");
+    touch0=t&&a?{x:t.clientX,y:t.clientY,a:a}:null;
+  },{capture:true,passive:true});
+  document.addEventListener("touchend",function(e){
+    if(!touch0)return;
+    var t=e.changedTouches&&e.changedTouches[0];
+    var start=touch0;touch0=null;
+    if(!t||Math.abs(t.clientX-start.x)>12||Math.abs(t.clientY-start.y)>12)return;
+    var a=start.a;
+    if(!a||a.target==="_blank"||a.hasAttribute("download"))return;
+    var u=appUrl(a.getAttribute("href")||"");
+    if(!u)return;
+    navTo(u,e);
+  },{capture:true,passive:false});
+  var a=document.getElementById("bgm");
+  if(!a)return;
+  try{
+    if(localStorage.getItem("cc-bgm")==="off")return;
+    if(!(localStorage.getItem("cc-bgm")==="on"||sessionStorage.getItem("cc-bgm-playing")==="1"))return;
+    var t=parseFloat(sessionStorage.getItem("cc-bgm-t")||"0")||0;
+    var w=parseInt(sessionStorage.getItem("cc-bgm-wall")||"0",10);
+    if(w) t+=Math.min(6,Math.max(0,(Date.now()-w)/1000));
+    a.volume=0.42;
+    var go=function(){
+      try{
+        var d=a.duration;
+        if(isFinite(d)&&d>0) t=((t%d)+d)%d;
+        if(Math.abs((a.currentTime||0)-t)>0.15) a.currentTime=Math.max(0,t);
+      }catch(e){}
+      var p=a.play();
+      if(p&&p.catch)p.catch(function(){});
+    };
+    if(a.readyState>=1) go();
+    else a.addEventListener("loadedmetadata",go,{once:true});
+  }catch(e){}
+})();
+</script>
+<header class="subpage-header"><a class="subpage-brand" href="index.html" aria-label="赛博法师首页"><img src="assets/brand/logo.svg" width="230" height="33" alt="赛博法师 CYBER CASTERS"></a><span class="subpage-location">JOIN / 申请加入</span><div class="subpage-actions"><div class="language-switch" role="group" aria-label="语言 / Language" data-no-i18n=""><button type="button" data-language="zh" lang="zh-CN" aria-pressed="true">中文</button><span aria-hidden="true">/</span><button type="button" data-language="en" lang="en" aria-pressed="false">EN</button></div><a href="index.html#top" class="subpage-home">返回首页 ↗</a><button type="button" class="subpage-theme" data-theme-toggle="" aria-label="切换明暗主题"><span data-theme-icon="" aria-hidden="true">☾</span></button><a class="subpage-cta" href="login.html">成员登录 ↗</a></div></header><main class="auth-layout" aria-label="JOIN / 申请加入"><aside class="auth-visual auth-visual-coast" aria-label="山峦与海湾交汇的开阔自然景色"><img class="auth-landscape" src="assets/illustrations/coast.png" alt="手绘海岸营地与望向星空的小探险者" fetchpriority="high"><div class="auth-visual-copy"><p class="page-eyebrow">NEXT / 一起探索</p><h2>下一次，<br>带上你的问题。</h2><p>一个亲自验证的方法，<br>或一个还没解开的难题。</p></div><p class="auth-visual-note">真诚 · 务实 · 开放 · 有温度</p><div class="subpage-photo-credit artwork-credit"><span class="ai-label">AI 生成</span><span class="artwork-copyright" data-no-i18n>© 赛博法师 Cyber Casters</span></div></aside><div class="auth-form-area"><form class="auth-card" id="applyForm">
+<p class="page-eyebrow">JOIN THE CIRCLE / 参加意向</p><h1>申请加入</h1><p class="lead">留下你的称呼、想交流的方向与参加意向。审核通过后，组织者会私下发放通行码。</p><p class="form-required-note">标记「必填」的项目需要填写，其余可稍后补充。</p>
+<fieldset class="form-section"><legend><span>01</span> 先认识一下</legend>
+<div class="field"><label for="apply-name">怎么称呼你 <span class="field-required">必填</span></label><input id="apply-name" name="name" required="" maxlength="40" placeholder="昵称即可" autocomplete="nickname"></div>
+<div class="field"><label for="apply-contact">联系方式 <span class="field-optional">选填</span></label><input id="apply-contact" name="contact" maxlength="80" placeholder="手机、邮箱或微信等" aria-describedby="contact-hint"><p class="hint" id="contact-hint">建议填写，方便组织者联系你。</p></div>
+</fieldset>
+<fieldset class="form-section"><legend><span>02</span> 关于下一次相遇</legend>
+<div class="field"><p class="field-label" id="join-next-label">是否有意参加后续活动 <span class="field-required">必填</span></p><span class="next-detail" id="nextLabel">后续活动 · 时间地点待公布</span>
+<div class="choice-row" role="radiogroup" aria-labelledby="join-next-label"><label class="choice"><input type="radio" name="joinNext" value="参加" required=""><span class="choice-face">有意参加 <span aria-hidden="true">↗</span></span></label><label class="choice"><input type="radio" name="joinNext" value="不参加"><span class="choice-face">暂不参加</span></label></div></div>
+<div class="field"><p class="field-label">方便参加的时间与地点 <span class="field-optional">选填</span></p><div class="field-row"><select aria-label="方便参加的日期" id="intentPeriod">
+            <option value="" selected="">日期</option>
+          </select><select aria-label="方便参加的时段" id="intentSlot">
+            <option value="" selected="">时段</option>
+            <option value="下午">下午</option>
+            <option value="工作日晚上">工作日晚上</option>
+            <option value="周末上午">周末上午</option>
+            <option value="周末下午">周末下午</option>
+            <option value="周末晚上">周末晚上</option>
+            <option value="周末全天">周末全天</option>
+            <option value="时间灵活">时间灵活</option>
+          </select><select aria-label="方便参加的地点" id="intentArea">
+            <option value="" selected="">地点</option>
+            <option value="香港">香港</option>
+            <option value="南山·科技园">南山·科技园</option>
+            <option value="南山·后海/深圳湾">南山·后海/深圳湾</option>
+            <option value="福田·车公庙">福田·车公庙</option>
+            <option value="福田·CBD">福田·CBD</option>
+            <option value="罗湖">罗湖</option>
+            <option value="宝安·前海">宝安·前海</option>
+            <option value="龙华">龙华</option>
+            <option value="龙岗/坂田">龙岗/坂田</option>
+            <option value="不限地点">不限地点</option>
+          </select></div><p class="hint">用于了解大家的意向，具体安排以活动公布为准。</p></div>
+<input type="hidden" name="intentDates" id="intentDates"></fieldset>
+<fieldset class="form-section"><legend><span>03</span> 把问题带来</legend>
+<div class="field"><label for="topicExtra">想交流的方向 <span class="field-required">必填</span></label><textarea id="topicExtra" maxlength="800" required="" placeholder="想交流的方向、拟分享的技巧以及遇到的困难与挑战。"></textarea><input type="hidden" name="message" id="message"></div>
+<div class="field"><label for="intentNote">补充说明 <span class="field-optional">选填</span></label><input id="intentNote" maxlength="80" placeholder="如：可推荐场地 / 其他特殊要求等"></div></fieldset>
+<div class="hp-field" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
+<div class="btn-row"><button class="btn btn-primary" type="submit" id="submitBtn">提交意向 <span aria-hidden="true">↗</span></button><a class="btn btn-ghost" href="login.html">已有通行码，去登录</a></div>
+<div class="form-msg" id="msg" aria-live="polite"></div><div class="handle-card" id="handleCard" hidden=""><div class="handle-label">你的登录名</div><div class="handle-value" id="handleValue"></div><button type="button" class="copy-handle" data-copy-handle="">复制登录名 ↗</button><p class="hint">请先记下它。审核通过后组织者会私下发通行码，两者搭配登录。</p></div>
+</form></div></main><footer class="subpage-footer"><span>© 2026 CYBER CASTERS</span><nav aria-label="页尾导航"><a href="process.html">活动流程 ↗</a><a href="photo-credits.html">版权声明 ↗</a><a href="mailto:info@cyber-casters.com">联系我们 ↗</a></nav><span>We Cast The Future.</span></footer>
+<button id="bgmBtn" type="button" aria-label="背景音乐开关" title="背景音乐" aria-pressed="false">♪</button>
+
+<script src="js/util.js"></script>
+<script src="js/theme.js?v=bj-sun2"></script>
+<script src="js/data.js?v=content1"></script>
+<script src="js/api.js"></script>
+<script src="js/bgm.js?v=b03-2"></script>
+<script src="js/page-shell.js"></script>
+<script>
+const authRoot = document.getElementById("applyForm");
+const authGet = id => authRoot.querySelector(`[id="${id}"]`);
+CC.BGM.init({ mode: "button", toggleId: "bgmBtn", gestureKick: true });
+
+const form = authRoot;
+const msg = authGet("msg");
+const submitBtn = authGet("submitBtn");
+const handleCard = authGet("handleCard");
+const handleValue = authGet("handleValue");
+const intentPeriod = authGet("intentPeriod");
+const intentSlot = authGet("intentSlot");
+const intentArea = authGet("intentArea");
+const intentNote = authGet("intentNote");
+const intentDates = authGet("intentDates");
+const topicExtra = authGet("topicExtra");
+const messageField = authGet("message");
+const nextLabel = authGet("nextLabel");
+
+function syncChoiceState(input) {
+  const label = input.closest(".choice");
+  if (!label) return;
+  if (input.type === "radio") {
+    authRoot.querySelectorAll(`input[type="radio"][name="${input.name}"]`).forEach((el) => {
+      el.closest(".choice")?.classList.toggle("is-on", el.checked);
+    });
+    return;
+  }
+  label.classList.toggle("is-on", input.checked);
+}
+authRoot.querySelectorAll(".choice input").forEach((el) => {
+  el.addEventListener("change", () => syncChoiceState(el));
+  if (el.checked) syncChoiceState(el);
+});
+
+/** DATA.nextGathering（如 2026.08.20 19:00）保持点分格式展示 */
+function formatNextFull(raw) {
+  const m = String(raw || "").match(/(\d{4})\.(\d{2})\.(\d{2})(?:\s+(\d{2}):(\d{2}))?/);
+  if (!m) return raw || "后续活动 · 时间地点待公布";
+  const time = m[4] != null ? ` ${m[4]}:${m[5]}` : "";
+  return `${m[1]}.${m[2]}.${m[3]}${time}`;
+}
+
+/** 从十一月起算（最早 2026-11-01），滚动生成「2026.11上旬/中旬/下旬…」 */
+function buildPeriodOptions(count = 6) {
+  const bands = ["上旬", "中旬", "下旬"];
+  let y = 2026;
+  let m = 10; // 十一月
+  let band = 0; // 上旬
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    out.push(`${y}.${String(m + 1).padStart(2, "0")}${bands[band]}`);
+    band += 1;
+    if (band > 2) {
+      band = 0;
+      m += 1;
+      if (m > 11) {
+        m = 0;
+        y += 1;
+      }
+    }
+  }
+  return out;
+}
+
+function fillPeriodOptions(keepValue) {
+  const opts = buildPeriodOptions(6);
+  const prev = keepValue || intentPeriod.value;
+  intentPeriod.innerHTML = '<option value="" selected>日期</option>';
+  for (const label of opts) {
+    const o = document.createElement("option");
+    o.value = label;
+    o.textContent = label;
+    intentPeriod.appendChild(o);
+  }
+  const flex = document.createElement("option");
+  flex.value = "时间灵活";
+  flex.textContent = "时间灵活";
+  intentPeriod.appendChild(flex);
+  if (prev && [...intentPeriod.options].some((o) => o.value === prev)) {
+    intentPeriod.value = prev;
+  }
+}
+
+const nextRaw = (typeof DATA !== "undefined" && DATA.nextGathering) || "后续活动 · 时间地点待公布";
+const nextFull = formatNextFull(nextRaw);
+
+function paintNextLabel() {
+  if (!nextLabel) return;
+  const parts = (typeof DATA !== "undefined" && DATA.nextGatheringParts) || null;
+  const cities = (parts && parts.coverPlaces && parts.coverPlaces.length)
+    ? parts.coverPlaces
+    : (parts && parts.places);
+  if (parts && cities && cities.length) {
+    nextLabel.textContent = `${parts.kicker} · ${parts.when} · ${cities.join("/")}`;
+    return;
+  }
+  nextLabel.textContent = nextFull;
+}
+
+paintNextLabel();
+fillPeriodOptions();
+
+function selectedJoinNext() {
+  const el = form.querySelector('input[name="joinNext"]:checked');
+  return el ? el.value : "";
+}
+
+function composeTopics() {
+  return topicExtra.value.trim();
+}
+
+function composeIntent() {
+  const join = selectedJoinNext();
+  if (!join) return "";
+  const period = intentPeriod.value;
+  const slot = intentSlot.value;
+  const area = intentArea.value;
+  const note = intentNote.value.trim();
+  let base = `最近一期（${nextFull}）：${join}`;
+  if (period) base += `｜日期：${period}`;
+  if (slot) base += `｜时段：${slot}`;
+  if (area) base += `｜地点：${area}`;
+  return note ? `${base}｜补充：${note}` : base;
+}
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   msg.className = "form-msg";
   msg.textContent = "提交中…";
   submitBtn.disabled = true;
+
+  const composed = composeIntent();
+  if (!composed) {
+    msg.className = "form-msg err";
+    msg.textContent = "请选择是否有意参加后续活动";
+    submitBtn.disabled = false;
+    return;
+  }
+  const topics = composeTopics();
+  if (!topics) {
+    msg.className = "form-msg err";
+    msg.textContent = "请填写想交流的方向";
+    topicExtra.focus();
+    submitBtn.disabled = false;
+    return;
+  }
+  intentDates.value = composed.slice(0, 200);
+  messageField.value = topics.slice(0, 800);
+
   const body = Object.fromEntries(new FormData(form).entries());
+  delete body.joinNext;
+
   try {
     const data = await CC.api("/api/apply", { method: "POST", body: JSON.stringify(body) });
     msg.className = "form-msg ok";
     msg.textContent = data.message || "已提交";
     if (data.handle) {
       handleValue.textContent = data.handle;
+      authRoot.querySelector("[data-copy-handle]").textContent = "复制登录名 ↗";
       handleCard.hidden = false;
       try { sessionStorage.setItem("cc-apply-handle", data.handle); } catch (_) {}
     }
     form.reset();
+    authRoot.querySelectorAll(".choice").forEach(label => label.classList.remove("is-on"));
+    nextLabel.textContent = nextFull;
+    fillPeriodOptions();
   } catch (err) {
     msg.className = "form-msg err";
     msg.textContent = err.message;
@@ -107,5 +382,6 @@ form.addEventListener("submit", async (e) => {
   }
 });
 </script>
-</body>
-</html>
+
+
+</body></html>
