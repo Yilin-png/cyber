@@ -10,6 +10,11 @@ function apiBaseHint() {
 
 CC.api = async function(path, opts = {}) {
   const { headers: extraHeaders, ...rest } = opts || {};
+  if (/^\/api\/(gatherings(?:\/\d+)?|member\/spells)(?:\?|$)/.test(path)) {
+    const url = new URL(path, location.href);
+    url.searchParams.set("lang", CC.I18n?.lang || "zh");
+    path = url.pathname + url.search;
+  }
   let res;
   try {
     res = await fetch(path, {
@@ -30,7 +35,7 @@ CC.api = async function(path, opts = {}) {
   let data = null;
   try { data = await res.json(); } catch (_) { data = null; }
   if (!res.ok) {
-    const err = new Error((data && data.error) || ("请求失败 " + res.status));
+    const err = new Error(CC.I18n?.t((data && data.error) || ("请求失败 " + res.status)) || (data && data.error) || ("Request failed " + res.status));
     err.status = res.status;
     err.data = data;
     throw err;
