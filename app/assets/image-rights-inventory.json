@@ -1,0 +1,72 @@
+[
+  {
+    "file": "assets/hero-snow.jpg",
+    "category": "licensed_landscape",
+    "rights_basis": "Unsplash License",
+    "source": "https://unsplash.com/photos/snow-covered-mountain-under-blue-sky-during-daytime--iyHBfL4LIc",
+    "checked_on": "2026-10-27",
+    "sha256": "ea5e6b2d9ee0c8afa24a657d46fd9cb5f459f6efbdd62b7165d5afbd0edf6fa4"
+  },
+  {
+    "file": "assets/hero-ocean.jpg",
+    "category": "licensed_landscape",
+    "rights_basis": "Unsplash License",
+    "source": "https://unsplash.com/photos/body-of-water-under-white-sky-during-daytime-3vb0tq6-bdI",
+    "checked_on": "2026-10-27",
+    "sha256": "ec2e250edb966bba652fb483c99e0f4f15ce5966831d9ac3d81ac7a7240f85b1"
+  },
+  {
+    "file": "assets/hero-coast.jpg",
+    "category": "licensed_landscape",
+    "rights_basis": "Unsplash License",
+    "source": "https://unsplash.com/photos/a-large-body-of-water-surrounded-by-mountains-1z_KKEuueoo",
+    "checked_on": "2026-10-27",
+    "sha256": "c894a557aab10c53babfd447a369b01f8190ff1139077c3cf101e6e19e7f98e0"
+  },
+  {
+    "file": "assets/hero-cosmos.jpg",
+    "category": "licensed_landscape",
+    "rights_basis": "CC BY 4.0",
+    "source": "https://www.eso.org/public/images/eso0932a/",
+    "checked_on": "2026-10-27",
+    "sha256": "6df7ce3cea79841c15e7d04750c073b6680671efa01be3da5eae433846e28c70"
+  },
+  {
+    "file": "assets/brand/logo.svg",
+    "category": "existing_brand_material",
+    "source": "https://cyber-casters.com/",
+    "rights_basis": "Operator confirmed on 2026-10-27 that the materials were self-created or their use was authorized; retained for this website.",
+    "operator_confirmation": "Confirmed directly by the user: 均已自行制作或取得授权. This is an operator representation, not independent title verification.",
+    "sha256": "b395fb43a54bfa9e26f24979285502cdcb5233196b237e0a7a87ede95e875a42"
+  },
+  {
+    "file": "assets/brand/gathering-003.png",
+    "category": "existing_brand_material",
+    "source": "https://cyber-casters.com/",
+    "rights_basis": "Operator confirmed on 2026-10-27 that the materials were self-created or their use was authorized; retained for this website.",
+    "operator_confirmation": "Confirmed directly by the user: 均已自行制作或取得授权. This is an operator representation, not independent title verification.",
+    "sha256": "2f4c1f219db74455a3689d9c279fec4e14a37b916d2156ba8960ca96479a1b31"
+  },
+  {
+    "file": "assets/qr/wechat-community.png",
+    "category": "existing_brand_material",
+    "source": "https://cyber-casters.com/",
+    "rights_basis": "Operator confirmed on 2026-10-27 that the materials were self-created or their use was authorized; retained for this website.",
+    "operator_confirmation": "Confirmed directly by the user: 均已自行制作或取得授权. This is an operator representation, not independent title verification.",
+    "sha256": "35d3f64b1f8c85af0bb9405ca584a5d68a54991901832ea3c4262c964c699f69"
+  },
+  {
+    "file": "assets/qr/wechat-xiangchuan.png",
+    "category": "existing_brand_material",
+    "source": "https://cyber-casters.com/",
+    "rights_basis": "Operator confirmed on 2026-10-27 that the materials were self-created or their use was authorized; retained for this website.",
+    "operator_confirmation": "Confirmed directly by the user: 均已自行制作或取得授权. This is an operator representation, not independent title verification.",
+    "sha256": "07cbb44f12b76970d9a2a5e607ec8f91c1fa162dc3d05fd4fe6edd4766f78114"
+  },
+  {
+    "file": "assets/icons/favicon.svg",
+    "category": "project_vector_art",
+    "rights_basis": "Existing project vector icon; no external photograph.",
+    "sha256": "53947bc71c5a1b6a9c6aa06cd57b714f0030b94887d4329f74a4b11d34a4480b"
+  }
+]
