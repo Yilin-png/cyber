@@ -1,6 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Cyber Casters">
-  <!-- 透明底；一根简洁的魔法棒 -->
-  <path fill="#9D6BFF" stroke="#9D6BFF" stroke-width="5.76" stroke-linecap="round" d="M12.8 51.2 L38.4 25.6"/>
-  <polygon fill="#9D6BFF" points="47.36,7.04 49.17,14.83 56.96,16.64 49.17,18.45 47.36,26.24 45.55,18.45 37.76,16.64 45.55,14.83"/>
-  <polygon fill="#9D6BFF" points="55.04,25.92 55.76,28.72 58.56,29.44 55.76,30.16 55.04,32.96 54.32,30.16 51.52,29.44 54.32,28.72"/>
+  <defs>
+    <linearGradient id="stick" x1="11.52" y1="52.48" x2="37.12" y2="26.88" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C46B32"/>
+      <stop offset="0.55" stop-color="#F2C14E"/>
+      <stop offset="1" stop-color="#FFF6D2"/>
+    </linearGradient>
+  </defs>
+  <path d="M11.52 52.48 L37.12 26.88" fill="none" stroke="url(#stick)" stroke-width="5.76" stroke-linecap="round"/>
+  <circle cx="29.95" cy="34.05" r="4.15" fill="#7B5CFF"/>
+  <polygon fill="#FFD65C" points="47.36,6.40 49.40,14.60 57.60,16.64 49.40,18.68 47.36,26.88 45.32,18.68 37.12,16.64 45.32,14.60"/>
+  <polygon fill="#FFFFFF" points="47.36,13.44 48.04,15.96 50.56,16.64 48.04,17.32 47.36,19.84 46.68,17.32 44.16,16.64 46.68,15.96"/>
+  <polygon fill="#3FE0D0" points="56.32,22.40 57.23,25.97 60.80,26.88 57.23,27.79 56.32,31.36 55.41,27.79 51.84,26.88 55.41,25.97"/>
+  <polygon fill="#FF7A6E" points="37.12,7.36 37.75,9.61 40.00,10.24 37.75,10.87 37.12,13.12 36.49,10.87 34.24,10.24 36.49,9.61"/>
 </svg>
