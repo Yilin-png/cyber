@@ -14,6 +14,7 @@
     "deploy:cf": "wrangler deploy",
     "cf:login": "wrangler login",
     "cf:tail": "wrangler tail",
+    "check:private": "node server/check-private.js",
     "check:deploy": "wrangler deploy --dry-run"
   },
   "dependencies": {

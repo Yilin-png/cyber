@@ -13,7 +13,6 @@ const {
   load, save, uid, hashPass, verifyPass, genPasscode, genHandle, handleOf, DATA_DIR
 } = require("./db");
 const { limiter, hit, reset } = require("./ratelimit");
-const { ensureDemoUser } = require("./seed");
 const GATHERINGS = require("./gatherings");
 const GATHERINGS_EN = require("./gatherings.en.json");
 const localizedGathering = (g, lang) => lang === "en" ? (GATHERINGS_EN.find(x => x.id === g.id) || g) : g;
@@ -44,8 +43,10 @@ const ADMIN_ACCOUNTS = [
 if (SESSION_SECRET.length < 32 || !ADMIN_ACCOUNTS.length) {
   throw new Error("Release configuration required: SESSION_SECRET (32+ characters) and ADMIN1_USER / ADMIN1_PASS.");
 }
-/* 上线候选版要求 HTTPS；本机交互预览请使用保留的 B03 预览版。 */
-const COOKIE_SECURE = true;
+/* 生产默认 Secure。本机 HTTP 预览可设 COOKIE_SECURE=false，否则浏览器会丢掉登录票据。 */
+const COOKIE_SECURE = process.env.COOKIE_SECURE != null && process.env.COOKIE_SECURE !== ""
+  ? ["1", "true", "yes"].includes(String(process.env.COOKIE_SECURE).toLowerCase())
+  : process.env.NODE_ENV === "production";
 
 /* 反代（Render / Railway / Nginx）后面要信任 X-Forwarded-* */
 app.set("trust proxy", 1);
@@ -54,7 +55,7 @@ app.use(express.json({ limit: "256kb" }));
 app.use("/api", (_req, res, next) => { res.set("Cache-Control", "private, no-store"); next(); });
 app.use(
   cookieSession({
-    name: "cc_b03_sess",
+    name: "cc_sess",
     keys: [SESSION_SECRET],
     maxAge: 30 * 24 * 60 * 60 * 1000,
     sameSite: "lax",
@@ -752,8 +753,4 @@ app.listen(PORT, process.env.HOST || "0.0.0.0", () => {
     console.warn("⚠ 仍在使用默认 SESSION_SECRET，上线前请务必修改。");
   }
   console.log("管理账号       →  " + ADMIN_ACCOUNTS.map((a) => a.username).join(" / "));
-  const db = load();
-  if (db._seedInfo) {
-    console.log(`演示登录       →  登录名 ${db._seedInfo.handle} / 通行码 ${db._seedInfo.passcode}`);
-  }
 });

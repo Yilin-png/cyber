@@ -73,7 +73,11 @@ export function clearSessionCookie({ secure }) {
 }
 
 export function cookieSecure(env, url) {
-  if (env.COOKIE_SECURE != null) {
+  const host = String(url.hostname || "").toLowerCase();
+  if (host === "localhost" || host === "127.0.0.1" || host === "[::1]" || host === "::1") {
+    return false;
+  }
+  if (env.COOKIE_SECURE != null && String(env.COOKIE_SECURE).trim() !== "") {
     return ["1", "true", "yes"].includes(String(env.COOKIE_SECURE).toLowerCase());
   }
   return url.protocol === "https:";

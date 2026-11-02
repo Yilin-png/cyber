@@ -46,14 +46,8 @@ function seedIfEmpty() {
 }
 
 if (require.main === module) {
-  const db = load();
-  db.users = [];
-  db.applications = [];
-  db.comments = [];
-  db.sessions = {};
-  save(db);
-  ensureDemoUser();
-  console.log("[seed] reset + demo:", DEMO_HANDLE, DEMO_PASS);
+  console.error("[seed] refused: this command does not reset member data or create accounts.");
+  process.exit(1);
 }
 
 module.exports = { seedIfEmpty, ensureDemoUser };

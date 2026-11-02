@@ -326,7 +326,7 @@ function composeIntent() {
   const slot = intentSlot.value;
   const area = intentArea.value;
   const note = intentNote.value.trim();
-  let base = `最近一期（${nextFull}）：${join}`;
+  let base = `后续活动（${nextFull}）：${join}`;
   if (period) base += `｜日期：${period}`;
   if (slot) base += `｜时段：${slot}`;
   if (area) base += `｜地点：${area}`;

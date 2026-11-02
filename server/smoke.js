@@ -80,8 +80,7 @@ function check(label, ok, extra = "") {
 
   const approve = await call("POST", `/api/admin/applications/${cnName.data.id}/approve`,
     { gatherings: ["001"] }, cookieHeader(jar), jar);
-  check("审批生成通行码", /^[A-Z2-9]{8}$/.test(approve.data.passcode || ""),
-    `${approve.data.handle} / ${approve.data.passcode}`);
+  check("审批生成通行码", /^[A-Z2-9]{8}$/.test(approve.data.passcode || ""));
 
   const reApprove = await call("POST", `/api/admin/applications/${cnName.data.id}/approve`,
     { gatherings: ["001"] }, cookieHeader(jar), jar);
@@ -109,8 +108,7 @@ function check(label, ok, extra = "") {
 
   const reissue = await call("POST", `/api/admin/applications/${cnName.data.id}/reissue`,
     {}, cookieHeader(jar), jar);
-  check("重发通行码", reissue.status === 200 && reissue.data.passcode !== approve.data.passcode,
-    reissue.data.passcode);
+  check("重发通行码", reissue.status === 200 && reissue.data.passcode !== approve.data.passcode);
 
   const oldCode = await call("POST", "/api/auth/login",
     { handle: approve.data.handle, passcode: approve.data.passcode });
@@ -148,12 +146,42 @@ function check(label, ok, extra = "") {
 
   const demoJar = new Map();
   const demo = await call("POST", "/api/auth/login", { handle: "demo_caster", passcode: "CAST-DEMO" }, {}, demoJar);
-  check("演示账号仍可登录", demo.status === 200);
+  check("演示登录名被拒绝", demo.status === 401);
 
-  const g2full = await call("GET", "/api/gatherings/002", undefined, cookieHeader(demoJar), demoJar);
-  check("演示账号可读第二期正文",
-    g2full.status === 200 && g2full.data.unlocked && /驾驶舱/.test(g2full.data.bodyHtml || ""),
-    g2full.data && g2full.data.unlocked ? "unlocked" : String(g2full.status));
+  const currentJar = new Map();
+  await call("POST", "/api/auth/login",
+    { handle: reissue.data.handle, passcode: reissue.data.passcode }, {}, currentJar);
+  const locked = await call("GET", "/api/gatherings/002");
+  check("未登录看不到纪要正文", locked.status === 200 && locked.data.unlocked === false && locked.data.bodyHtml == null);
+  const opened = await call("GET", "/api/gatherings/002", undefined, cookieHeader(currentJar), currentJar);
+  check("成员看到的是占位纪要",
+    opened.status === 200 && opened.data.unlocked === true && /尚未配置/.test(opened.data.bodyHtml || ""));
+  const openedEn = await call("GET", "/api/gatherings/002?lang=en", undefined, cookieHeader(currentJar), currentJar);
+  check("英文纪要接口可切换且仍是占位",
+    openedEn.status === 200 && openedEn.data.contentLang === "en" && /尚未配置/.test(openedEn.data.bodyHtml || ""));
+
+  const commentDenied = await call("GET", "/api/gatherings/002/comments");
+  check("未登录不能看留言", commentDenied.status === 401);
+  const comment = await call("POST", "/api/gatherings/002/comments",
+    { body: "本地校验留言" }, cookieHeader(currentJar), currentJar);
+  check("成员可以留言", comment.status === 200 && comment.data.comment && comment.data.comment.body === "本地校验留言");
+  const commentList = await call("GET", "/api/gatherings/002/comments", undefined, cookieHeader(currentJar), currentJar);
+  check("成员可以读到自己的留言",
+    commentList.status === 200 && (commentList.data.comments || []).some((item) => item.body === "本地校验留言"));
+
+  const cleared = await call("POST", `/api/admin/applications/${cnName.data.id}/permissions`,
+    { gatherings: [] }, cookieHeader(jar), jar);
+  check("可以收回全部期次", cleared.status === 200 && Array.isArray(cleared.data.gatherings) && cleared.data.gatherings.length === 0);
+  const afterClear = await call("POST", "/api/auth/login",
+    { handle: reissue.data.handle, passcode: reissue.data.passcode });
+  const clearJar = new Map();
+  await call("POST", "/api/auth/login",
+    { handle: reissue.data.handle, passcode: reissue.data.passcode }, {}, clearJar);
+  const isolated = await call("GET", "/api/gatherings/002", undefined, cookieHeader(clearJar), clearJar);
+  check("没有期次资格时正文锁定",
+    afterClear.status === 200 && isolated.status === 200 && isolated.data.unlocked === false);
+  const isolatedComment = await call("GET", "/api/gatherings/002/comments", undefined, cookieHeader(clearJar), clearJar);
+  check("没有期次资格时不能看留言", isolatedComment.status === 403);
 
   let limited = 0;
   for (let i = 0; i < 8; i++) {

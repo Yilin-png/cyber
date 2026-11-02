@@ -12,7 +12,7 @@ export function parseIntent(raw) {
   };
   if (!text) return out;
 
-  const joinM = text.match(/最近一期（([^）]+)）：\s*([^｜]+)/);
+  const joinM = text.match(/(?:最近一期|后续活动)（([^）]+)）：\s*([^｜]+)/);
   if (joinM) {
     out.nextLabel = joinM[1].trim();
     out.joinNext = joinM[2].trim();

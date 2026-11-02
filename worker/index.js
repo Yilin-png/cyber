@@ -582,7 +582,7 @@ app.post("/api/gatherings/:id/comments", async (c) => {
   } catch {
     return c.json({ error: "无效请求" }, 400);
   }
-  const text = safeText(body.body || body.text, 2000);
+  const text = safeText(body.body, 1000);
   if (!text) return c.json({ error: "留言不能为空" }, 400);
   const authorName = user ? user.name : `管理·${session.adminUser}`;
   const userId = user ? user.id : `admin:${session.adminUser}`;

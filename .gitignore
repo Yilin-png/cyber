@@ -12,11 +12,9 @@ server/data/db.json.tmp
 # Isolated local preview data
 .preview-data/
 
-# Private member records and local account data
-/server/content/gatherings/*.html
-/server/data/db.json
-
-# Protected meeting minutes: placeholders may be tracked; real files stay private
+# Untracked private records. Already tracked placeholder minutes are NOT covered:
+# editing them and committing still publishes the change. Run npm run check:private.
 /server/content/gatherings/*.html
 /worker/content-00*.html
 /server/data/db.json
+/internal-records/

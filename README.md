@@ -19,12 +19,14 @@ B03 V08「探险手账」官网候选版。包含首页、活动申请、成员�
 
 - Worker 配置位于 `wrangler.jsonc`，Worker 名称为 `cybercasters`。
 - 站点域名路由、Durable Object `STORE` 绑定、`CyberStore` 类及既有迁移状态须先与 Cloudflare 后台核对并保留。不要重建存储或重置迁移来解决部署问题。
-- 使用 `npm run check:deploy` 只做部署预演；正式部署命令为 `npm run deploy:cf`。正式部署应由维护者在确认数据与线上配置后执行。
+- 使用 `npm run check:deploy` 只做部署预演；正式部署命令为 `npm run deploy:cf`。正式部署应由维护者在确认数据与线上配置后执行。`wrangler.jsonc` 含生产域名路由，不能把它当成与线上存储无关的预览配置。提交公开分支前另运行 `npm run check:private`。
 - 在 Worker 的机密设置中配置 `SESSION_SECRET`、`ADMIN1_USER`、`ADMIN1_PASS`。其它可选管理员和微信 OAuth 密钥按现有功能需要配置。
 
 ## 私有纪要
 
 公开仓库只含“纪要未配置”的占位文件，不含实际纪要正文。正式部署前，维护者必须在私有部署副本中，从内部归档恢复对应期次的中文和英文纪要，再构建或部署。Node 版本使用 `server/content/gatherings/`；Workers 版本还需将中文正文放入 `worker/content-001.html`、`worker/content-002.html`。不要把实际纪要提交至公开 Git、构建日志或公开制品。
+
+这些占位文件已经被 Git 跟踪。`.gitignore` 不能阻止对已跟踪文件的后续提交。提交或部署前运行 `npm run check:private`，确认正文仍是占位。真实纪要不要写回这些已跟踪路径后再执行 `git add`。
 
 本次审核分支会从当前版本移除原先被跟踪的成员纪要和本地账号数据库，并新增忽略规则；这不会改写或删除既有公开提交历史。维护者应另行检查历史中曾公开的敏感内容，并按需轮换凭据或处理数据。
 
