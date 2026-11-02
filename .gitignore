@@ -1,0 +1,22 @@
+node_modules/
+.env
+.DS_Store
+.wrangler/
+.dev.vars
+!.dev.vars.example
+dist/
+*.log
+.mf/
+server/data/db.json.tmp
+
+# Isolated local preview data
+.preview-data/
+
+# Private member records and local account data
+/server/content/gatherings/*.html
+/server/data/db.json
+
+# Protected meeting minutes: placeholders may be tracked; real files stay private
+/server/content/gatherings/*.html
+/worker/content-00*.html
+/server/data/db.json

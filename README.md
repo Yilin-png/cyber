@@ -1,121 +1,33 @@
 # 赛博法师 · CYBER CASTERS
 
-AI 技巧交流会站点：**公开摘要 + 成员权限纪要 + 留言板**。
+B03 V08「探险手账」官网候选版。包含首页、活动申请、成员登录、组织者审核、双语活动纪要与留言功能。公众号二维码已接入“关注我们”弹窗。
 
-## 权限模型
+## 部署前请维护者确认
 
-| 访客 | 可见内容 |
-|------|----------|
-| 未登录 | 活动 1–2 句安全摘要、法器长廊、申请入口 |
-| 已申请待审 | 同上（等待组织者发通行码） |
-| 参会成员（登录） | 自己参加过的期次**完整纪要**、现场照片、留言板、咒语手册 |
+原仓库提供 Node / Render 部署配置；本候选也包含 Cloudflare Workers 入口。两种运行方式的成员存储位置不同。**这次代码推送和合并本身不代表可以直接切换托管平台。** 请先确认当前网站实际运行的平台、持久化数据位置、绑定和自动部署设置，并完成数据备份。平台切换需要单独的数据迁移，本项目没有自动搬迁现有成员记录。
 
-敏感操作细节（含完整纪要正文）只存在服务端，不放进公开 HTML。
+发布域名为 `cyber-casters.com` 和 `www.cyber-casters.com`。部署者应保留现有域名配置，决定 www 的转址方式，并确认 DNS 最终指向实际运行的网站。
 
-## 快速开始（本地）
+## Node / Render
 
-```bash
-npm install
-cp .env.example .env   # 按需修改密钥
-npm start
-```
+- 启动命令：`npm start`；健康检查：`/api/health`。
+- `DATA_DIR` 必须指向已有的持久化数据卷，不能使用本机演示数据或空库替代线上数据。
+- `SESSION_SECRET` 至少 32 个字符；需在运行平台安全设置中填写 `ADMIN1_USER`、`ADMIN1_PASS`。可选管理员使用 `ADMIN2_USER/PASS` 与 `ADMIN3_USER/PASS`。
+- 如果使用微信登录，保留原有微信 App ID 与 App Secret，并核对回调域名。
 
-打开 http://localhost:3000
+## Cloudflare Workers
 
-**演示账号**（启动日志也会打印）：
+- Worker 配置位于 `wrangler.jsonc`，Worker 名称为 `cybercasters`。
+- 站点域名路由、Durable Object `STORE` 绑定、`CyberStore` 类及既有迁移状态须先与 Cloudflare 后台核对并保留。不要重建存储或重置迁移来解决部署问题。
+- 使用 `npm run check:deploy` 只做部署预演；正式部署命令为 `npm run deploy:cf`。正式部署应由维护者在确认数据与线上配置后执行。
+- 在 Worker 的机密设置中配置 `SESSION_SECRET`、`ADMIN1_USER`、`ADMIN1_PASS`。其它可选管理员和微信 OAuth 密钥按现有功能需要配置。
 
-- 登录名：`demo_caster`
-- 通行码：`CAST-DEMO`
+## 私有纪要
 
-## 部署上线（推荐）
+公开仓库只含“纪要未配置”的占位文件，不含实际纪要正文。正式部署前，维护者必须在私有部署副本中，从内部归档恢复对应期次的中文和英文纪要，再构建或部署。Node 版本使用 `server/content/gatherings/`；Workers 版本还需将中文正文放入 `worker/content-001.html`、`worker/content-002.html`。不要把实际纪要提交至公开 Git、构建日志或公开制品。
 
-本站是 **Node + Express**，需要能跑 Node 的平台（申请 / 登录 / 评论都写本地数据库）。
+本次审核分支会从当前版本移除原先被跟踪的成员纪要和本地账号数据库，并新增忽略规则；这不会改写或删除既有公开提交历史。维护者应另行检查历史中曾公开的敏感内容，并按需轮换凭据或处理数据。
 
-> **不要**用 Cloudflare Workers / Pages「拖文件夹上传」整仓部署：  
-> Workers 跑不了 Express，且 `node_modules` 里的 `.d.ts` 会被误判成 TypeScript 项目。
+## 本地运行
 
-### 方式 A：Render（最简单）
-
-1. 代码推到 GitHub  
-2. 打开 [Render](https://render.com) → **New** → **Blueprint**，选本仓库（读 `render.yaml`）  
-   或 **Web Service**，Build：`npm ci`，Start：`npm start`  
-3. 环境变量至少设置：
-
-| 变量 | 说明 |
-|------|------|
-| `SESSION_SECRET` | 随机长字符串 |
-| `ADMIN_TOKEN` | 管理后台令牌 |
-| `PUBLIC_BASE` | 上线后的 https 地址，如 `https://cybercasters.onrender.com` |
-| `NODE_ENV` | `production` |
-
-4. 部署完成后打开 `PUBLIC_BASE`，健康检查：`/api/health`
-
-免费实例无持久盘时，**重新部署会清空**申请/用户/评论。要留数据：加 Disk，并把 `DATA_DIR` 指到挂载路径。
-
-### 方式 B：Docker（任意 VPS / Railway / Fly）
-
-```bash
-docker build -t cybercasters .
-docker run -d -p 3000:3000 \
-  -e SESSION_SECRET=换成长随机串 \
-  -e ADMIN_TOKEN=换成管理令牌 \
-  -e PUBLIC_BASE=https://你的域名 \
-  -e NODE_ENV=production \
-  -v cybercasters-data:/data \
-  cybercasters
-```
-
-数据写在容器内 `/data`（`DATA_DIR`），务必挂卷。
-
-### 方式 C：已有 Linux 服务器
-
-```bash
-git clone <你的仓库>
-cd cybercasters_0726
-npm ci
-# 配置 .env 或 export 环境变量
-NODE_ENV=production npm start
-```
-
-前面建议再挂 Nginx / Caddy 做 HTTPS 反代。
-
-## 目录
-
-```
-app/                    前端静态页
-server/
-  index.js              API + 静态托管
-  gatherings.js         公开摘要元数据
-  content/gatherings/   完整纪要 HTML（仅 API 对参会者返回）
-  data/                 默认数据目录（可被 DATA_DIR 覆盖）
-  seed.js               演示账号
-Dockerfile              容器镜像
-render.yaml             Render 蓝图
-```
-
-## 常用流程
-
-1. 访客在 **我想参加** 填写称呼与意向时间（联系方式选填）  
-2. 组织者打开 `/admin.html`，用 `ADMIN_TOKEN` 审批  
-3. 把返回的**登录名 + 一次性通行码**私下发给对方  
-4. 对方在 **成员登录** 用「登录名 + 通行码」进入当期纪要并留言  
-
-## 微信扫码（可选）
-
-```bash
-WECHAT_APP_ID=...
-WECHAT_APP_SECRET=...
-PUBLIC_BASE=https://your-domain.com
-```
-
-未配置时，登录页「微信扫码」会提示改用通行码。
-
-## 环境变量
-
-见 `.env.example`。本地可放 `.env`（已接入 `dotenv`）；线上用平台面板注入。
-
-## 注意
-
-- 请用 `npm start` 跑服务，不要只用静态文件服务器——权限与评论依赖 `/api/*`。  
-- 生产环境务必修改 `SESSION_SECRET` 与 `ADMIN_TOKEN`。  
-- 数据文件含用户哈希，勿提交到公开仓库。
+Node 测试服务需要设置正式格式的本地密钥和隔离的 `DATA_DIR`。Cloudflare 本机预览可使用 `npm run dev:cf`。生产密钥不要提交至 Git。
