@@ -1,0 +1,163 @@
+/* Shared palette for the original application pages and their existing theme controls. */
+:root,
+html[data-theme="dark"] {
+  --void: #0e171e;
+  --panel: #17242b;
+  --panel-2: #1c2d35;
+  --line: #bac9c62e;
+  --cyan: #b5cdd1;
+  --arcane: #b6c3aa;
+  --gold: #d1c9b5;
+  --ash: #a8b6b6;
+  --paper: #f1eee5;
+  --body: #c0cbc8;
+  --panel-glass: #101b23ed;
+  --theme-meta: #0e171e;
+  --font-display: "Iowan Old Style", Baskerville, "Songti SC", STSong, serif;
+}
+html[data-theme="light"] {
+  --void: #f2efe8;
+  --panel: #eaece5;
+  --panel-2: #e5e9e3;
+  --line: #2d434b2d;
+  --cyan: #355563;
+  --arcane: #566b52;
+  --gold: #68735a;
+  --ash: #667471;
+  --paper: #263d47;
+  --body: #526565;
+  --panel-glass: #f2efe8ed;
+  --theme-meta: #f2efe8;
+}
+body {
+  background: var(--void);
+  color: var(--paper);
+}
+.auth-page .auth-card {
+  background: var(--void);
+  border: 1px solid var(--line);
+  padding: 45px 42px;
+  max-width: 600px;
+  width: 100%;
+  margin: 48px auto 80px;
+  box-shadow: 0 12px 70px #152c3810;
+}
+.auth-page .auth-card h1 {
+  font-size: clamp(30px, 4vw, 44px);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+.auth-page .field label {
+  color: var(--paper);
+  letter-spacing: 0.015em;
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+html .field input,
+html .field textarea,
+html .field select,
+html .comment-form textarea {
+  font-size: 16px;
+  border-radius: 0;
+  min-height: 46px;
+}
+html .btn {
+  clip-path: none;
+  border-radius: 0;
+  min-height: 44px;
+  letter-spacing: 0.015em;
+}
+html .btn-primary {
+  background: var(--cyan);
+  color: var(--void);
+}
+.auth-card .handle-card,
+.auth-card .handle-card,
+.credential {
+  background: var(--panel);
+  border-color: var(--line);
+}
+.form-msg.err {
+  color: #b45b58;
+}
+html[data-theme="dark"] .form-msg.err {
+  color: #f0a8a0;
+}
+html .topbar {
+  background: var(--panel-glass);
+  box-shadow: 0 1px 0 var(--line);
+}
+html .head::before {
+  display: none;
+}
+html .head h1 {
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  font-size: clamp(34px, 5vw, 58px);
+  max-width: 900px;
+}
+html .lock-box {
+  background: var(--panel);
+}
+html .lock-box::before {
+  background: var(--arcane);
+}
+html .topic-list li {
+  border-color: var(--line);
+}
+html .abstract::before {
+  background: var(--arcane);
+}
+#bgmBtn,
+#themeBtn {
+  border-radius: 0;
+  background: var(--panel-glass);
+  color: var(--paper);
+}
+body.nature-shell #themeBtn {
+  display: none;
+}
+@media (max-width: 600px) {
+  .auth-page .auth-card {
+    padding: 30px 22px;
+    margin-top: 28px;
+  }
+  .auth-nav {
+    padding-block: 20px;
+  }
+  .topbar-in {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .auth-nav a {
+    font-family: var(--font-sans);
+    letter-spacing: 0;
+    font-size: 12px;
+  }
+}
+
+/* Keep the same quiet palette when original page styles join the SPA. */
+html[data-theme="light"] {
+  --tabbar-bg: #f2efe8ed;
+  --on-accent: #f2efe8;
+  --panel-wash: #eaece5b8;
+  --panel-wash-soft: #eaece56b;
+  --glow-arcane: transparent;
+  --glow-cyan: transparent;
+  --glow-brand: transparent;
+}
+html[data-theme="dark"] {
+  --tabbar-bg: #101b23ed;
+  --on-accent: #0e171e;
+  --panel-wash: #17242bb8;
+  --panel-wash-soft: #17242b6b;
+  --glow-arcane: transparent;
+  --glow-cyan: transparent;
+  --glow-brand: transparent;
+}
+html #themeBtn,
+html #themeBtn[data-theme="light"] {
+  background: var(--panel-glass);
+  color: var(--paper);
+  border-color: var(--line);
+}
