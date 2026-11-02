@@ -1,0 +1,166 @@
+[
+  {
+    "id": "002",
+    "date": "2026.08.20",
+    "title": "Cyber Casters · Second AI Meetup",
+    "mode": "In person",
+    "place": "Shenzhen",
+    "status": "past",
+    "summary": "The second in-person meetup covered Word delivery of due-diligence reports, Skill organization and triggering, team standards, long-running projects and constrained writing.",
+    "topics": [
+      {
+        "no": "01",
+        "title": "Iterating a due diligence skill in Cursor",
+        "blurb": "Manage skills visually; separate content and formatting, then chain them."
+      },
+      {
+        "no": "02",
+        "title": "From Markdown to Word",
+        "blurb": "Build the structure, then finish tables and styles through reference mappings."
+      },
+      {
+        "no": "03",
+        "title": "Cloud agents and selected edits",
+        "blurb": "Mobile sync and scheduled briefings; select a passage before editing."
+      },
+      {
+        "no": "04",
+        "title": "From individuals to teams",
+        "blurb": "Remote access first; shared standards make team collaboration work."
+      },
+      {
+        "no": "05",
+        "title": "Layered memory and retrospectives",
+        "blurb": "Keep general rules, domain guidance and project lessons separate; read on demand."
+      },
+      {
+        "no": "06",
+        "title": "Synchronizing team files",
+        "blurb": "Manage standards in a repository and make project archives locally accessible."
+      },
+      {
+        "no": "07",
+        "title": "Why a skill did not trigger",
+        "blurb": "Mismatched locations, overwritten settings and long memories can silence hooks."
+      },
+      {
+        "no": "08",
+        "title": "Pair instructions with checks",
+        "blurb": "Keep context concise and verify required steps at milestones."
+      },
+      {
+        "no": "09",
+        "title": "A customized demand letter",
+        "blurb": "Capture tone in the workspace and clarify uncertainty with multiple-choice questions."
+      },
+      {
+        "no": "10",
+        "title": "Turning work into workflows",
+        "blurb": "Organized folders and a concise knowledge base show people what matters."
+      },
+      {
+        "no": "11",
+        "title": "The cockpit and task branches",
+        "blurb": "Keep heavy work in separate conversations and use deliberate handoffs."
+      },
+      {
+        "no": "12",
+        "title": "Multi-device sync and Chinese search",
+        "blurb": "An allowlisted information feed; mainland search remains a challenge."
+      },
+      {
+        "no": "13",
+        "title": "Constrained writing",
+        "blurb": "A fixed framework and sentence-level sources stabilize long reports."
+      },
+      {
+        "no": "14",
+        "title": "Specialist legal products",
+        "blurb": "Separate process from output and validate individual workflows first."
+      }
+    ],
+    "link": "gathering-002.html"
+  },
+  {
+    "id": "001",
+    "date": "2026.07.24",
+    "title": "Cyber Casters · First AI Meetup",
+    "mode": "In person",
+    "place": "Shenzhen",
+    "status": "past",
+    "summary": "Our first in-person meetup: a problem AI could not solve and a useful technique others might not know. Open the laptop and compare approaches.",
+    "topics": [
+      {
+        "no": "01",
+        "title": "Collecting and organizing information",
+        "blurb": "Gather and verify public sources, then connect them to a local library."
+      },
+      {
+        "no": "02",
+        "title": "Packaging and managing skills",
+        "blurb": "Turn experience into reusable skills organized in layers."
+      },
+      {
+        "no": "03",
+        "title": "The efficiency of formats and tools",
+        "blurb": "Markdown suits AI; choosing the right Word tool changes the cost substantially."
+      },
+      {
+        "no": "04",
+        "title": "Confidential minutes and local processing",
+        "blurb": "Transcribe locally before asking a trusted model to structure the notes."
+      },
+      {
+        "no": "05",
+        "title": "Audio and meeting records",
+        "blurb": "Connect transcription, recording devices and everyday note-taking."
+      },
+      {
+        "no": "06",
+        "title": "Voice input tools",
+        "blurb": "Turn speech into writing; structured dictation improves the result."
+      },
+      {
+        "no": "07",
+        "title": "Desktop collaboration and model switching",
+        "blurb": "Work with local folders and switch models inside an editor."
+      },
+      {
+        "no": "08",
+        "title": "Coding and multiple agents",
+        "blurb": "Skills and specialist roles help; requirements and testing often remain the bottleneck."
+      },
+      {
+        "no": "09",
+        "title": "Cloud computers and isolated environments",
+        "blurb": "Run assistants on an isolated host with access while away."
+      },
+      {
+        "no": "10",
+        "title": "Managing work with Projects",
+        "blurb": "One space per project, with background, documents and memories."
+      },
+      {
+        "no": "11",
+        "title": "Connecting data through MCP",
+        "blurb": "Connect external data and tools; access depends on source openness."
+      },
+      {
+        "no": "12",
+        "title": "Obsidian tips",
+        "blurb": "Sync, templates, image assets and editor integration."
+      },
+      {
+        "no": "13",
+        "title": "A pandoc formatting workflow",
+        "blurb": "Mapping rules and style templates turn Markdown into Word."
+      },
+      {
+        "no": "14",
+        "title": "Meetup photographs",
+        "blurb": "Photographs from the meetup; the full gallery requires member access."
+      }
+    ],
+    "link": "gathering-001.html"
+  }
+]

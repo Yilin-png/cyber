@@ -7,36 +7,54 @@ const cookieSession = require("cookie-session");
 /* 本地可选：有 .env 就加载；线上用平台环境变量 */
 try { require("dotenv").config(); } catch (_) {}
 
+const { formatChinaTime } = require("./time");
+const { parseIntent } = require("./intent");
 const {
   load, save, uid, hashPass, verifyPass, genPasscode, genHandle, handleOf, DATA_DIR
 } = require("./db");
 const { limiter, hit, reset } = require("./ratelimit");
 const { ensureDemoUser } = require("./seed");
 const GATHERINGS = require("./gatherings");
+const GATHERINGS_EN = require("./gatherings.en.json");
+const localizedGathering = (g, lang) => lang === "en" ? (GATHERINGS_EN.find(x => x.id === g.id) || g) : g;
 
-ensureDemoUser();
+process.env.DISABLE_DEMO = "1";
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "cc-admin-change-me";
-const SESSION_SECRET = process.env.SESSION_SECRET || "cyber-casters-dev-secret";
+const SESSION_SECRET = process.env.SESSION_SECRET || "";
 const WECHAT_APP_ID = process.env.WECHAT_APP_ID || "";
 const WECHAT_APP_SECRET = process.env.WECHAT_APP_SECRET || "";
 const PUBLIC_BASE = (process.env.PUBLIC_BASE || `http://localhost:${PORT}`).replace(/\/$/, "");
-/* 仅在明确要求或生产环境启用 Secure Cookie。
-   不要用 PUBLIC_BASE 是否 https 来判断——本地预览时常把 PUBLIC_BASE 写成线上地址，
-   会导致 http://localhost 登录成功但浏览器拒收 Cookie，表现为「无法登录」。 */
-const COOKIE_SECURE = process.env.COOKIE_SECURE != null
-  ? ["1", "true", "yes"].includes(String(process.env.COOKIE_SECURE).toLowerCase())
-  : process.env.NODE_ENV === "production";
+const ADMIN_ACCOUNTS = [
+  {
+    username: String(process.env.ADMIN1_USER || "").trim().toLowerCase(),
+    password: String(process.env.ADMIN1_PASS || "")
+  },
+  {
+    username: String(process.env.ADMIN2_USER || "").trim().toLowerCase(),
+    password: String(process.env.ADMIN2_PASS || "")
+  },
+  {
+    username: String(process.env.ADMIN3_USER || "").trim().toLowerCase(),
+    password: String(process.env.ADMIN3_PASS || "")
+  }
+].filter((a) => a.username && a.password);
+if (SESSION_SECRET.length < 32 || !ADMIN_ACCOUNTS.length) {
+  throw new Error("Release configuration required: SESSION_SECRET (32+ characters) and ADMIN1_USER / ADMIN1_PASS.");
+}
+/* 上线候选版要求 HTTPS；本机交互预览请使用保留的 B03 预览版。 */
+const COOKIE_SECURE = true;
 
 /* 反代（Render / Railway / Nginx）后面要信任 X-Forwarded-* */
 app.set("trust proxy", 1);
 
 app.use(express.json({ limit: "256kb" }));
+app.use("/api", (_req, res, next) => { res.set("Cache-Control", "private, no-store"); next(); });
 app.use(
   cookieSession({
-    name: "cc_sess",
+    name: "cc_b03_sess",
     keys: [SESSION_SECRET],
     maxAge: 30 * 24 * 60 * 60 * 1000,
     sameSite: "lax",
@@ -53,12 +71,14 @@ function publicGathering(g) {
   return {
     id: g.id,
     date: g.date,
+    time: g.time || "",
     title: g.title,
     mode: g.mode,
     place: g.place,
+    status: g.status || "past",
     summary: g.summary,
     topics: g.topics || [],
-    link: g.link
+    link: g.link || ""
   };
 }
 
@@ -66,7 +86,7 @@ function currentUser(req) {
   const id = req.session && req.session.userId;
   if (!id) return null;
   const db = load();
-  return db.users.find(u => u.id === id) || null;
+  return db.users.find(u => u.id === id && handleOf(u).toLowerCase() !== "demo_caster") || null;
 }
 
 function requireUser(req, res) {
@@ -78,14 +98,32 @@ function requireUser(req, res) {
   return u;
 }
 
-function canAccessGathering(user, gatheringId) {
-  return !!(user && Array.isArray(user.gatherings) && user.gatherings.includes(gatheringId));
+function canAccessGathering(user, gatheringId, session) {
+  if (session && session.adminUser) return true;
+  if (!user || !Array.isArray(user.gatherings) || !user.gatherings.length) return false;
+  if (user.gatherings.includes(gatheringId)) return true;
+  const g = GATHERINGS.find(x => x.id === gatheringId);
+  /* 已发布的往期纪要对现有成员开放，避免账号仍绑着旧期次时正文被锁住。 */
+  return !!(g && g.status === "past");
+}
+
+function safeEqualStr(a, b) {
+  const x = Buffer.from(String(a));
+  const y = Buffer.from(String(b));
+  if (x.length !== y.length) return false;
+  return crypto.timingSafeEqual(x, y);
+}
+
+function findAdmin(username, password) {
+  const u = String(username || "").trim().toLowerCase();
+  const p = String(password || "");
+  if (!u || !p) return null;
+  return ADMIN_ACCOUNTS.find((a) => a.username === u && safeEqualStr(a.password, p)) || null;
 }
 
 function requireAdmin(req, res) {
-  const token = req.get("x-admin-token") || "";
-  if (token !== ADMIN_TOKEN) {
-    res.status(403).json({ error: "管理员令牌无效" });
+  if (!req.session || !req.session.adminUser) {
+    res.status(403).json({ error: "请先登录管理账号" });
     return false;
   }
   return true;
@@ -97,8 +135,16 @@ function safeText(s, max = 500) {
 
 const APPLY_STATUSES = ["pending", "approved", "rejected"];
 
+function applyStatusLabel(s) {
+  if (s === "approved") return "已通过";
+  if (s === "rejected") return "已驳回";
+  return "";
+}
+
 /** 管理端展示用：统一字段名，不外泄哈希等敏感信息 */
-function adminApplication(row) {
+function adminApplication(row, user) {
+  const issued = row.issuedGatherings || [];
+  const live = user && Array.isArray(user.gatherings) ? user.gatherings : issued;
   return {
     id: row.id,
     name: row.name,
@@ -111,30 +157,44 @@ function adminApplication(row) {
     approvedAt: row.approvedAt || null,
     rejectedAt: row.rejectedAt || null,
     rejectReason: row.rejectReason || "",
-    issuedGatherings: row.issuedGatherings || []
+    issuedGatherings: issued,
+    userId: user ? user.id : null,
+    gatherings: live
   };
 }
 
+function findUserByApp(db, appRow) {
+  const handle = handleOf(appRow).toLowerCase();
+  return db.users.find(u => handleOf(u).toLowerCase() === handle) || null;
+}
+
 /* ── 公开：集会列表（仅摘要） ── */
-app.get("/api/gatherings", (_req, res) => {
-  res.json({ gatherings: GATHERINGS.map(publicGathering) });
+app.get("/api/gatherings", (req, res) => {
+  res.json({ gatherings: GATHERINGS.map(g => publicGathering(localizedGathering(g, req.query.lang))) });
 });
 
 app.get("/api/gatherings/:id", (req, res) => {
   const g = GATHERINGS.find(x => x.id === req.params.id);
   if (!g) return res.status(404).json({ error: "未找到该期集会" });
 
+  const session = req.session || {};
   const user = currentUser(req);
-  const unlocked = canAccessGathering(user, g.id);
+  const unlocked = canAccessGathering(user, g.id, session);
   const payload = {
-    ...publicGathering(g),
+    ...publicGathering(localizedGathering(g, req.query.lang)),
+    contentLang: req.query.lang === "en" ? "en" : "zh-CN",
     unlocked,
-    auth: !!user,
-    user: user ? { name: user.name, gatherings: user.gatherings } : null
+    auth: !!(user || session.adminUser),
+    admin: !!session.adminUser,
+    user: user
+      ? { name: user.name, gatherings: user.gatherings }
+      : (session.adminUser
+        ? { name: `管理·${session.adminUser}`, gatherings: GATHERINGS.map(x => x.id), isAdmin: true }
+        : null)
   };
 
   if (unlocked) {
-    const file = path.join(__dirname, "content", "gatherings", `${g.id}.html`);
+    const file = path.join(__dirname, "content", "gatherings", `${g.id}${req.query.lang === "en" ? ".en" : ""}.html`);
     payload.bodyHtml = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "<p>正文暂缺</p>";
   } else {
     payload.bodyHtml = null;
@@ -142,7 +202,21 @@ app.get("/api/gatherings/:id", (req, res) => {
       ? "你的账号未绑定本期参会资格，如有疑问请联系组织者。"
       : "完整纪要仅对当期参会成员开放，请先登录。";
   }
+  res.set("Cache-Control", "private, no-store");
   res.json(payload);
+});
+
+/* Existing member extracts share the same permissions as the corresponding notes. */
+app.get("/api/member/spells", (req, res) => {
+  const user = currentUser(req);
+  const session = req.session || {};
+  if (!user && !session.adminUser) return res.status(401).json({ error: "需要登录" });
+  const groups = require(req.query.lang === "en" ? "./content/member-spells.en.json" : "./content/member-spells.json").filter(group => {
+    const match = String(group.src || "").match(/gathering-(\d+)\.html/);
+    return match && canAccessGathering(user, match[1], session);
+  });
+  res.set("Cache-Control", "private, no-store");
+  res.json({ groups });
 });
 
 /* ── 申请入会 / 报意向（不强制微信等身份信息） ── */
@@ -161,14 +235,17 @@ app.post("/api/apply", applyLimiter, (req, res) => {
 
   const name = safeText(req.body.name, 40);
   const contact = safeText(req.body.contact, 80);
-  const intentDates = safeText(req.body.intentDates, 120);
+  const intentDates = safeText(req.body.intentDates, 200);
   const message = safeText(req.body.message, 800);
 
-  if (!name || !intentDates) {
-    return res.status(400).json({ error: "请填写称呼与意向参与时间" });
+  if (!name) {
+    return res.status(400).json({ error: "请填写称呼" });
   }
   if (name.length < 2) {
     return res.status(400).json({ error: "称呼太短了，写两个字以上吧" });
+  }
+  if (!message) {
+    return res.status(400).json({ error: "请填写想交流的方向" });
   }
 
   const db = load();
@@ -230,7 +307,7 @@ app.post("/api/auth/login", (req, res) => {
 
   const db = load();
   const user = db.users.find(u => handleOf(u).toLowerCase() === handle.toLowerCase());
-  if (!user || !verifyPass(passcode, user.passcodeHash)) {
+  if (handle.toLowerCase() === "demo_caster" || !user || !verifyPass(passcode, user.passcodeHash)) {
     return res.status(401).json({ error: "登录名或通行码不正确" });
   }
 
@@ -248,13 +325,31 @@ app.post("/api/auth/logout", (req, res) => {
 });
 
 app.get("/api/auth/me", (req, res) => {
+  const wechatOAuth = !!(WECHAT_APP_ID && WECHAT_APP_SECRET);
+  const session = req.session || {};
   const user = currentUser(req);
-  if (!user) return res.json({ auth: false, user: null, wechatOAuth: !!(WECHAT_APP_ID && WECHAT_APP_SECRET) });
-  res.json({
-    auth: true,
-    user: { name: user.name, handle: handleOf(user), gatherings: user.gatherings },
-    wechatOAuth: !!(WECHAT_APP_ID && WECHAT_APP_SECRET)
-  });
+  if (user) {
+    return res.json({
+      auth: true,
+      admin: session.adminUser ? { username: session.adminUser } : null,
+      user: { name: user.name, handle: handleOf(user), gatherings: user.gatherings },
+      wechatOAuth
+    });
+  }
+  if (session.adminUser) {
+    return res.json({
+      auth: true,
+      admin: { username: session.adminUser },
+      user: {
+        name: `管理·${session.adminUser}`,
+        handle: session.adminUser,
+        gatherings: GATHERINGS.map(g => g.id),
+        isAdmin: true
+      },
+      wechatOAuth
+    });
+  }
+  return res.json({ auth: false, admin: null, user: null, wechatOAuth });
 });
 
 /* 微信网页授权（可选增强；未配置时前端不展示入口） */
@@ -299,7 +394,7 @@ app.get("/api/auth/wechat/callback", async (req, res) => {
       return res.redirect("/login.html?bind=1");
     }
     req.session.userId = user.id;
-    res.redirect("/gathering-001.html");
+    res.redirect("/gathering-002.html");
   } catch (e) {
     console.error(e);
     res.redirect("/login.html?err=wechat_fail");
@@ -319,11 +414,14 @@ app.post("/api/auth/bind-wechat", (req, res) => {
   res.json({ ok: true });
 });
 
-/* ── 评论：仅当期参会者可读可写 ── */
+/* ── 评论：当期参会者或管理员可读可写 ── */
 app.get("/api/gatherings/:id/comments", (req, res) => {
-  const user = requireUser(req, res);
-  if (!user) return;
-  if (!canAccessGathering(user, req.params.id)) {
+  const session = req.session || {};
+  const user = currentUser(req);
+  if (!user && !session.adminUser) {
+    return res.status(401).json({ error: "需要登录", code: "AUTH_REQUIRED" });
+  }
+  if (!canAccessGathering(user, req.params.id, session)) {
     return res.status(403).json({ error: "仅当期参会成员可查看留言" });
   }
   const db = load();
@@ -340,9 +438,12 @@ app.get("/api/gatherings/:id/comments", (req, res) => {
 });
 
 app.post("/api/gatherings/:id/comments", (req, res) => {
-  const user = requireUser(req, res);
-  if (!user) return;
-  if (!canAccessGathering(user, req.params.id)) {
+  const session = req.session || {};
+  const user = currentUser(req);
+  if (!user && !session.adminUser) {
+    return res.status(401).json({ error: "需要登录", code: "AUTH_REQUIRED" });
+  }
+  if (!canAccessGathering(user, req.params.id, session)) {
     return res.status(403).json({ error: "仅当期参会成员可留言" });
   }
   const body = safeText(req.body.body, 1000);
@@ -352,8 +453,8 @@ app.post("/api/gatherings/:id/comments", (req, res) => {
   const row = {
     id: uid("c_"),
     gatheringId: req.params.id,
-    userId: user.id,
-    authorName: user.name,
+    userId: user ? user.id : `admin:${session.adminUser}`,
+    authorName: user ? user.name : `管理·${session.adminUser}`,
     body,
     createdAt: new Date().toISOString()
   };
@@ -370,7 +471,47 @@ app.post("/api/gatherings/:id/comments", (req, res) => {
   });
 });
 
-/* ── 管理员：审批申请、发放通行码、绑定参会期次 ── */
+/* ── 管理员：账号密码登录 + 审批申请 ── */
+const ADMIN_LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const ADMIN_LOGIN_MAX_FAILS = 8;
+
+app.post("/api/admin/login", (req, res) => {
+  const username = safeText(req.body?.username || req.body?.user || req.body?.handle, 40);
+  const password = safeText(req.body?.password || req.body?.pass, 64);
+  if (!username || !password) {
+    return res.status(400).json({ error: "请填写账号与密码" });
+  }
+
+  const failKey = `admin-login-fail:${req.ip}`;
+  const probe = hit(failKey, { windowMs: ADMIN_LOGIN_WINDOW_MS, max: ADMIN_LOGIN_MAX_FAILS });
+  if (!probe.allowed) {
+    res.set("Retry-After", String(probe.retryAfterSec));
+    return res.status(429).json({
+      error: `尝试次数过多，请 ${Math.ceil(probe.retryAfterSec / 60)} 分钟后再试`,
+      retryAfterSec: probe.retryAfterSec
+    });
+  }
+
+  const admin = findAdmin(username, password);
+  if (!admin) {
+    return res.status(401).json({ error: "账号或密码不正确" });
+  }
+
+  reset(failKey);
+  req.session.adminUser = admin.username;
+  res.json({ ok: true, admin: { username: admin.username } });
+});
+
+app.post("/api/admin/logout", (req, res) => {
+  if (req.session) delete req.session.adminUser;
+  res.json({ ok: true });
+});
+
+app.get("/api/admin/me", (req, res) => {
+  const username = req.session && req.session.adminUser;
+  res.json({ auth: !!username, admin: username ? { username } : null });
+});
+
 const adminLimiter = limiter({
   scope: "admin",
   windowMs: 10 * 60 * 1000,
@@ -398,7 +539,10 @@ app.get("/api/admin/applications", (req, res) => {
     counts[s] = db.applications.filter(a => a.status === s).length;
   }
 
-  res.json({ applications: rows.map(adminApplication), counts });
+  res.json({
+    applications: rows.map(a => adminApplication(a, findUserByApp(db, a))),
+    counts
+  });
 });
 
 /* 报名表导出：给组织者拉到表格里排期用 */
@@ -411,12 +555,29 @@ app.get("/api/admin/applications.csv", (req, res) => {
     if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
     return `"${s.replace(/"/g, '""')}"`;
   };
-  const header = ["提交时间", "称呼", "登录名", "联系方式", "意向时间", "留言", "状态", "审批时间", "可见期次"];
+  const header = [
+    "提交时间", "称呼", "登录名", "联系方式",
+    "最近一期", "是否参加", "日期", "时段", "地点", "补充说明", "交流方向",
+    "状态", "审批时间", "可见期次"
+  ];
   const lines = [header.map(cell).join(",")];
   for (const a of db.applications) {
+    const p = parseIntent(a.intentDates);
     lines.push([
-      a.createdAt, a.name, handleOf(a), a.contact || "", a.intentDates || "",
-      a.message || "", a.status, a.approvedAt || "", (a.issuedGatherings || []).join(" ")
+      formatChinaTime(a.createdAt),
+      a.name,
+      handleOf(a),
+      a.contact || "",
+      p.nextLabel || "",
+      p.joinNext || "",
+      p.period || "",
+      p.slot || "",
+      p.area || "",
+      p.note || p.legacy || "",
+      a.message || "",
+      applyStatusLabel(a.status),
+      formatChinaTime(a.approvedAt),
+      (a.issuedGatherings || []).join(" ")
     ].map(cell).join(","));
   }
   res.set("Content-Type", "text/csv; charset=utf-8");
@@ -491,6 +652,45 @@ app.post("/api/admin/applications/:id/reissue", (req, res) => {
   res.json({ ok: true, name: user.name, handle: handleOf(user), passcode, gatherings: user.gatherings });
 });
 
+app.post("/api/admin/applications/:id/permissions", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const gatherings = Array.isArray(req.body.gatherings) ? req.body.gatherings.map(String) : null;
+  if (!gatherings) return res.status(400).json({ error: "需要 gatherings 数组" });
+
+  const db = load();
+  const appRow = db.applications.find(a => a.id === req.params.id);
+  if (!appRow) return res.status(404).json({ error: "申请不存在" });
+
+  let passcode = null;
+  let user = findUserByApp(db, appRow);
+
+  if (appRow.status !== "approved") {
+    const issued = issueAccess(db, appRow, []);
+    user = issued.user;
+    passcode = issued.passcode;
+    appRow.status = "approved";
+    appRow.approvedAt = new Date().toISOString();
+    appRow.rejectedAt = null;
+    appRow.rejectReason = "";
+  } else if (!user) {
+    const issued = issueAccess(db, appRow, []);
+    user = issued.user;
+    passcode = issued.passcode;
+  }
+
+  user.gatherings = [...new Set(gatherings)];
+  appRow.issuedGatherings = user.gatherings;
+  save(db);
+
+  res.json({
+    ok: true,
+    name: user.name,
+    handle: handleOf(user),
+    passcode,
+    gatherings: user.gatherings
+  });
+});
+
 app.post("/api/admin/applications/:id/reject", (req, res) => {
   if (!requireAdmin(req, res)) return;
   const db = load();
@@ -544,14 +744,14 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: "服务器错误" });
 });
 
-app.listen(PORT, "0.0.0.0", () => {
+app.listen(PORT, process.env.HOST || "0.0.0.0", () => {
   const host = PUBLIC_BASE || `http://localhost:${PORT}`;
   console.log(`CYBER CASTERS  →  ${host}`);
   console.log(`数据目录       →  ${DATA_DIR}`);
-  if (SESSION_SECRET === "cyber-casters-dev-secret" || ADMIN_TOKEN === "cc-admin-change-me") {
-    console.warn("⚠ 仍在使用默认 SESSION_SECRET / ADMIN_TOKEN，上线前请务必修改。");
+  if (SESSION_SECRET === "cyber-casters-dev-secret") {
+    console.warn("⚠ 仍在使用默认 SESSION_SECRET，上线前请务必修改。");
   }
-  console.log(`管理审批令牌   →  x-admin-token: ${ADMIN_TOKEN}`);
+  console.log("管理账号       →  " + ADMIN_ACCOUNTS.map((a) => a.username).join(" / "));
   const db = load();
   if (db._seedInfo) {
     console.log(`演示登录       →  登录名 ${db._seedInfo.handle} / 通行码 ${db._seedInfo.passcode}`);
