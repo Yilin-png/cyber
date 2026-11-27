@@ -185,6 +185,14 @@
     padding:10px 12px;border-left:2px solid var(--gold);background:var(--panel-wash-soft);
   }
   .perm-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+  .survey-admin{margin-top:44px;padding-top:24px;border-top:1px solid var(--line)}
+  .survey-admin h2{font-family:var(--font-display);font-size:var(--text-lg);font-weight:700;letter-spacing:var(--track-title);margin:0 0 6px}
+  .survey-admin-note{font-size:var(--text-sm);margin:0 0 12px}
+  .survey-admin-note a{color:var(--cyan)}
+  #surveyWrap{width:100%;max-width:100%;overflow-x:auto}
+  .lv-pill{font-family:var(--font-mono);font-size:var(--text-sm);color:var(--cyan);border:1px solid rgba(63,224,208,.5);padding:2px 8px;display:inline-block}
+  .sv-block{display:flex;flex-direction:column;gap:4px;line-height:1.5;font-size:var(--text-sm)}
+  .sv-block .k{color:var(--gold);font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:var(--track-label);margin-right:4px}
 
   @media (max-width:640px){
     .admin-wrap{
@@ -268,6 +276,24 @@
 
     <div id="credential"></div>
     <div id="tableWrap"></div>
+
+    <section class="survey-admin" aria-labelledby="surveyTitle">
+      <h2 id="surveyTitle">法律 AI 社群问卷</h2>
+      <p class="muted survey-admin-note">问卷与报名分开存放。级别按 <a href="survey.html" target="_blank" rel="noopener">问卷页</a> 里的分级说明计算。</p>
+      <div class="filter-bar" id="surveyBar">
+        <button class="chip" type="button" data-level="" aria-pressed="true">全部</button>
+        <button class="chip" type="button" data-level="L0" aria-pressed="false">L0</button>
+        <button class="chip" type="button" data-level="L1" aria-pressed="false">L1</button>
+        <button class="chip" type="button" data-level="L2" aria-pressed="false">L2</button>
+        <button class="chip" type="button" data-level="L3" aria-pressed="false">L3</button>
+        <button class="chip" type="button" data-level="L4" aria-pressed="false">L4</button>
+        <span class="spacer"></span>
+        <button class="chip" type="button" id="surveyReload">刷新问卷</button>
+        <button class="chip" type="button" id="surveyCsvBtn">导出问卷 CSV</button>
+      </div>
+      <p class="muted" id="surveyStats" aria-live="polite"></p>
+      <div id="surveyWrap"></div>
+    </section>
   </div>
 
   <div class="form-msg" id="msg" aria-live="polite"></div>
@@ -290,6 +316,7 @@
 <script src="js/util.js"></script>
 <script src="js/theme.js?v=bj-sun1"></script>
 <script src="js/api.js"></script>
+<script src="js/legal-ai-survey.js?v=1"></script>
 <script>
 const msg = document.getElementById("msg");
 const qInput = document.getElementById("q");
@@ -346,7 +373,10 @@ async function refreshAuth() {
   try {
     const me = await CC.api("/api/admin/me");
     showGate(me.auth, me.admin && me.admin.username);
-    if (me.auth) await load();
+    if (me.auth) {
+      await load();
+      await loadSurveys();
+    }
     else setMsg("");
   } catch (err) {
     showGate(false);
@@ -533,6 +563,7 @@ loginForm.addEventListener("submit", async (e) => {
     showGate(true, data.admin && data.admin.username);
     setMsg("登录成功", "ok");
     await load();
+    await loadSurveys();
   } catch (err) {
     setMsg(err.message, "err");
   } finally {
@@ -627,6 +658,105 @@ document.addEventListener("cc:language", async () => {
     const g = catalog.find(item => item.id === label.querySelector("input").value);
     if (g) label.querySelector(".t").textContent = `${g.id} · ${g.title}`;
   });
+});
+
+const surveyWrap = document.getElementById("surveyWrap");
+const surveyStats = document.getElementById("surveyStats");
+let surveyLevel = "";
+let surveyRows = [];
+
+function svLabel(id, answers) {
+  const q = CCSurvey.QUESTIONS.find(x => x.id === id);
+  return q ? CCSurvey.labelOf(q, answers[id]) : "";
+}
+
+function svLine(key, id, answers, raw) {
+  const v = svLabel(id, answers);
+  if (!v) return "";
+  const text = raw ? `<span data-no-i18n>${esc(v)}</span>` : esc(v);
+  return `<div><span class="k">${esc(key)}</span>${text}</div>`;
+}
+
+function renderSurveys() {
+  const rows = surveyLevel ? surveyRows.filter(r => r.level === surveyLevel) : surveyRows;
+  if (!rows.length) {
+    surveyWrap.innerHTML = "<p class='muted' style='margin-top:12px'>暂无问卷记录</p>";
+    return;
+  }
+  surveyWrap.innerHTML = `
+    <table>
+      <thead><tr><th>提交时间</th><th>级别</th><th>受访者</th><th>AI 使用</th><th>需求</th><th>活动</th></tr></thead>
+      <tbody>
+        ${rows.map(r => {
+          const a = r.answers || {};
+          const lv = CCSurvey.LEVELS.find(x => x.id === r.level) || CCSurvey.levelOf(a);
+          return `<tr>
+            <td class="muted" data-label="提交时间">${esc(fmtTime(r.createdAt))}</td>
+            <td data-label="级别"><span class="lv-pill" data-no-i18n>${esc(lv.id)}</span><br><span class="muted">${esc(lv.name)}</span></td>
+            <td data-label="受访者"><div class="sv-block">
+              ${a.name ? `<strong data-no-i18n style="color:var(--paper)">${esc(a.name)}</strong>` : `<span class="muted">未留称呼</span>`}
+              ${a.contact ? `<span data-no-i18n class="mono">${esc(a.contact)}</span>` : ""}
+              ${svLine("角色", "role", a)}${svLine("机构", "org", a)}
+              ${svLine("城市", "city", a)}${svLine("城市", "cityOther", a, true)}
+              ${svLine("领域", "areas", a)}
+            </div></td>
+            <td data-label="AI 使用"><div class="sv-block">
+              ${svLine("频率", "freq", a)}${svLine("提示词", "prompt", a)}
+              ${svLine("自动化", "automation", a)}${svLine("开发", "dev", a)}
+              ${svLine("工具", "tools", a)}
+            </div></td>
+            <td data-label="需求"><div class="sv-block">
+              ${svLine("问题", "tasks", a)}${svLine("场景", "pain", a, true)}
+              ${svLine("希望", "wants", a)}${svLine("顾虑", "concerns", a)}
+            </div></td>
+            <td data-label="活动"><div class="sv-block">
+              ${svLine("形式", "format", a)}${svLine("时间", "time", a)}
+              ${svLine("主题", "topics", a)}${svLine("分享", "share", a)}
+              ${svLine("题目", "shareTopic", a, true)}${svLine("建议", "suggest", a, true)}
+            </div></td>
+          </tr>`;
+        }).join("")}
+      </tbody>
+    </table>`;
+}
+
+async function loadSurveys() {
+  if (!authed) return;
+  try {
+    const data = await CC.api("/api/admin/surveys");
+    const c = data.counts || {};
+    surveyRows = data.responses || [];
+    surveyStats.textContent = `共 ${c.all || 0} 份问卷 · L0 ${c.L0 || 0} · L1 ${c.L1 || 0} · L2 ${c.L2 || 0} · L3 ${c.L3 || 0} · L4 ${c.L4 || 0}`;
+    renderSurveys();
+  } catch (err) {
+    surveyStats.textContent = err.message;
+    surveyWrap.innerHTML = "";
+  }
+}
+
+document.getElementById("surveyBar").addEventListener("click", (e) => {
+  const chip = e.target.closest(".chip[data-level]");
+  if (!chip) return;
+  surveyLevel = chip.dataset.level;
+  document.querySelectorAll("#surveyBar .chip[data-level]").forEach(c => {
+    c.setAttribute("aria-pressed", String(c === chip));
+  });
+  renderSurveys();
+});
+document.getElementById("surveyReload").addEventListener("click", loadSurveys);
+document.getElementById("surveyCsvBtn").addEventListener("click", async () => {
+  try {
+    const res = await fetch("/api/admin/surveys.csv", { credentials: "same-origin" });
+    if (!res.ok) throw new Error("导出失败，请确认已登录");
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `法律AI问卷-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    setMsg(err.message, "err");
+  }
 });
 
 document.getElementById("loadBtn").addEventListener("click", load);

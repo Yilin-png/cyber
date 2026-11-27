@@ -67,6 +67,10 @@
     if ((match = key.match(/^(.+?) · (已通过|已驳回)$/))) return `${match[1]} · ${t(match[2])}`;
     if ((match = key.match(/^· (.+)$/))) return `· ${t(match[1])}`;
     if ((match = key.match(/^(\d{4}\.\d{2}(?:上旬|中旬|下旬)) · (.+)$/))) return `${months(match[1])} · ${t(match[2])}`;
+    if ((match = key.match(/^共 (\d+) 份问卷 · (.+)$/)))
+      return `${match[1]} survey responses · ${match[2]}`;
+    if ((match = key.match(/^请回答：(.+)$/)))
+      return `Please answer: ${t(match[1])}`;
     if ((match = key.match(/^请求失败 (\d+)$/)))
       return `Request failed (${match[1]})`;
     if (key.match(/^\d{4}\.\d{2}(上旬|中旬|下旬)$/)) return months(key);
@@ -117,7 +121,7 @@
             const url = new URL(href, location.href);
             if (
               url.origin === location.origin &&
-              /\/(?:index|login|apply|admin|process|photo-credits|gathering-\d+)\.html$/.test(
+              /\/(?:index|login|apply|survey|admin|process|photo-credits|gathering-\d+)\.html$/.test(
                 url.pathname,
               )
             ) {

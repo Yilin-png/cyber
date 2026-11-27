@@ -25,8 +25,14 @@ import {
 import { GATHERINGS, gatheringBodyHtml, localizedGathering } from "./gatherings.js";
 import { formatChinaTime } from "./time.js";
 import { parseIntent } from "./intent.js";
+import survey from "../app/js/legal-ai-survey.js";
 
 export { CyberStore };
+
+/* 问卷放在同一个 CyberStore 类的独立实例里：读写整份 JSON 时不会碰到成员库（实例 "main"）。 */
+function getSurveyStore(env) {
+  return env.STORE.get(env.STORE.idFromName(survey.SURVEY_ID));
+}
 
 const DEMO_HANDLE = "demo_caster";
 const DEMO_PASS = "CAST-DEMO";
@@ -271,7 +277,7 @@ app.get("/", async (c) => {
 });
 
 /* 子页也走 Worker，强制 UTF-8，避免 fetch/SPA 切页中文乱码 */
-["/index.html", "/apply.html", "/login.html", "/gathering-001.html", "/gathering-002.html", "/process.html", "/admin.html"].forEach((p) => {
+["/index.html", "/apply.html", "/survey.html", "/login.html", "/gathering-001.html", "/gathering-002.html", "/process.html", "/admin.html"].forEach((p) => {
   app.get(p, async (c) => {
     const asset = await assetResponse(c, p);
     return asset || c.text("Not Found", 404);
@@ -399,6 +405,54 @@ app.post("/api/apply", applyLimiter, async (c) => {
     handle,
     message: `报名已提交。你的登录名是「${handle}」，请先记下；审核通过后组织者会私下发通行码，两者搭配即可查阅纪要。`
   });
+});
+
+const surveyLimiter = limiter({
+  scope: "survey",
+  windowMs: 60 * 60 * 1000,
+  max: 30,
+  message: "提交太频繁了，请稍后再试。"
+});
+
+app.post("/api/survey", surveyLimiter, async (c) => {
+  let body;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "无效请求" }, 400);
+  }
+  if (safeText(body.website, 100)) {
+    return c.json({ error: "提交未通过校验" }, 400);
+  }
+  const { answers, missing } = survey.normalize(body.answers);
+  if (missing) {
+    return c.json({ error: `请回答：${missing.title}`, field: missing.id }, 400);
+  }
+  const level = survey.levelOf(answers);
+  const row = {
+    id: uid("svy_"),
+    survey: survey.SURVEY_ID,
+    version: survey.SURVEY_VERSION,
+    level: level.id,
+    answers,
+    createdAt: new Date().toISOString(),
+    meta: { ua: safeText(c.req.header("user-agent"), 200) }
+  };
+  try {
+    await mutate(getSurveyStore(c.env), (db) => {
+      if (!Array.isArray(db.surveys)) db.surveys = [];
+      if (db.surveys.length >= survey.MAX_RESPONSES) {
+        const err = new Error("FULL");
+        err.code = "FULL";
+        throw err;
+      }
+      db.surveys.push(row);
+    });
+  } catch (e) {
+    if (e && e.code === "FULL") return c.json({ error: "问卷已收满，感谢关注" }, 409);
+    throw e;
+  }
+  return c.json({ ok: true, id: row.id, level: level.id });
 });
 
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
@@ -953,6 +1007,38 @@ app.post("/api/admin/users/:id/gatherings", async (c) => {
     throw e;
   }
   return c.json({ ok: true, user: userOut });
+});
+
+async function loadSurveys(env) {
+  const db = await getSurveyStore(env).load();
+  return Array.isArray(db.surveys) ? db.surveys : [];
+}
+
+app.get("/api/admin/surveys", async (c) => {
+  if (!requireAdmin(c)) return c.json({ error: "请先登录管理账号" }, 403);
+  const list = await loadSurveys(c.env);
+  const counts = { all: list.length };
+  for (const lv of survey.LEVELS) counts[lv.id] = list.filter((r) => r.level === lv.id).length;
+  return c.json({
+    responses: list.slice().reverse().map((r) => ({
+      id: r.id,
+      createdAt: r.createdAt,
+      level: r.level,
+      answers: r.answers || {}
+    })),
+    counts
+  });
+});
+
+app.get("/api/admin/surveys.csv", async (c) => {
+  if (!requireAdmin(c)) return c.json({ error: "请先登录管理账号" }, 403);
+  const list = await loadSurveys(c.env);
+  return new Response(survey.csv(list, formatChinaTime), {
+    headers: {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="legal-ai-survey-${Date.now()}.csv"`
+    }
+  });
 });
 
 app.notFound(async (c) => {

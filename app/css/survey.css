@@ -1,0 +1,167 @@
+/* 法律 AI 社群问卷：沿用申请页表单，只补多选网格、进度条与结果卡。 */
+.survey-page .survey-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.survey-page .survey-options .choice {
+  flex: none;
+}
+.survey-page .survey-options .choice-face {
+  justify-content: flex-start;
+  text-align: left;
+  white-space: normal;
+  min-height: 46px;
+  padding: 11px 13px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.survey-page .choice.is-disabled {
+  cursor: not-allowed;
+}
+.survey-page .choice.is-disabled .choice-face {
+  opacity: 0.45;
+}
+.survey-page .survey-q .hint {
+  margin: -4px 0 10px;
+}
+.survey-page .survey-q .hint.after {
+  margin: 6px 0 0;
+}
+.survey-page .survey-q.is-missing .field-label {
+  color: var(--accent-red, #c0563f);
+}
+.survey-page .survey-q.is-missing .survey-options .choice-face {
+  border-color: color-mix(in srgb, var(--accent-red, #c0563f) 55%, var(--line));
+}
+.survey-page .survey-q textarea {
+  min-height: 96px;
+  resize: vertical;
+  line-height: 1.7;
+  padding: 11px 13px;
+}
+.survey-page .survey-lead {
+  margin: -6px 0 12px;
+}
+
+.survey-page .survey-progress {
+  position: sticky;
+  top: 86px;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 10px 0;
+  font: 11px/1.4 var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--ash);
+  background: var(--panel-glass);
+}
+.survey-page .survey-progress-count {
+  color: var(--paper);
+}
+.survey-page .survey-progress-bar {
+  height: 3px;
+  background: var(--line);
+  overflow: hidden;
+}
+.survey-page .survey-progress-bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--cyan);
+  transition: width 0.25s ease;
+}
+
+.survey-page .survey-levels {
+  margin: 0 0 18px;
+  border: 1px solid var(--line);
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.survey-page .survey-levels summary {
+  cursor: pointer;
+  color: var(--paper);
+}
+.survey-page .survey-levels ol {
+  list-style: none;
+  margin: 10px 0 6px;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.survey-page .survey-levels li {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  column-gap: 8px;
+}
+.survey-page .survey-levels li b {
+  grid-row: span 3;
+  font-family: var(--font-mono);
+  color: var(--cyan);
+}
+.survey-page .survey-levels li strong {
+  color: var(--paper);
+  font-weight: 600;
+}
+.survey-page .survey-levels li span {
+  color: var(--body, inherit);
+}
+.survey-page .survey-levels li small {
+  color: var(--ash);
+  font-size: 11px;
+}
+
+.survey-page .survey-result {
+  margin-top: 22px;
+  padding: 20px 22px;
+  border: 1px solid color-mix(in srgb, var(--cyan) 50%, var(--line));
+  background: var(--panel);
+}
+.survey-page .survey-result-k {
+  font: 11px var(--font-mono);
+  letter-spacing: 0.06em;
+  color: var(--ash);
+  margin: 0 0 6px;
+}
+.survey-page .survey-result-level {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 8px;
+  color: var(--paper);
+  font-size: 18px;
+}
+.survey-page .survey-result-level b {
+  font: 600 34px/1 var(--font-mono);
+  color: var(--cyan);
+}
+.survey-page .survey-result-summary {
+  margin: 0 0 6px;
+  line-height: 1.7;
+}
+
+@media (max-width: 600px) {
+  .survey-page .survey-progress {
+    top: 72px;
+  }
+  .survey-page .survey-options .choice-face {
+    font-size: 14px;
+    min-height: 48px;
+  }
+  .survey-page .survey-options.is-many {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .survey-page .survey-q input,
+  .survey-page .survey-q textarea {
+    font-size: 16px;
+  }
+}
+@media (max-width: 360px) {
+  .survey-page .survey-options {
+    grid-template-columns: 1fr;
+  }
+}
