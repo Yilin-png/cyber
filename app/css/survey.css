@@ -1,20 +1,24 @@
-/* 法律 AI 社群问卷：沿用申请页表单，只补多选网格、进度条与结果卡。 */
+/* 法律 AI 社群问卷：沿用申请页表单，只补选项网格与进度条。 */
 .survey-page .survey-options {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 44px;
+  gap: 6px;
 }
 .survey-page .survey-options .choice {
   flex: none;
+  height: 100%;
 }
 .survey-page .survey-options .choice-face {
-  justify-content: flex-start;
-  text-align: left;
-  white-space: normal;
-  min-height: 46px;
-  padding: 11px 13px;
+  justify-content: center;
+  text-align: center;
+  height: 100%;
+  min-height: 0;
+  padding: 0 8px;
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.2;
+  white-space: normal;
+  overflow: hidden;
 }
 .survey-page .choice.is-disabled {
   cursor: not-allowed;
@@ -75,93 +79,15 @@
   transition: width 0.25s ease;
 }
 
-.survey-page .survey-levels {
-  margin: 0 0 18px;
-  border: 1px solid var(--line);
-  padding: 10px 14px;
-  font-size: 13px;
-  line-height: 1.6;
-}
-.survey-page .survey-levels summary {
-  cursor: pointer;
-  color: var(--paper);
-}
-.survey-page .survey-levels ol {
-  list-style: none;
-  margin: 10px 0 6px;
-  padding: 0;
-  display: grid;
-  gap: 10px;
-}
-.survey-page .survey-levels li {
-  display: grid;
-  grid-template-columns: 30px 1fr;
-  column-gap: 8px;
-}
-.survey-page .survey-levels li b {
-  grid-row: span 3;
-  font-family: var(--font-mono);
-  color: var(--cyan);
-}
-.survey-page .survey-levels li strong {
-  color: var(--paper);
-  font-weight: 600;
-}
-.survey-page .survey-levels li span {
-  color: var(--body, inherit);
-}
-.survey-page .survey-levels li small {
-  color: var(--ash);
-  font-size: 11px;
-}
-
-.survey-page .survey-result {
-  margin-top: 22px;
-  padding: 20px 22px;
-  border: 1px solid color-mix(in srgb, var(--cyan) 50%, var(--line));
-  background: var(--panel);
-}
-.survey-page .survey-result-k {
-  font: 11px var(--font-mono);
-  letter-spacing: 0.06em;
-  color: var(--ash);
-  margin: 0 0 6px;
-}
-.survey-page .survey-result-level {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  margin: 0 0 8px;
-  color: var(--paper);
-  font-size: 18px;
-}
-.survey-page .survey-result-level b {
-  font: 600 34px/1 var(--font-mono);
-  color: var(--cyan);
-}
-.survey-page .survey-result-summary {
-  margin: 0 0 6px;
-  line-height: 1.7;
-}
-
 @media (max-width: 600px) {
   .survey-page .survey-progress {
     top: 72px;
   }
-  .survey-page .survey-options .choice-face {
-    font-size: 14px;
-    min-height: 48px;
-  }
-  .survey-page .survey-options.is-many {
+  .survey-page .survey-options {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .survey-page .survey-q input,
   .survey-page .survey-q textarea {
     font-size: 16px;
-  }
-}
-@media (max-width: 360px) {
-  .survey-page .survey-options {
-    grid-template-columns: 1fr;
   }
 }

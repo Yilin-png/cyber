@@ -1,11 +1,10 @@
-/* 法律 AI 社群问卷页。题目与分级规则来自 legal-ai-survey.js（window.CCSurvey）。 */
+/* 法律 AI 社群问卷页。题目来自 legal-ai-survey.js（window.CCSurvey）。 */
 (() => {
   const S = window.CCSurvey;
   const form = document.getElementById("surveyForm");
   const bodyEl = document.getElementById("surveyBody");
   const msg = document.getElementById("msg");
   const submitBtn = document.getElementById("submitBtn");
-  const resultEl = document.getElementById("result");
   const progressCount = document.getElementById("progressCount");
   const progressBar = document.getElementById("progressBar");
   const DRAFT_KEY = `cc-survey-${S.SURVEY_ID}-draft`;
@@ -27,7 +26,7 @@
     if (q.type === "single" || q.type === "multi") {
       const type = q.type === "single" ? "radio" : "checkbox";
       const opts = q.options.map((o) => `<label class="choice"><input type="${type}" name="${esc(q.id)}" value="${esc(o.id)}"><span class="choice-face">${esc(o.label)}</span></label>`).join("");
-      return `<div class="field survey-q" ${attrs}><p class="field-label" id="q-${esc(q.id)}">${esc(q.title)}${tag(q)}</p>${hint}<div class="survey-options${q.options.length > 6 ? " is-many" : ""}" role="${type === "radio" ? "radiogroup" : "group"}" aria-labelledby="q-${esc(q.id)}">${opts}</div></div>`;
+      return `<div class="field survey-q" ${attrs}><p class="field-label" id="q-${esc(q.id)}">${esc(q.title)}${tag(q)}</p>${hint}<div class="survey-options" role="${type === "radio" ? "radiogroup" : "group"}" aria-labelledby="q-${esc(q.id)}">${opts}</div></div>`;
     }
     const field = q.type === "textarea"
       ? `<textarea id="f-${esc(q.id)}" name="${esc(q.id)}" maxlength="${q.max}" rows="3" placeholder="${esc(q.placeholder || "")}"></textarea>`
@@ -36,16 +35,10 @@
     return `<div class="field survey-q" ${attrs}><label for="f-${esc(q.id)}">${esc(q.title)}${tag(q)}</label>${field}${after}</div>`;
   }
 
-  function levelGuide() {
-    return `<details class="survey-levels"><summary>分级说明 L0–L4</summary><ol>${S.LEVELS.slice().reverse().map((lv) =>
-      `<li><b data-no-i18n>${esc(lv.id)}</b> <strong>${esc(lv.name)}</strong><span>${esc(lv.summary)}</span><small>${esc(lv.rule)}</small></li>`).join("")}</ol><p class="hint">从 L4 往下判断，满足哪一级的条件就停在哪一级。</p></details>`;
-  }
-
   function render() {
     bodyEl.innerHTML = S.SECTIONS.map((sec, i) => `
       <fieldset class="form-section survey-section"><legend><span>${String(i + 1).padStart(2, "0")}</span> ${esc(sec.title)}</legend>
       ${sec.lead ? `<p class="hint survey-lead">${esc(sec.lead)}</p>` : ""}
-      ${sec.id === "level" ? levelGuide() : ""}
       ${sec.questions.map(renderQuestion).join("")}
       </fieldset>`).join("");
   }
@@ -126,16 +119,6 @@
     return answers;
   }
 
-  function showLevel(levelId, note) {
-    const lv = S.LEVELS.find((x) => x.id === levelId) || S.levelOf({});
-    document.getElementById("resultLevel").textContent = lv.id;
-    document.getElementById("resultName").textContent = lv.name;
-    document.getElementById("resultSummary").textContent = lv.summary;
-    document.getElementById("resultNote").textContent = note;
-    resultEl.hidden = false;
-    resultEl.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-
   function setMsg(text, kind) {
     msg.className = "form-msg" + (kind ? " " + kind : "");
     msg.textContent = text;
@@ -175,11 +158,10 @@
       setMsg(`请回答：${missing.title}`, "err");
       return;
     }
-    const level = S.levelOf(answers);
     submitBtn.disabled = true;
     setMsg("提交中…");
     try {
-      const data = await CC.api("/api/survey", {
+      await CC.api("/api/survey", {
         method: "POST",
         body: JSON.stringify({ answers, website: form.elements.website.value })
       });
@@ -188,13 +170,11 @@
         localStorage.removeItem(DRAFT_KEY);
         localStorage.setItem(DONE_KEY, new Date().toISOString());
       } catch (_) {}
-      showLevel(data.level || level.id, "级别只用于分组安排活动，组织者会据此准备不同深度的内容。");
     } catch (err) {
       const offline = err.status === 0 || err.status >= 500;
       setMsg(offline
         ? "暂时无法提交，服务器还在配置中。答案已保存在这台设备上，稍后再打开本页点提交即可。"
         : err.message, "err");
-      showLevel(level.id, offline ? "这是按你的答案在本机算出的级别，提交成功后组织者才能看到。" : "");
     } finally {
       submitBtn.disabled = false;
     }

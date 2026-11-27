@@ -320,19 +320,17 @@ app.post("/api/survey", surveyLimiter, (req, res) => {
   if (list.length >= survey.MAX_RESPONSES) {
     return res.status(409).json({ error: "问卷已收满，感谢关注" });
   }
-  const level = survey.levelOf(answers);
   const row = {
     id: uid("svy_"),
     survey: survey.SURVEY_ID,
     version: survey.SURVEY_VERSION,
-    level: level.id,
     answers,
     createdAt: new Date().toISOString(),
     meta: { ua: safeText(req.get("user-agent"), 200) }
   };
   list.push(row);
   saveSurveys(list);
-  res.json({ ok: true, id: row.id, level: level.id });
+  res.json({ ok: true, id: row.id });
 });
 
 /* ── 登录：登录名 + 通行码 ── */
@@ -789,12 +787,10 @@ app.get("/api/admin/surveys", (req, res) => {
   if (!requireAdmin(req, res)) return;
   const list = loadSurveys();
   const counts = { all: list.length };
-  for (const lv of survey.LEVELS) counts[lv.id] = list.filter(r => r.level === lv.id).length;
   res.json({
     responses: list.slice().reverse().map(r => ({
       id: r.id,
       createdAt: r.createdAt,
-      level: r.level,
       answers: r.answers || {}
     })),
     counts

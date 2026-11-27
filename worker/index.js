@@ -428,12 +428,10 @@ app.post("/api/survey", surveyLimiter, async (c) => {
   if (missing) {
     return c.json({ error: `请回答：${missing.title}`, field: missing.id }, 400);
   }
-  const level = survey.levelOf(answers);
   const row = {
     id: uid("svy_"),
     survey: survey.SURVEY_ID,
     version: survey.SURVEY_VERSION,
-    level: level.id,
     answers,
     createdAt: new Date().toISOString(),
     meta: { ua: safeText(c.req.header("user-agent"), 200) }
@@ -452,7 +450,7 @@ app.post("/api/survey", surveyLimiter, async (c) => {
     if (e && e.code === "FULL") return c.json({ error: "问卷已收满，感谢关注" }, 409);
     throw e;
   }
-  return c.json({ ok: true, id: row.id, level: level.id });
+  return c.json({ ok: true, id: row.id });
 });
 
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
@@ -1018,12 +1016,10 @@ app.get("/api/admin/surveys", async (c) => {
   if (!requireAdmin(c)) return c.json({ error: "请先登录管理账号" }, 403);
   const list = await loadSurveys(c.env);
   const counts = { all: list.length };
-  for (const lv of survey.LEVELS) counts[lv.id] = list.filter((r) => r.level === lv.id).length;
   return c.json({
     responses: list.slice().reverse().map((r) => ({
       id: r.id,
       createdAt: r.createdAt,
-      level: r.level,
       answers: r.answers || {}
     })),
     counts
