@@ -1,0 +1,128 @@
+[
+  {
+    "group": "Formatting and layout",
+    "src": "gathering-001.html#s03",
+    "items": [
+      {
+        "k": "method",
+        "t": "The main takeaway",
+        "d": "Markdown and HTML suit AI better than Word. When Word is required, avoid the unpacking route."
+      },
+      {
+        "k": "method",
+        "t": "Manage styles with reference.docx",
+        "d": "Combine pandoc with a style-only template, separating content from layout."
+      },
+      {
+        "k": "exp",
+        "t": "A cost comparison",
+        "d": "Different ways of processing the same Word passage can differ in token costs by tens of times, adding up over a year of daily briefings."
+      },
+      {
+        "k": "pit",
+        "t": "A reported pitfall",
+        "d": "The speaker reported a watermark from default pandoc rules and suggested overriding it with a reference file."
+      }
+    ]
+  },
+  {
+    "group": "Packaging and managing skills",
+    "src": "gathering-001.html#s02",
+    "items": [
+      {
+        "k": "method",
+        "t": "Skills are distilled experience",
+        "d": "Essentially Markdown, they can work across tools."
+      },
+      {
+        "k": "method",
+        "t": "Organize in layers",
+        "d": "Separate project and system skills; add a map when the collection grows."
+      },
+      {
+        "k": "exp",
+        "t": "Do not simply copy another person’s skill",
+        "d": "Format, aesthetics and rigor differ, so online skills rarely fit unchanged."
+      }
+    ]
+  },
+  {
+    "group": "Confidentiality and local processing",
+    "src": "gathering-001.html#s04",
+    "items": [
+      {
+        "k": "method",
+        "t": "Keep transcription local",
+        "d": "The discussion placed de-identification at transcription: convert speech locally, then ask a trusted model for structured minutes."
+      },
+      {
+        "k": "exp",
+        "t": "Local recognition can be sufficient",
+        "d": "Accuracy may be lower than cloud services, but later summarization can correct some errors."
+      }
+    ]
+  },
+  {
+    "group": "Delivering due diligence reports",
+    "src": "gathering-002.html#s02",
+    "items": [
+      {
+        "k": "method",
+        "t": "Separate content and formatting skills",
+        "d": "One finalizes research, another converts to Word. A demo can test conversion alone."
+      },
+      {
+        "k": "method",
+        "t": "Markdown → HTML → Word, then refine",
+        "d": "Use HTML for contents and merged tables, then adjust widths and spacing in the generated document."
+      },
+      {
+        "k": "exp",
+        "t": "Ask the model to adjust the reference",
+        "d": "Map styles according to pandoc rules instead of manually setting fonts from scratch."
+      }
+    ]
+  },
+  {
+    "group": "Triggering skills",
+    "src": "gathering-002.html#s08",
+    "items": [
+      {
+        "k": "pit",
+        "t": "Relays can overwrite settings",
+        "d": "Put hooks in project configuration so replacing user settings with an older file does not silence them."
+      },
+      {
+        "k": "method",
+        "t": "Put frequent skills in the scanned layer",
+        "d": "Trigger words buried in long memories are easily missed. Move daily skills first."
+      },
+      {
+        "k": "method",
+        "t": "Pair soft rules with checkpoints",
+        "d": "Instructions are reminders. If required sections are missing, return and redo the work."
+      }
+    ]
+  },
+  {
+    "group": "Starting a long project",
+    "src": "gathering-002.html#s11",
+    "items": [
+      {
+        "k": "method",
+        "t": "Keep the main conversation as a cockpit",
+        "d": "Open new conversations for heavy work. Use authoritative files as memory rather than trusting automatic compression."
+      },
+      {
+        "k": "method",
+        "t": "The directory is a map for the model",
+        "d": "Separate raw material, briefings and knowledge; the knowledge base keeps concise summaries."
+      },
+      {
+        "k": "exp",
+        "t": "Hard constraints come from a framework",
+        "d": "Sentence-level sources and JSON Schema help stabilize long reports."
+      }
+    ]
+  }
+]

@@ -1,8 +1,14 @@
 /* 赛博法师 · 站点公开内容 —— 不含敏感操作细节 */
-const DATA = {
+window.DATA = {
 
   pulse: { members: 340, gatherings: 7, spells: 62 },
-  nextGathering: "2026.08.20 19:00",
+  nextGathering: "后续活动 · 时间地点待公布",
+  nextGatheringParts: {
+    kicker: "后续活动",
+    when: "时间地点待公布",
+    places: [],
+    coverPlaces: []
+  },
   mana: 82,
 
   trending: [
@@ -16,46 +22,145 @@ const DATA = {
     "Semantic Chunking", "Knowledge Graph", "Multimodal", "Diffusion Models",
     "World Models", "Open Weights", "Edge Inference", "AI Alignment"
   ],
-  contact: "CONTACT · cybercasters@gmail.com",
+  contact: "CONTACT · info@cyber-casters.com",
 
   /* 活动记录：公开摘要可写充分；操作细节与全文仍需参会登录 */
   activity: [
+    {
+      date: "2026.08.20",
+      title: "赛博法师 • 第二期AI交流会",
+      mode: "线下",
+      place: "深圳",
+      status: "past",
+      desc: "第二期线下交流已举办。从把尽调报告收成可交付 Word，Skill 分层与触发，从个人工作流到团队规范，再到驾驶舱式长项目和硬约束写作。",
+      link: "gathering-002.html",
+      linkText: "阅读纪要"
+    },
     {
       date: "2026.07.24",
       title: "赛博法师 • 第一期AI交流会",
       mode: "线下",
       place: "深圳",
+      status: "past",
       desc: "第一期线下交流。一件AI没能替你搞定的难事、一个你自己顺手、别人多半不知道的小技巧。打开电脑，同题异解，互相修炼。",
       link: "gathering-001.html",
-      linkText: "阅读公开纪要"
+      linkText: "阅读纪要"
     }
   ],
 
-  /* 法器长廊：预留给成员项目 / 个人网页展示 */
+  /* 成员作品：成员主页 / 公众号 / GitHub / 小工具 */
+  artifactCats: [
+    { k: "all",    name: "全部" },
+    { k: "home",   name: "个人主页" },
+    { k: "wechat", name: "公众号" },
+    { k: "github", name: "GitHub" },
+    { k: "tool",   name: "小工具" }
+  ],
   artifacts: [
     {
-      name: "征集中",
+      kind: "home",
+      name: "IOVE",
+      status: "live",
+      label: "个人主页",
+      role: "成员站点",
+      desc: "摄影、小游戏和每日小件收在一个 Hub 里。有趣的地方，从这里推门进去。",
+      tags: ["个人主页", "作品集"],
+      link: "https://iove.lol/",
+      linkText: "打开主页"
+    },
+    {
+      kind: "home",
+      name: "不加班廖律",
+      status: "live",
+      label: "个人主页",
+      role: "成员站点",
+      desc: "律师廖律的个人站点。今日看板、基金实务，以及 AI 怎么嵌进法律工作。",
+      tags: ["个人主页", "写作"],
+      link: "https://nootliao.com/",
+      linkText: "打开主页"
+    },
+    {
+      kind: "wechat",
+      name: "像船在AI Coding",
+      status: "live",
+      label: "公众号",
+      role: "成员公众号",
+      desc: "关注公众号「像船在AI Coding」。微信扫一扫即可。",
+      tags: ["公众号"],
+      img: "assets/qr/wechat-xiangchuan.png?v=1",
+      link: "",
+      linkText: "打开公众号"
+    },
+    {
+      kind: "github",
+      name: "GitHub",
       status: "soon",
-      label: "即将开放",
-      role: "成员作品位",
-      desc: "用于展示成员的项目、工具或个人网页。做好了就可以申请挂上来。",
-      tags: ["项目", "网页"],
-      link: "apply.html",
-      linkText: "申请展示"
+      label: "待补充",
+      role: "代码仓库",
+      desc: "成员的 GitHub 主页或代表仓库。发来 github.com 链接即可。",
+      tags: ["GitHub"],
+      link: "",
+      linkText: "打开 GitHub"
+    },
+    {
+      kind: "tool",
+      name: "小工具",
+      status: "soon",
+      label: "待补充",
+      role: "成员工具",
+      desc: "成员做的小工具、演示页或在线服务。发来可访问的地址后挂上。",
+      tags: ["小工具"],
+      link: "",
+      linkText: "打开工具"
     }
   ],
 
   /* 咒语手册筛选分类：cat 与下方 tools 的 cat 字段对应 */
   toolCats: [
     { k: "all",       name: "全部" },
+    { k: "desktop",   name: "桌面" },
+    { k: "coding",    name: "编程" },
     { k: "capture",   name: "采集" },
     { k: "document",  name: "文档" },
     { k: "knowledge", name: "知识库" },
     { k: "voice",     name: "语音" }
   ],
 
-  /* 咒语手册：只列工具（卡片式，按名称字母序）；技巧归集会摘录 */
+  /* 咒语手册：只列工具（卡片式，按名称字母序）；使用心得归成员区 */
   tools: [
+    {
+      name: "Claude Code",
+      cat: "coding",
+      status: "tool",
+      label: "编程",
+      role: "终端编程 Agent",
+      desc: "Anthropic 的命令行编程助手：读仓库、改文件、跑命令，适合在终端里把开发任务闭环完成。",
+      tags: ["编程", "Agent", "CLI"],
+      link: "https://docs.anthropic.com/en/docs/claude-code",
+      linkText: "打开"
+    },
+    {
+      name: "Claude Desktop",
+      cat: "desktop",
+      status: "tool",
+      label: "桌面",
+      role: "综合桌面 Agent",
+      desc: "Anthropic 桌面端：聊天、Cowork 与本地协作集于一处，可接文件与应用，适合跨场景把事做完。",
+      tags: ["桌面", "Agent", "综合"],
+      link: "https://claude.com/download",
+      linkText: "打开"
+    },
+    {
+      name: "Codex",
+      cat: "desktop",
+      status: "tool",
+      label: "桌面",
+      role: "综合桌面 Agent",
+      desc: "OpenAI 的 Codex 应用 / ChatGPT 入口：并行调度多 Agent、审 diff、跨项目推进，不只是写几行补丁。",
+      tags: ["桌面", "Agent", "综合"],
+      link: "https://chatgpt.com/codex/",
+      linkText: "打开"
+    },
     {
       name: "Cubox",
       cat: "capture",
@@ -65,6 +170,50 @@ const DATA = {
       desc: "把链接与摘录收进统一收件箱，减少「看过就丢」。第一期聊过的采集层入口之一。",
       tags: ["采集", "剪藏"],
       link: "https://cubox.pro/",
+      linkText: "打开"
+    },
+    {
+      name: "Cursor",
+      cat: "coding",
+      status: "tool",
+      label: "编程",
+      role: "AI 代码编辑器",
+      desc: "在 IDE 里写代码、审 diff、跑 Agent；适合日常开发与多文件改动。",
+      tags: ["编程", "IDE", "Agent"],
+      link: "https://cursor.com/",
+      linkText: "打开"
+    },
+    {
+      name: "Firecrawl",
+      cat: "capture",
+      status: "tool",
+      label: "采集",
+      role: "网页采集 API",
+      desc: "把网页搜、爬、转成干净的 Markdown / JSON，适合给 Agent 喂网页上下文。",
+      tags: ["采集", "爬虫", "API"],
+      link: "https://www.firecrawl.dev/",
+      linkText: "打开"
+    },
+    {
+      name: "MinerU",
+      cat: "document",
+      status: "tool",
+      label: "文档",
+      role: "文档解析",
+      desc: "把 PDF / Office / 图片解析成结构化 Markdown 与 JSON，方便 RAG 与 Agent 后续处理。",
+      tags: ["文档", "PDF", "解析"],
+      link: "https://github.com/opendatalab/MinerU",
+      linkText: "仓库"
+    },
+    {
+      name: "NotebookLM",
+      cat: "knowledge",
+      status: "tool",
+      label: "知识库",
+      role: "资料笔记本",
+      desc: "Google 的资料笔记本：上传文档与链接后，按来源问答、摘要与整理，适合深读一批材料。",
+      tags: ["知识库", "问答"],
+      link: "https://notebooklm.google.com/",
       linkText: "打开"
     },
     {
@@ -88,6 +237,17 @@ const DATA = {
       tags: ["文档", "Office", "CLI"],
       link: "https://github.com/iOfficeAI/OfficeCLI",
       linkText: "仓库"
+    },
+    {
+      name: "OpenCode",
+      cat: "coding",
+      status: "tool",
+      label: "编程",
+      role: "开源编程 Agent",
+      desc: "开源 AI 编程助手，终端 / 桌面 / IDE 都能用；可接多家模型，读仓库、改代码、跑命令。",
+      tags: ["编程", "Agent", "开源"],
+      link: "https://opencode.ai/",
+      linkText: "打开"
     },
     {
       name: "Pandoc",
@@ -123,6 +283,17 @@ const DATA = {
       linkText: "仓库"
     },
     {
+      name: "Workbuddy",
+      cat: "desktop",
+      status: "tool",
+      label: "桌面",
+      role: "综合桌面 Agent",
+      desc: "腾讯全场景 AI 工作台：研究、文档、表格到本地文件操作一条龙；Coding Mode 只是其中一环。",
+      tags: ["桌面", "Agent", "综合"],
+      link: "https://www.workbuddy.ai/",
+      linkText: "打开"
+    },
+    {
       name: "闪电说",
       /* 中文名按拼音参与字母排序 */
       sortKey: "shandianshuo",
@@ -137,28 +308,12 @@ const DATA = {
     }
   ],
 
-  /* 集会摘录：技巧 / 方法 / 踩坑，仅参会成员可见 */
+  /* 使用心得：技巧 / 方法 / 踩坑，仅参会成员可见 */
   spellsMemberOnly: true,
-  spells: [
-    { group: "格式与排版", src: "gathering-001.html#s03", items: [
-      { k: "method", t: "结论先摆这儿", d: "MD / HTML 最适合 AI，Word 不适合。非用 Word 不可的时候，别走解包那条路。" },
-      { k: "method", t: "用 reference.docx 管样式", d: "pandoc 配纯样式模板：内容与版式解耦，改内容不必重调格式。" },
-      { k: "exp", t: "一份成本实测", d: "同样一段 Word，不同处理路径的 token 成本可差数十倍；日报场景一年下来差别很明显。" },
-      { k: "pit", t: "踩过的坑", d: "pandoc 默认规则可能给输出加水印，需用 reference 覆盖。" }
-    ]},
-    { group: "Skill 的封装与管理", src: "gathering-001.html#s02", items: [
-      { k: "method", t: "Skill 就是蒸馏过的经验", d: "本质是一份 markdown，跨工具通用。" },
-      { k: "method", t: "分层放", d: "项目级与系统级分开；数量大了挂图谱让它自学调用。" },
-      { k: "exp", t: "别指望直接抄别人的", d: "格式、审美、严谨度因人而异，网上 skill 很难原样套用。" }
-    ]},
-    { group: "保密与本地化", src: "gathering-001.html#s04", items: [
-      { k: "method", t: "脱敏发生在转写那一步", d: "语音转文字尽量本地完成，再交给可信模型做结构化纪要。" },
-      { k: "exp", t: "本地识别够用", d: "准确率略低于云端，但后续提炼能纠回一部分。" }
-    ]}
-  ],
+  spells: [], // 使用心得通过成员权限接口读取。
 
   about: {
-    title: "赛博法师的初心与理念",
+    title: "赛博法师的初心",
     lead: "我们希望建立一个真诚、务实、开放的熟人社群。在 AI 技术快速演进、信息不断涌现的时代，彼此分享、共同探索，把对变化的焦虑转化为学习与行动，把零散的经验和灵感沉淀为真正有用的方法、产品与连接。",
     principles: [
       {
@@ -181,9 +336,53 @@ const DATA = {
   },
 
   channels: [
-    { name: "我想参加", type: "link", url: "apply.html", note: "留个称呼和意向时间即可 · 审核后发登录名与通行码",
+    { name: "我想参加", type: "link", url: "apply.html",
+      kicker: "JOIN",
+      note: "留下称呼与意向，审核通过后会收到登录名和通行码。",
       cta: "填写申请", variant: "primary" },
-    { name: "成员登录", type: "link", url: "login.html", note: "登录名 + 通行码 · 查阅参会纪要",
+    { name: "成员登录", type: "link", url: "login.html",
+      kicker: "LOGIN",
+      note: "用登录名和通行码进入，查阅参会纪要与留言。",
       cta: "去登录", variant: "ghost" }
-  ]
+  ],
+
+  wechatCommunity: {
+    title: "微信社群",
+    kicker: "COMMUNITY",
+    publicAccount: "Cyber Casters",
+    note: "关注微信公众号「Cyber Casters」，通过公众号加入微信社群。"
+  }
+};
+
+/* Short homepage copy; full source descriptions above remain available. */
+window.DATA.home = {
+  "tools": {
+    "Claude Code": "在终端中阅读代码、修改文件和运行开发任务。",
+    "Claude Desktop": "连接文件与应用，完成桌面 AI 协作。",
+    "Codex": "用 AI 推进编程任务，查看和审阅代码改动。",
+    "Cubox": "收藏链接与摘录，集中管理稍后阅读的资料。",
+    "Cursor": "在代码编辑器中使用 AI 编写和修改项目。",
+    "Firecrawl": "将网页采集为 Markdown 或 JSON。",
+    "MinerU": "将 PDF、Office 和图片解析为结构化内容。",
+    "NotebookLM": "基于上传的资料进行问答、摘要与整理。",
+    "Obsidian": "用本地 Markdown 笔记构建个人知识库。",
+    "OfficeCli": "通过命令行创建、检查和修改 Office 文档。",
+    "OpenCode": "连接不同模型，完成终端、桌面或 IDE 编程任务。",
+    "Pandoc": "转换 Markdown、Word、PDF 等文档格式。",
+    "Typeless": "将口述整理成文字，直接输入常用应用。",
+    "Whisper": "将语音转为文字，支持本地运行。",
+    "Workbuddy": "用 AI 处理研究、文档、表格与本地文件。",
+    "闪电说": "通过语音输入中文，也可结合上下文起草回复。"
+  },
+  "works": {
+    "IOVE": "摄影、小游戏与个人作品。",
+    "不加班廖律": "基金实务、法律工作与 AI 实践。",
+    "像船在AI Coding": "分享 AI Coding 实践的成员公众号。",
+    "GitHub": "欢迎提交成员的公开代码仓库。",
+    "小工具": "欢迎提交成员的小工具与在线服务。"
+  },
+  "activity": {
+    "001": "AI 使用中的难题与小技巧。",
+    "002": "Word 交付、Skill 与团队规范。"
+  }
 };

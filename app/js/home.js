@@ -1,454 +1,617 @@
-/* 首页渲染与交互 */
-/* ---------- 渲染 ---------- */
-const $ = CC.$;
-const esc = CC.esc;
+/* Nature edition: original data, sessions and business routes, presented as a scroll narrative. */
+(() => {
+  "use strict";
+  const root = document.getElementById("nature-root");
+  if (!root || root.dataset.hydrated) return;
+  root.dataset.hydrated = "true";
+  const $ = (selector) => root.querySelector(selector);
+  const all = (selector) => [...root.querySelectorAll(selector)];
+  const esc = CC.esc;
+  const data = window.DATA || {};
+  const brief = data.home || {};
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const isActive = () =>
+    root.isConnected &&
+    (!root.closest("[data-cc-slot]") ||
+      root.closest("[data-cc-slot]").classList.contains("is-on"));
 
-$("#footNote").textContent = DATA.contact;
-
-/* 左侧滚动名词表：列表复制两份，位移 -50% 即无缝循环 */
-const TR = DATA.trending, trN = TR.length;
-/* 左侧词表：每条一行，JS 按纵向位置实时插值颜色（两端暗紫、中间亮青） */
-$("#credits").innerHTML =
-  `<ul style="animation-duration:${Math.round(trN * 1.5)}s">` +
-  TR.concat(TR).map((t,i) => `<li>${esc(t)}</li>`).join("") + `</ul>`;
-/* 首屏可见性总闸：滚出视口 / 切到后台就停掉首屏的逐帧活儿，
-   把帧预算整个让给滚动。注册者会立刻收到一次当前状态。 */
-const heroEl = $(".hero");
-const heroWatchers = [];
-let heroLive = true;
-const onHeroLive = fn => { heroWatchers.push(fn); fn(heroLive); };
-const pushHeroLive = v => {
-  if (v === heroLive) return;
-  heroLive = v;
-  heroWatchers.forEach(fn => fn(v));
-};
-if (heroEl && "IntersectionObserver" in window){
-  new IntersectionObserver(es => {
-    const vis = es[0].isIntersecting;
-    heroEl.classList.toggle("is-idle", !vis);
-    pushHeroLive(vis && !document.hidden);
-  }, { rootMargin:"100px 0px" }).observe(heroEl);
-}
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) pushHeroLive(false);
-  else if (heroEl && !heroEl.classList.contains("is-idle")) pushHeroLive(true);
-});
-
-(function(){
-  const box = $("#credits");
-  const items = [...box.querySelectorAll("li")];
-  /* 颜色插值：两端 #6E6790(暗紫) → 中间 #3FE0D0(亮青)
-     用 ul 的 transform 推算位置，避免每帧 getBoundingClientRect
-     强制整页重排——那会让右侧终端读数跟着抖。 */
-  const edge = [110,103,144], mid = [63,224,208];
-  const lerp = (a,b,t) => Math.round(a + (b-a)*t);
-  const ul = box.querySelector("ul");
-  const rowH = items[0] ? (items[0].offsetHeight || 22) : 22;
-  const H = box.clientHeight || 198;
-  let raf = 0, lastPaint = 0;
-  const paint = () => {
-    let shift = 0;
-    if (ul){
-      const tr = getComputedStyle(ul).transform;
-      if (tr && tr !== "none"){
-        const m = tr.match(/matrix\(([^)]+)\)/);
-        if (m) shift = parseFloat(m[1].split(",")[5]) || 0;
-      }
-    }
-    for (let i = 0; i < items.length; i++){
-      const cy = i * rowH + rowH / 2 + shift;
-      const d = Math.min(1, Math.abs(cy - H / 2) / (H / 2));
-      const t = 1 - d;
-      items[i].style.color =
-        `rgb(${lerp(edge[0],mid[0],t)},${lerp(edge[1],mid[1],t)},${lerp(edge[2],mid[2],t)})`;
-    }
-  };
-  const loop = ts => {
-    /* ~20fps 足够跟滚动色带，不必跟 SVG 抢 60 帧 */
-    if (ts - lastPaint >= 50){ paint(); lastPaint = ts; }
-    raf = requestAnimationFrame(loop);
-  };
-  onHeroLive(live => {
-    if (live && !raf) raf = requestAnimationFrame(loop);
-    else if (!live && raf){ cancelAnimationFrame(raf); raf = 0; }
+  // Every fresh homepage visit starts with the galaxy, including chapter links.
+  // Remember that destination until the visitor explicitly opens the site.
+  const entry = $("#cosmic-entry");
+  const enterButton = $("#enter-site");
+  const siteContent = $("#site-content");
+  const html = document.documentElement;
+  let entryDestination = location.hash;
+  let entryState = "waiting";
+  root.dataset.entryState = entryState;
+  root.dataset.entryVersion = "nav-2";
+  let entryFallback;
+  const followCta = $(".follow-cta");
+  const followButton = $("#join");
+  let meteorTimer = 0;
+  function canAnimateFollow() {
+    if (!followCta || entryState !== "complete" || !isActive() ||
+        document.hidden || reduced.matches || $("dialog[open]")) return false;
+    const r = followButton.getBoundingClientRect();
+    return r.bottom > 110 && r.top < innerHeight - 30;
+  }
+  function stopFollowMeteor() {
+    clearTimeout(meteorTimer);
+    meteorTimer = 0;
+    followCta?.classList.remove("meteor-playing");
+  }
+  function queueFollowMeteor(delay = 850) {
+    if (!canAnimateFollow() || meteorTimer || followCta.classList.contains("meteor-playing")) return;
+    meteorTimer = setTimeout(() => {
+      meteorTimer = 0;
+      playFollowMeteor();
+    }, delay);
+  }
+  function playFollowMeteor() {
+    if (!canAnimateFollow() || followCta.classList.contains("meteor-playing")) return;
+    clearTimeout(meteorTimer);
+    meteorTimer = 0;
+    followCta.classList.add("meteor-playing");
+  }
+  followCta?.addEventListener("pointerenter", playFollowMeteor);
+  followButton?.addEventListener("focus", playFollowMeteor);
+  followButton?.addEventListener("click", stopFollowMeteor);
+  followCta?.addEventListener("animationend", (event) => {
+    if (event.animationName !== "follow-meteor-flight") return;
+    followCta.classList.remove("meteor-playing");
+    queueFollowMeteor(12000);
   });
-})();
+  function finishEntry() {
+    if (entryState === "complete") return;
+    entryState = "complete";
+    root.dataset.entryState = entryState;
+    clearTimeout(entryFallback);
+    entry.hidden = true;
+    entry.removeAttribute("aria-busy");
+    siteContent.inert = false;
+    html.classList.remove("intro-pending");
+    root.classList.remove("entry-opening");
+    root.classList.add("entry-complete");
+    const destination = entryDestination && entryDestination !== "#top"
+      ? document.getElementById(entryDestination.slice(1)) : null;
+    const target = destination && root.contains(destination) ? destination : $("#top-title");
+    if (destination && root.contains(destination)) destination.scrollIntoView({ block: "start", behavior: "instant" });
+    target.tabIndex = -1;
+    target.focus({ preventScroll: true });
+    schedulePaint();
+  }
+  function showEntry(destination = "#top") {
+    // Navigation can report the same visit more than once. Never restart a split.
+    if (entryState === "opening") return;
+    stopFollowMeteor();
+    clearTimeout(entryFallback);
+    entryDestination = destination;
+    entryState = "waiting";
+    root.dataset.entryState = entryState;
+    root.classList.remove("entry-opening", "entry-complete");
+    entry.hidden = false;
+    entry.removeAttribute("aria-busy");
+    enterButton.disabled = false;
+    siteContent.inert = true;
+    html.classList.add("intro-pending");
+  }
+  showEntry(entryDestination);
+  // Every link whose destination is the homepage replays the same overture.
+  // Other chapters and ordinary scrolling do not reopen it.
+  document.addEventListener("click", (event) => {
+    if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const dialogLink = event.target.closest?.("dialog[open] a[href]");
+    if (dialogLink && root.contains(dialogLink)) dialogLink.closest("dialog").close();
+    const link = event.target.closest?.("a[href]");
+    if (!link || !root.contains(link) || !isActive() || link.target === "_blank" || link.hasAttribute("download")) return;
+    const destination = new URL(link.href, location.href);
+    const isHome = /\/(?:index\.html)?$/.test(destination.pathname);
+    if (destination.origin === location.origin && isHome && (!destination.hash || destination.hash === "#top")) showEntry("#top");
+  }, true);
+  enterButton.addEventListener("click", () => {
+    if (entryState !== "waiting") return;
+    entryState = "opening";
+    root.dataset.entryState = entryState;
+    enterButton.disabled = true;
+    entry.setAttribute("aria-busy", "true");
+    // Reveal the same snow scene even if history restored an older scroll.
+    const behavior = html.style.scrollBehavior;
+    html.style.scrollBehavior = "auto";
+    window.scrollTo(0, 0);
+    html.style.scrollBehavior = behavior;
+    if (reduced.matches) {
+      finishEntry();
+      return;
+    }
+    root.classList.add("entry-opening");
+    // Native animation completion plus a fallback for a backgrounded tab.
+    entryFallback = setTimeout(finishEntry, 1650);
+  });
+  entry.addEventListener("animationend", (e) => {
+    if (e.animationName === "entry-curtain-right") finishEntry();
+  });
+  reduced.addEventListener("change", () => {
+    if (reduced.matches && entryState === "opening") finishEntry();
+  });
 
-/* 右侧终端读数：mana / 人数带轻微活态起伏（非布局抖动） */
-const manaBase = Math.max(0, Math.min(100, DATA.mana|0));
-const membersBase = DATA.pulse.members|0;
-const BAR_N = 10;
-const barCells = () => Array.from({length:BAR_N}, (_,i) =>
-  `<i class="cell" data-i="${i}"></i>`).join("");
-
-$("#term").innerHTML = `
-  <span class="q">&gt; casters --status</span>
-  <span class="v v-online">ONLINE</span>
-  <span class="q">&gt; members</span>
-  <span class="v v-members" id="termMembers">${membersBase}</span>
-  <span class="q">&gt; mana</span>
-  <span class="v v-mana"><span class="bar" id="termBar" style="--fill:0">${barCells()}</span> <span class="pct" id="termPct">0%</span></span>
-  <span class="q">&gt; next.gathering</span>
-  <span class="v v-next">${esc(DATA.nextGathering)}</span>
-  <span class="q">&gt; <span class="cursor"></span></span>
-`;
-
-const termBar = $("#termBar");
-const termPct = $("#termPct");
-const termMembers = $("#termMembers");
-const setManaUI = v => {
-  const n = Math.max(0, Math.min(100, v));
-  const fill = n / 100;
-  if (termBar) termBar.style.setProperty("--fill", fill.toFixed(3));
-  if (termPct) termPct.textContent = Math.round(n) + "%";
-  if (termBar){
-    [...termBar.children].forEach((c,i) => {
-      c.classList.toggle("on", (i + .5) / BAR_N <= fill);
-      c.classList.toggle("edge", Math.abs((i + .5) / BAR_N - fill) < .08 && fill > 0 && fill < 1);
+  // Render the maintained source dataset before binding search/filter controls.
+  const categoryNames = Object.fromEntries(
+    (data.toolCats || []).map((c) => [c.k, c.name]),
+  );
+  const tools = [...(data.tools || [])].sort((a, b) =>
+    String(a.sortKey || a.name)
+      .toLowerCase()
+      .localeCompare(String(b.sortKey || b.name).toLowerCase(), "en"),
+  );
+  if (tools.length) {
+    $("#tool-grid").innerHTML = tools
+      .map(
+        (t) =>
+          `<article class="tool-card" data-category="${esc(categoryNames[t.cat] || t.label || "")}" data-search="${esc([t.name, t.role, t.desc, ...(t.tags || [])].join(" "))}"><div class="tool-tags"><span>${esc(t.label || "")}</span></div><h3>${esc(t.name)}</h3><p>${esc(brief.tools?.[t.name] || t.desc || "")}</p><a href="${esc(t.link)}" target="_blank" rel="noopener noreferrer">${esc(t.linkText || "访问官网")} ↗</a></article>`,
+      )
+      .join("");
+  }
+  const cards = all(".tool-card");
+  let category = "全部";
+  const search = $("#tool-search");
+  const filterTools = () => {
+    const query = search.value.trim().toLocaleLowerCase();
+    let count = 0;
+    cards.forEach((card) => {
+      const show =
+        (category === "全部" || card.dataset.category === category) &&
+        (card.dataset.search + " " + card.textContent)
+          .toLocaleLowerCase()
+          .includes(query);
+      card.hidden = !show;
+      if (show) count++;
     });
-  }
-};
-setManaUI(0);
-
-/* 标语下：下一期活动时间 */
-const nextEl = $("#nextMeet");
-if (nextEl && DATA.nextGathering){
-  nextEl.innerHTML =
-    `<span class="nm-label">下一期</span>` +
-    `<span class="nm-dot" aria-hidden="true"></span>` +
-    `<span class="nm-date">${esc(DATA.nextGathering)}</span>`;
-}
-
-/* 终端活态：mana 快呼吸 + 人数高频跳变；首屏不可见时停 */
-(function(){
-  let raf = 0, t0 = 0;
-  let mem = membersBase;
-  let nextMemAt = 0;
-  const easeOut = x => 1 - Math.pow(1 - x, 3);
-
-  const tick = ts => {
-    if (!t0) t0 = ts;
-    const t = (ts - t0) / 1000;
-
-    /* 入场 0.45s 填到基准，之后大幅快呼吸（约 ±22～28） */
-    let mana;
-    if (t < .45) mana = manaBase * easeOut(t / .45);
-    else mana = manaBase
-      + Math.sin((t - .45) * 4.2) * 18
-      + Math.sin((t - .45) * 7.8) * 8
-      + Math.sin((t - .45) * 13.5) * 4;
-    setManaUI(mana);
-
-    /* 人数：每 0.18–0.45s 跳 ±8～28 */
-    if (ts >= nextMemAt){
-      const span = 8 + Math.floor(Math.random() * 21);
-      const delta = (Math.random() < .5 ? 1 : -1) * span;
-      mem = Math.max(1, membersBase + delta);
-      if (termMembers){
-        termMembers.textContent = mem;
-        termMembers.classList.remove("flash");
-        void termMembers.offsetWidth;
-        termMembers.classList.add("flash");
-      }
-      nextMemAt = ts + 180 + Math.random() * 270;
-    }
-
-    raf = requestAnimationFrame(tick);
+    $("#tool-count").textContent =
+      `${count} 个工具 / ${category}${query ? " / 搜索：" + search.value.trim() : ""}`;
+    $("#tool-empty").hidden = count !== 0;
   };
-
-  onHeroLive(live => {
-    if (live && !raf){
-      t0 = 0;
-      nextMemAt = 0;
-      raf = requestAnimationFrame(tick);
-    } else if (!live && raf){
-      cancelAnimationFrame(raf);
-      raf = 0;
-      setManaUI(manaBase);
-      if (termMembers) termMembers.textContent = membersBase;
-    }
+  const selectCategory = (button) => {
+    category = button.dataset.filter;
+    all("#tool-filters button").forEach((b) =>
+      b.setAttribute("aria-pressed", String(b === button)),
+    );
+    filterTools();
+  };
+  search.addEventListener("input", filterTools);
+  all("#tool-filters button").forEach((b) =>
+    b.addEventListener("click", () => selectCategory(b)),
+  );
+  $("#reset-tools").addEventListener("click", () => {
+    search.value = "";
+    selectCategory($('[data-filter="全部"]'));
+    search.focus();
   });
-})();
+  filterTools();
 
-function localPage(href) {
-  /* 统一成相对路径，避免 /xxx 在 file:// 下失效 */
-  if (!href) return "";
-  if (/^https?:\/\//i.test(href)) return href;
-  return String(href).replace(/^\//, "");
-}
-
-function renderCards(list) {
-  return (list || []).map(p => {
-    const href = localPage(p.link && p.link !== "#" ? p.link : "");
-    const external = /^https?:\/\//i.test(href);
-    const linkAttrs = external ? ` target="_blank" rel="noopener noreferrer"` : "";
-    return `
-    <article class="card">
-      <div class="card-top">
-        <h3>${esc(p.name)}</h3>
-        <span class="status ${esc(p.status || "")}">${esc(p.label || "")}</span>
-      </div>
-      ${p.role ? `<div class="role">${esc(p.role)}</div>` : ""}
-      <p>${esc(p.desc || "")}</p>
-      ${p.tags && p.tags.length
-        ? `<div class="tags">${p.tags.map(t => `<span>${esc(t)}</span>`).join("")}</div>`
-        : ""}
-      ${href
-        ? `<a class="card-link" href="${esc(href)}"${linkAttrs}>${esc(p.linkText || "打开")}<span class="arrow" aria-hidden="true">→</span></a>`
-        : ""}
-    </article>`;
-  }).join("");
-}
-
-function renderActivity(items) {
-  $("#logList").innerHTML = (items || []).map((a, i) => {
-    const href = localPage(a.link || "");
-    const title = href
-      ? `<h3><a class="log-title" href="${esc(href)}">${esc(a.title)}</a></h3>`
-      : `<h3>${esc(a.title)}</h3>`;
-    const cta = href
-      ? `<a class="log-link" href="${esc(href)}">${esc(a.linkText || "阅读公开纪要")}<span class="arrow" aria-hidden="true">→</span></a>`
-      : "";
-    return `
-    <article class="log-item" ${i === 0 ? "data-latest" : ""} ${href ? `data-href="${esc(href)}"` : ""}>
-      <div class="log-date">${esc(a.date)}</div>
-      ${title}
-      <div class="log-meta">${esc(a.mode)} · ${esc(a.place)}</div>
-      <p>${esc(a.desc)}</p>
-      ${cta}
-    </article>`;
-  }).join("");
-}
-
-/* 活动记录跳转：显式 assign，避免 <a> 被环境吞掉不跳转 */
-const logListEl = $("#logList");
-if (logListEl && !logListEl.dataset.navBound) {
-  logListEl.dataset.navBound = "1";
-  logListEl.addEventListener("click", e => {
-    const a = e.target.closest("a.log-link, a.log-title");
-    const item = e.target.closest(".log-item[data-href]");
-    const href = (a && a.getAttribute("href")) || (item && item.getAttribute("data-href"));
-    if (!href || /^https?:\/\//i.test(href)) return;
-    e.preventDefault();
-    window.location.assign(href);
-  });
-}
-
-renderActivity(DATA.activity);
-$("#artList").innerHTML = renderCards(DATA.artifacts);
-
-(async function syncActivity() {
-  try {
-    const data = await CC.api("/api/gatherings");
-    const list = (data.gatherings || []).map(g => ({
-      date: g.date,
-      title: g.title,
-      mode: g.mode,
-      place: g.place,
-      desc: g.summary,
-      link: localPage(g.link || (`gathering-${g.id}.html`)),
-      linkText: "阅读公开纪要"
-    }));
-    if (list.length) renderActivity(list);
-  } catch (_) {}
-})();
-
-const SPELL_CATS = [
-  { k: "prod",   name: "产品",   en: "PRODUCTS" },
-  { k: "tool",   name: "工具",   en: "TOOLS" },
-  { k: "method", name: "方法论", en: "METHODOLOGY" },
-  { k: "exp",    name: "经验",   en: "EXPERIENCE" },
-  { k: "pit",    name: "踩坑",   en: "PITFALLS" }
-];
-
-let toolCat = "all";
-
-function sortedTools() {
-  const key = t => String(t.sortKey || t.name).toLowerCase();
-  return [...(DATA.tools || [])].sort((a, b) => key(a).localeCompare(key(b), "en"));
-}
-
-function renderToolsPublic() {
-  const all = sortedTools();
-  if (!all.length) {
-    return `<p class="toolkit-intro">集会上讨论过的工具将陆续以卡片形式收录于此。</p>`;
+  const kindName = {
+    home: "个人主页",
+    wechat: "公众号",
+    github: "GitHub",
+    tool: "小工具",
+  };
+  if (data.artifacts?.length) {
+    $(".gallery-list").innerHTML = data.artifacts
+      .map((work, index) => {
+        const pending = work.status !== "live";
+        const kind = kindName[work.kind] || "个人主页";
+        const action = work.img
+          ? '<button type="button" class="work-link" data-dialog="wechat-dialog">查看公众号二维码 ↗</button>'
+          : work.link
+            ? `<a href="${esc(work.link)}" target="_blank" rel="noopener noreferrer" class="work-link">${esc(work.linkText || "打开主页")} ↗</a>`
+            : '<a class="work-link" href="mailto:info@cyber-casters.com?subject=%E8%B5%9B%E5%8D%9A%E6%B3%95%E5%B8%88%E4%BD%9C%E5%93%81%E6%8A%95%E7%A8%BF">提交作品链接 ↗</a>';
+        return `<article class="member-work${pending ? " pending" : ""}" data-gallery="${esc(kind)}"><span class="work-no">${String(index + 1).padStart(2, "0")} / ${esc(kind)}</span><div class="work-title"><h3${work.kind === "home" ? " data-no-i18n" : ""}>${esc(work.name)}${pending ? "<small>待补充</small>" : ""}</h3><p>${esc(brief.works?.[work.name] || work.desc)}</p></div>${action}</article>`;
+      })
+      .join("");
   }
-
-  const cats = (DATA.toolCats || [{ k: "all", name: "全部" }]).filter(c =>
-    c.k === "all" || all.some(t => t.cat === c.k)
+  const filterGallery = (selected) => {
+    all("[data-gallery-filter]").forEach((b) =>
+      b.setAttribute(
+        "aria-pressed",
+        String(b.dataset.galleryFilter === selected),
+      ),
+    );
+    const works = all("[data-gallery]");
+    works.forEach((w) => {
+      w.hidden = selected !== "全部" && w.dataset.gallery !== selected;
+    });
+    const shown = works.filter((w) => !w.hidden);
+    const pending = shown.filter((w) => w.classList.contains("pending")).length;
+    $("#gallery-count").textContent =
+      `${shown.length - pending} 项公开展示${pending ? ` · ${pending} 项待补充` : ""}`;
+  };
+  all("[data-gallery-filter]").forEach((b) =>
+    b.addEventListener("click", () => filterGallery(b.dataset.galleryFilter)),
   );
-  if (!cats.some(c => c.k === toolCat)) toolCat = "all";
+  filterGallery("全部");
 
-  const chips = cats.map(c => {
-    const n = c.k === "all" ? all.length : all.filter(t => t.cat === c.k).length;
-    return `<button type="button" class="filter-chip" data-cat="${esc(c.k)}"
-      aria-pressed="${c.k === toolCat}">${esc(c.name)}<span class="n">${n}</span></button>`;
-  }).join("");
-
-  const list = toolCat === "all" ? all : all.filter(t => t.cat === toolCat);
-  const grid = list.length
-    ? `<div class="grid">${renderCards(list)}</div>`
-    : `<p class="toolkit-intro">该分类下暂无工具。</p>`;
-
-  return `<div class="filter-bar" role="group" aria-label="工具分类筛选">${chips}</div>${grid}`;
-}
-
-function renderSpellsMember() {
-  const FLAT = (DATA.spells || []).flatMap(g =>
-    g.items.map(s => ({
-      name: s.t,
-      status: s.k,
-      label: (SPELL_CATS.find(c => c.k === s.k) || {}).name || s.k,
-      role: g.group,
-      desc: s.d,
-      tags: [g.group],
-      link: localPage(s.u || g.src || ""),
-      linkText: g.src ? "出自纪要" : (s.u ? "前往" : "")
-    }))
+  const prep = {
+    share: [
+      "带一个你亲自用过的方法。",
+      "准备：应用场景 → 具体做法 → 实际效果 → 适用边界。可以带截图、示例，或用电脑现场演示。",
+    ],
+    question: [
+      "带一个还没解开的 AI 使用难题。",
+      "说清你想完成什么、已经尝试过什么，以及卡在了哪一步。准备一个具体例子，方便大家一起拆解。",
+    ],
+  };
+  all("[data-prep]").forEach((b) =>
+    b.addEventListener("click", () => {
+      all("[data-prep]").forEach((item) =>
+        item.setAttribute("aria-pressed", String(item === b)),
+      );
+      const [title, text] = prep[b.dataset.prep];
+      $("#prep-content h4").textContent = title;
+      $("#prep-content p").textContent = text;
+    }),
   );
-  if (!FLAT.length) return "";
-  return `
-    <h3 class="spell-cat">集会摘录<span class="cat-en">MEMBERS</span></h3>
-    <div class="grid">${renderCards(FLAT)}</div>`;
-}
 
-function renderSpellsMemberLocked() {
-  return `
-    <h3 class="spell-cat">集会摘录<span class="cat-en">MEMBERS</span></h3>
-    <div class="lock-box">
-      <h2>现场技巧与踩坑需成员权限</h2>
-      <p>上面的工具卡片可自由查阅。方法论、经验与踩坑等技巧，请参会登录后查看。</p>
-      <div class="lock-actions">
-        <a class="btn btn-primary" href="login.html">成员登录</a>
-        <a class="btn btn-ghost" href="apply.html">申请加入</a>
-      </div>
-    </div>`;
-}
-
-let spellbookMember = false;
-
-function renderSpellbook(member) {
-  spellbookMember = !!member;
-  const publicPart = renderToolsPublic();
-  const memberPart = spellbookMember ? renderSpellsMember() : renderSpellsMemberLocked();
-  $("#spellList").innerHTML = publicPart + memberPart;
-}
-
-/* 筛选交给容器代理，重渲染后无需重新绑定 */
-const spellListEl = $("#spellList");
-if (spellListEl && !spellListEl.dataset.filterBound) {
-  spellListEl.dataset.filterBound = "1";
-  spellListEl.addEventListener("click", e => {
-    const chip = e.target.closest(".filter-chip");
-    if (!chip) return;
-    const cat = chip.dataset.cat;
-    if (!cat || cat === toolCat) return;
-    toolCat = cat;
-    renderSpellbook(spellbookMember);
+  all("[data-dialog]").forEach((b) =>
+    b.addEventListener("click", () => {
+      const dialog = $("#" + b.dataset.dialog);
+      stopFollowMeteor();
+      dialog.showModal();
+      document.body.style.overflow = "hidden";
+    }),
+  );
+  all("dialog").forEach((dialog) => {
+    dialog
+      .querySelector(".dialog-close")
+      .addEventListener("click", () => dialog.close());
+    dialog.addEventListener("click", (event) => {
+      const r = dialog.getBoundingClientRect();
+      if (
+        event.clientX < r.left ||
+        event.clientX > r.right ||
+        event.clientY < r.top ||
+        event.clientY > r.bottom
+      )
+        dialog.close();
+    });
+    dialog.addEventListener("close", () => {
+      document.body.style.overflow = "";
+      schedulePaint();
+    });
   });
-}
 
-(function renderAbout() {
-  const about = DATA.about;
-  const el = $("#aboutBlock");
-  if (!el || !about) return;
-  const items = (about.principles || []).map((p, i) => `
-    <li class="about-item">
-      <span class="about-no">${String(i + 1).padStart(2, "0")}</span>
-      <div>
-        <h4>${esc(p.title)}</h4>
-        <p>${esc(p.body)}</p>
-      </div>
-    </li>`).join("");
-  el.innerHTML = `
-    <div class="about-lead">
-      <h3>${esc(about.title)}</h3>
-      <p>${esc(about.lead)}</p>
-    </div>
-    <ol class="about-list">${items}</ol>`;
-})();
+  // The invitation remains available, without dominating the next meetup.
+  const openInvitation = () => {
+    if (location.hash === "#invitation-003") $("#invitation-003").open = true;
+  };
+  all("[data-invitation]").forEach((link) =>
+    link.addEventListener("click", () => {
+      $("#" + link.dataset.invitation).open = true;
+    }),
+  );
+  window.addEventListener("hashchange", openInvitation);
+  openInvitation();
 
-$("#chanList").innerHTML = DATA.channels.map(c => {
-  const variant = c.variant === "ghost" ? "ghost" : "primary";
-  const body = c.type === "qr"
-    ? `<div class="qr-slot">${c.img ? `<img src="${esc(c.img)}" alt="${esc(c.name)}二维码">` : esc(c.alt||"").replace(/\n/g,"<br>")}</div>`
-    : `<a class="go go-${variant}" href="${esc(c.url)}">${esc(c.cta||"前往")}<span class="arrow" aria-hidden="true">→</span></a>`;
-  return `<div class="channel channel-${variant}">
-    <h3>${esc(c.name)}</h3>
-    <div class="note">${esc(c.note||"")}</div>
-    ${body}
-  </div>`;
-}).join("");
+  const menuButton = $("#menu-toggle");
+  const menu = $("#mobile-nav");
+  const closeMenu = (focus = false) => {
+    menu.hidden = true;
+    menuButton.setAttribute("aria-expanded", "false");
+    menuButton.setAttribute("aria-label", "打开导航菜单");
+    document.body.style.overflow = "";
+    if (focus) menuButton.focus();
+  };
+  menuButton.addEventListener("click", () => {
+    const open = menu.hidden;
+    menu.hidden = !open;
+    menuButton.setAttribute("aria-expanded", String(open));
+    menuButton.setAttribute(
+      "aria-label",
+      open ? "关闭导航菜单" : "打开导航菜单",
+    );
+    document.body.style.overflow = open ? "hidden" : "";
+  });
+  // The existing SPA handles anchors at document capture, before menu bubbling.
+  document.addEventListener(
+    "click",
+    (e) => {
+      if (isActive() && menu.contains(e.target) && e.target.closest("a"))
+        closeMenu();
+    },
+    true,
+  );
+  document.addEventListener("keydown", (e) => {
+    if (isActive() && e.key === "Escape" && !menu.hidden) closeMenu(true);
+  });
+  window.matchMedia("(min-width:1001px)").addEventListener("change", (e) => {
+    if (e.matches) closeMenu();
+  });
 
-/* 登录态：公开工具目录始终展示；集会摘录按成员解锁 */
-renderSpellbook(false);
-(async function syncAuth(){
-  const foot = $("#footNote");
-  try {
-    const me = await CC.authMe();
-    const member = !!(me.auth && me.user && me.user.gatherings && me.user.gatherings.length);
-    renderSpellbook(DATA.spellsMemberOnly ? member : true);
+  // Keep metadata and entry points connected to the original API.
+  let archiveGeneration = 0;
+  function refreshArchive() {
+    const generation = ++archiveGeneration;
+    return CC.api("/api/gatherings")
+      .then((payload) => {
+        if (generation !== archiveGeneration) return;
+        for (const gathering of payload.gatherings || []) {
+          const entry = all(".archive-item").find((a) =>
+            new URL(a.href, location.href).pathname.endsWith(
+              "/" + gathering.link,
+            ),
+          );
+          if (entry) {
+            entry.querySelector("p").textContent =
+              brief.activity?.[gathering.id] || gathering.summary;
+            continue;
+          }
+          if (!/^gathering-\d+\.html$/.test(gathering.link || "")) continue;
+          const entryLink = document.createElement("a");
+          entryLink.href = gathering.link;
+          entryLink.className = "archive-item";
+          entryLink.innerHTML = `<time>${esc(gathering.date)}</time><span class="archive-issue">${esc(gathering.id)}</span><div><h3>${esc(gathering.title)}</h3><p>${esc(gathering.summary)}</p></div><span class="access-label">纪要 · 成员权限</span><span class="arrow" aria-hidden="true">↗</span>`;
+          $(".archive-list").prepend(entryLink);
+        }
+      })
+      .catch(() => {});
+  }
+  refreshArchive();
 
-    if (me.auth) {
-      foot.innerHTML = `${esc(me.user.name)} · <a href="gathering-001.html" style="color:var(--cyan)">我的纪要</a> · <a href="#" id="homeLogout" style="color:var(--cyan)">退出</a>`;
-      const btn = document.getElementById("homeLogout");
-      if (btn) btn.addEventListener("click", async e => {
-        e.preventDefault();
+  let authGeneration = 0;
+  async function refreshAuth() {
+    const generation = ++authGeneration;
+    try {
+      const me = await CC.authMe();
+      if (generation !== authGeneration) return;
+      const member =
+        me.auth &&
+        (me.admin || me.user?.isAdmin || me.user?.gatherings?.length);
+      $("#header-login").textContent = me.auth ? "我的纪要 ↗" : "成员登录 ↗";
+      $("#header-login").href = me.auth ? "gathering-002.html" : "login.html";
+      $("#member-spells").replaceChildren();
+      root.querySelector("#homeLogout")?.remove();
+      const login = $("#member-login-link");
+      login.textContent = me.auth ? "查看完整纪要 ↗" : "登录查看使用心得 ↗";
+      login.href = me.auth
+        ? "gathering-002.html"
+        : "login.html?next=index.html%23toolkit";
+      if (!member) {
+        $("#member-status").textContent = me.auth
+          ? "当前账号尚未开通参会权限，可联系组织者。"
+          : "参会成员登录后，可查阅集会摘录与完整纪要。";
+        return;
+      }
+      $("#member-status").textContent =
+        `${me.user?.name || "成员"}，欢迎回来。以下为已开放纪要中的使用心得。`;
+      const logout = document.createElement("button");
+      logout.type = "button";
+      logout.id = "homeLogout";
+      logout.className = "text-link";
+      logout.textContent = "退出登录";
+      logout.style.cssText =
+        "border:0;border-bottom:1px solid var(--line);background:none;color:inherit";
+      logout.addEventListener("click", async () => {
         await CC.logout();
+        await CC.api("/api/admin/logout", { method: "POST", body: "{}" }).catch(
+          () => {},
+        );
         location.reload();
       });
-    } else {
-      foot.innerHTML = `${esc(DATA.contact)} · <a href="login.html" style="color:var(--cyan)">登录</a> · <a href="apply.html" style="color:var(--cyan)">申请</a>`;
+      $(".member-links").appendChild(logout);
+      const result = await CC.api("/api/member/spells");
+      if (generation !== authGeneration) return;
+      $("#member-spells").innerHTML =
+        '<div class="member-spell-grid">' +
+        (result.groups || [])
+          .flatMap((group) =>
+            group.items.map(
+              (item) =>
+                `<article class="member-spell"><small>${esc(group.group)}</small><h4>${esc(item.t)}</h4><p>${esc(item.d)}</p><a href="${esc(item.u || group.src)}">出自纪要 ↗</a></article>`,
+            ),
+          )
+          .join("") +
+        "</div>";
+    } catch (_) {
+      $("#member-status").textContent =
+        "使用心得暂时无法载入，可进入纪要目录查阅。";
     }
-  } catch (_) {
-    renderSpellbook(false);
   }
-})();
-
-
-/* ---------- 标签切换 ---------- */
-/* 标签栏「归位点」＝它在文档流里的自然位置。
-   不能用 getBoundingClientRect：吸顶后它的 top 恒为 0，算出来的坐标是错的。
-   main 的 offsetTop 不受 sticky 影响，减掉标签栏自身高度就是正确锚点。 */
-const tbOuter = $(".tabbar-outer");
-const mainEl  = $("main.wrap");
-const anchorY = () => Math.max(0, mainEl.offsetTop - tbOuter.offsetHeight);
-
-/* 下滑进入：点击箭头平滑滚到内容区顶格（标签栏吸顶、首屏恰好滚出） */
-document.getElementById("scrollHint").addEventListener("click", () => {
-  window.scrollTo({ top: anchorY(), behavior: "smooth" });
-});
-
-const tabs = [...document.querySelectorAll(".tab")];
-function show(name){
-  tabs.forEach(t => t.setAttribute("aria-selected", String(t.dataset.panel === name)));
-  document.querySelectorAll(".panel").forEach(p => p.classList.toggle("is-on", p.id === "p-"+name));
-  /* 各面板高度悬殊（咒语手册约 5000px，活动记录约 500px）。
-     若停在旧面板深处切页，新面板撑不到那个滚动位置，浏览器会把
-     scrollY 硬夹回去——那一下的突跳就是「翻页发顿」的来源。
-     这里主动收回标签栏，且必须用 auto：平滑滚动和同一帧的重排打架，
-     反而更卡。只在已经滚过标签栏时才动，还在首屏就别打扰用户。 */
-  const y = anchorY();
-  if (window.scrollY > y){
-    const root = document.documentElement;
-    const prev = root.style.scrollBehavior;
-    root.style.scrollBehavior = "auto";
-    window.scrollTo(0, y);
-    root.style.scrollBehavior = prev;
-  }
-}
-tabs.forEach((t,i) => {
-  t.addEventListener("click", () => show(t.dataset.panel));
-  t.addEventListener("keydown", e => {
-    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-    e.preventDefault();
-    const n = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
-    n.focus(); show(n.dataset.panel);
+  refreshAuth();
+  document.addEventListener("cc:language", () => {
+    refreshArchive();
+    refreshAuth();
+    schedulePaint();
   });
-});
-/* 背景音乐：手印开关 */
-CC.BGM.init({
-  mode: "sigil",
-  toggleId: "coreJoin",
-  sigilEl: $(".sigil")
-});
+  document.addEventListener("cc:page", (e) => {
+    if (e.detail.key === "index.html" && isActive()) {
+      if (!location.hash || location.hash === "#top") showEntry("#top");
+      closeMenu();
+      refreshAuth();
+      schedulePaint();
+    }
+  });
+  window.addEventListener("pageshow", (event) => {
+    if (isActive()) {
+      if (event.persisted) showEntry(location.hash);
+      refreshAuth();
+    }
+  });
+
+  // Native hash changes and same-page history returns bypass SPA activation.
+  const replayOnHomeLocation = () => {
+    if (isActive() && (!location.hash || location.hash === "#top")) showEntry("#top");
+  };
+  window.addEventListener("hashchange", replayOnHomeLocation);
+  window.addEventListener("popstate", replayOnHomeLocation);
+
+  const scenes = all(".scene");
+  const sections = all("main > section[id]");
+  const indexLinks = all(".chapter-index a");
+  const chapterCursor = $(".chapter-cursor");
+  let currentChapter = "";
+  let requestedChapter = null;
+  const bounceChapter = (link) => {
+    if (reduced.matches) return;
+    const label = link.querySelector(".chapter-label");
+    label.getAnimations().forEach((animation) => animation.cancel());
+    label.animate(
+      [
+        { transform: "translateX(0)" },
+        { transform: "translateX(15px)", offset: 0.38 },
+        { transform: "translateX(-5px)", offset: 0.66 },
+        { transform: "translateX(3px)", offset: 0.84 },
+        { transform: "translateX(0)" },
+      ],
+      { duration: 650, easing: "cubic-bezier(.22,.7,.32,1)" },
+    );
+  };
+  document.addEventListener(
+    "click",
+    (e) => {
+      const link = e.target.closest(".chapter-index a");
+      if (
+        !isActive() ||
+        !link ||
+        !root.contains(link) ||
+        e.button > 0 ||
+        e.metaKey ||
+        e.ctrlKey ||
+        e.shiftKey ||
+        e.altKey
+      )
+        return;
+      requestedChapter = {
+        key: link.hash.slice(1),
+        until: performance.now() + 1800,
+      };
+      if (currentChapter === requestedChapter.key) bounceChapter(link);
+      schedulePaint();
+    },
+    true,
+  );
+  const header = $("#site-header");
+  const chapterKeys = [
+    "top",
+    "about",
+    "gathering",
+    "toolkit",
+    "gallery",
+    "cosmos",
+  ];
+  let scheduled = false;
+  function paint() {
+    scheduled = false;
+    if (!isActive() || document.hidden) {
+      stopFollowMeteor();
+      return;
+    }
+    if (canAnimateFollow()) queueFollowMeteor();
+    else stopFollowMeteor();
+    const viewport = innerHeight;
+    let surface = "paper";
+    let imageChapter = "";
+    for (const scene of scenes) {
+      const r = scene.getBoundingClientRect();
+      if (r.top <= 1 && r.bottom > header.offsetHeight)
+        surface = scene.dataset.scene;
+      if (r.top <= viewport * 0.45 && r.bottom > viewport * 0.45) {
+        imageChapter = {
+          snow: "top",
+          ocean: "about",
+          coast: "gathering",
+          cosmos: "cosmos",
+        }[scene.dataset.scene];
+      }
+      if (r.bottom > 0 && r.top < viewport) {
+        const progress = Math.max(
+          0,
+          Math.min(1, -r.top / Math.max(1, r.height - viewport)),
+        );
+        const image = scene.querySelector("img");
+        const copy = scene.querySelector(".scene-copy");
+        image.style.transform = reduced.matches
+          ? "none"
+          : `translateY(${-progress * 10}px) scale(${1.045 - progress * 0.045})`;
+        copy.style.transform = reduced.matches
+          ? "none"
+          : `translateY(${-progress * 55}px)`;
+        copy.style.opacity = reduced.matches
+          ? "1"
+          : String(1 - Math.max(0, progress - 0.45) * 0.75);
+      }
+    }
+    root.dataset.surface = surface;
+    header.dataset.surface = surface;
+    let chapter = imageChapter;
+    if (!chapter) {
+      chapter = "top";
+      for (const section of sections) {
+        if (
+          chapterKeys.includes(section.id) &&
+          section.getBoundingClientRect().top < viewport * 0.45
+        )
+          chapter = section.id;
+      }
+    }
+    if (requestedChapter) {
+      const target = $("#" + requestedChapter.key);
+      if (
+        performance.now() > requestedChapter.until ||
+        Math.abs(target.getBoundingClientRect().top) < 100
+      ) {
+        chapter = requestedChapter.key;
+        requestedChapter = null;
+      } else chapter = requestedChapter.key;
+    }
+    indexLinks.forEach((link) => {
+      if (link.hash === "#" + chapter) {
+        link.setAttribute("aria-current", "location");
+        chapterCursor.style.transform = `translateY(${link.offsetTop + link.offsetHeight / 2 - 13}px)`;
+        if (currentChapter !== chapter) bounceChapter(link);
+      } else link.removeAttribute("aria-current");
+    });
+    currentChapter = chapter;
+    const maximum = Math.max(
+      1,
+      document.documentElement.scrollHeight - viewport,
+    );
+    $(".reading-progress i").style.transform =
+      `scaleX(${Math.max(0, Math.min(1, scrollY / maximum))})`;
+  }
+  function schedulePaint() {
+    if (!scheduled) {
+      scheduled = true;
+      requestAnimationFrame(paint);
+    }
+  }
+  window.addEventListener("scroll", schedulePaint, { passive: true });
+  window.addEventListener("resize", schedulePaint, { passive: true });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stopFollowMeteor();
+    else schedulePaint();
+  });
+  reduced.addEventListener("change", () => {
+    stopFollowMeteor();
+    schedulePaint();
+  });
+  const reveals = all(
+    ".belief-intro,.values>li,.practice-notes>article,.archive-heading,.gallery-heading,.library-heading,.member-work,.join-layout",
+  );
+  if ("IntersectionObserver" in window && !reduced.matches) {
+    root.classList.add("is-enhanced");
+    const observer = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        }),
+      { threshold: 0.08 },
+    );
+    reveals.forEach((el) => {
+      el.classList.add("reveal");
+      observer.observe(el);
+    });
+  }
+  schedulePaint();
+  CC.BGM.init({ mode: "button", toggleId: "bgmBtn", gestureKick: true });
+})();

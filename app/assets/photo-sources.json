@@ -1,0 +1,62 @@
+[
+  {
+    "scene": "snow",
+    "file": "hero-snow.jpg",
+    "credit": "T. Selin Erkan",
+    "source": "https://unsplash.com/photos/snow-covered-mountain-under-blue-sky-during-daytime--iyHBfL4LIc",
+    "license": "Unsplash License",
+    "license_url": "https://unsplash.com/license",
+    "checked_on": "2026-10-27",
+    "sha256": "ea5e6b2d9ee0c8afa24a657d46fd9cb5f459f6efbdd62b7165d5afbd0edf6fa4",
+    "presentation": "Responsive CSS crop and tonal overlays; no generative editing",
+    "author_profile_url": "https://unsplash.com/@cesttse",
+    "commercial_use": "Allowed under the published license, subject to its conditions, for this website presentation.",
+    "verification_evidence": "Original photo page explicitly labels Unsplash License.",
+    "rights_warranty": "No independent title or third-party rights guarantee."
+  },
+  {
+    "scene": "ocean",
+    "file": "hero-ocean.jpg",
+    "credit": "JM Lova",
+    "source": "https://unsplash.com/photos/body-of-water-under-white-sky-during-daytime-3vb0tq6-bdI",
+    "license": "Unsplash License",
+    "license_url": "https://unsplash.com/license",
+    "checked_on": "2026-10-27",
+    "sha256": "ec2e250edb966bba652fb483c99e0f4f15ce5966831d9ac3d81ac7a7240f85b1",
+    "presentation": "Responsive CSS crop and tonal overlays; no generative editing",
+    "author_profile_url": "https://unsplash.com/@jm_unsplash",
+    "commercial_use": "Allowed under the published license, subject to its conditions, for this website presentation.",
+    "verification_evidence": "Original photo page explicitly labels Unsplash License.",
+    "rights_warranty": "No independent title or third-party rights guarantee."
+  },
+  {
+    "scene": "coast",
+    "file": "hero-coast.jpg",
+    "credit": "Daniel Seßler",
+    "source": "https://unsplash.com/photos/a-large-body-of-water-surrounded-by-mountains-1z_KKEuueoo",
+    "license": "Unsplash License",
+    "license_url": "https://unsplash.com/license",
+    "checked_on": "2026-10-27",
+    "sha256": "c894a557aab10c53babfd447a369b01f8190ff1139077c3cf101e6e19e7f98e0",
+    "presentation": "Responsive CSS crop and tonal overlays; no generative editing",
+    "author_profile_url": "https://unsplash.com/@danielsessler",
+    "commercial_use": "Allowed under the published license, subject to its conditions, for this website presentation.",
+    "verification_evidence": "Original photo page explicitly labels Unsplash License.",
+    "rights_warranty": "No independent title or third-party rights guarantee."
+  },
+  {
+    "scene": "cosmos",
+    "file": "hero-cosmos.jpg",
+    "credit": "ESO/S. Brunier",
+    "source": "https://www.eso.org/public/images/eso0932a/",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "checked_on": "2026-10-27",
+    "sha256": "6df7ce3cea79841c15e7d04750c073b6680671efa01be3da5eae433846e28c70",
+    "presentation": "Responsive CSS crop and tonal overlays; no generative editing",
+    "author_profile_url": "https://www.eso.org/public/images/eso0932a/",
+    "commercial_use": "Allowed under the published license, subject to its conditions, for this website presentation.",
+    "verification_evidence": "ESO photo page links its usage policy; CC BY 4.0 applies to the publicly supplied 1920x1200 rendition. The unavailable 800-million-pixel original is not used.",
+    "rights_warranty": "No independent title or third-party rights guarantee."
+  }
+]

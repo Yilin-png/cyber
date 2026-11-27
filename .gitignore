@@ -1,0 +1,20 @@
+node_modules/
+.env
+.DS_Store
+.wrangler/
+.dev.vars
+!.dev.vars.example
+dist/
+*.log
+.mf/
+server/data/db.json.tmp
+
+# Isolated local preview data
+.preview-data/
+
+# Untracked private records. Already tracked placeholder minutes are NOT covered:
+# editing them and committing still publishes the change. Run npm run check:private.
+/server/content/gatherings/*.html
+/worker/content-00*.html
+/server/data/db.json
+/internal-records/

@@ -1,17 +1,32 @@
-/* 临时联调脚本：node server/smoke.js [baseUrl] */
+/* 烟雾联调脚本：node server/smoke.js [baseUrl] */
 const BASE = process.argv[2] || "http://localhost:3100";
-const TOKEN = process.env.ADMIN_TOKEN || "cc-admin-change-me";
+const ADMIN_USER = process.env.ADMIN1_USER || "";
+const ADMIN_PASS = process.env.ADMIN1_PASS || "";
 
-async function call(method, path, body, headers = {}) {
+async function call(method, path, body, headers = {}, jar) {
   const res = await fetch(BASE + path, {
     method,
     headers: { "Content-Type": "application/json", ...headers },
-    body: body ? JSON.stringify(body) : undefined
+    body: body === undefined ? undefined : JSON.stringify(body),
+    redirect: "manual"
   });
+  const setCookie = res.headers.getSetCookie ? res.headers.getSetCookie() : [];
+  if (jar && setCookie.length) {
+    for (const c of setCookie) {
+      const [pair] = c.split(";");
+      const eq = pair.indexOf("=");
+      if (eq > 0) jar.set(pair.slice(0, eq).trim(), pair.slice(eq + 1).trim());
+    }
+  }
   const text = await res.text();
   let data;
   try { data = JSON.parse(text); } catch { data = text.slice(0, 200); }
   return { status: res.status, data };
+}
+
+function cookieHeader(jar) {
+  if (!jar || !jar.size) return {};
+  return { Cookie: [...jar.entries()].map(([k, v]) => `${k}=${v}`).join("; ") };
 }
 
 function check(label, ok, extra = "") {
@@ -21,43 +36,54 @@ function check(label, ok, extra = "") {
 
 (async () => {
   const stamp = Date.now().toString().slice(-5);
+  const jar = new Map();
 
   const cnName = await call("POST", "/api/apply", {
-    name: "张三" + stamp, intentDates: "8月20日晚上", contact: "zs@example.com"
+    name: "张三" + stamp, intentDates: "8月20日晚上", contact: "zs@example.com",
+    message: "想交流的方向、拟分享的技巧以及遇到的困难与挑战。"
   });
   check("中文称呼生成 ASCII 登录名", /^caster-[a-z0-9]{5}$/.test(cnName.data.handle || ""), cnName.data.handle);
 
   const enName = await call("POST", "/api/apply", {
-    name: "Alice " + stamp, intentDates: "线上都行"
+    name: "Alice " + stamp, intentDates: "线上都行",
+    message: "想交流的方向、拟分享的技巧以及遇到的困难与挑战。"
   });
   check("拉丁称呼走 slug", /^alice-?\d*$/.test(enName.data.handle || ""), enName.data.handle);
 
-  const dup = await call("POST", "/api/apply", { name: "张三" + stamp, intentDates: "再来一次" });
+  const dup = await call("POST", "/api/apply", {
+    name: "张三" + stamp, intentDates: "再来一次",
+    message: "想交流的方向、拟分享的技巧以及遇到的困难与挑战。"
+  });
   check("同名待审去重 409", dup.status === 409, String(dup.status));
 
   const bot = await call("POST", "/api/apply", {
-    name: "Bot", intentDates: "x", website: "http://spam.example"
+    name: "Bot", intentDates: "x", website: "http://spam.example",
+    message: "想交流的方向、拟分享的技巧以及遇到的困难与挑战。"
   });
   check("蜜罐字段拦截", bot.status === 400, String(bot.status));
 
   const noAuth = await call("GET", "/api/admin/applications");
-  check("管理接口需令牌", noAuth.status === 403, String(noAuth.status));
+  check("管理接口需登录", noAuth.status === 403, String(noAuth.status));
 
-  const list = await call("GET", "/api/admin/applications?status=pending", null, { "x-admin-token": TOKEN });
+  const adminLogin = await call("POST", "/api/admin/login",
+    { username: ADMIN_USER, password: ADMIN_PASS }, {}, jar);
+  check("管理员可登录", adminLogin.status === 200 && adminLogin.data.ok,
+    adminLogin.data.admin && adminLogin.data.admin.username);
+
+  const list = await call("GET", "/api/admin/applications?status=pending", undefined, cookieHeader(jar), jar);
   check("待审列表可读", list.status === 200 && Array.isArray(list.data.applications),
     `pending=${list.data.counts && list.data.counts.pending}`);
 
   const search = await call("GET", `/api/admin/applications?q=${encodeURIComponent(cnName.data.handle)}`,
-    null, { "x-admin-token": TOKEN });
+    undefined, cookieHeader(jar), jar);
   check("按登录名搜索", search.data.applications && search.data.applications.length === 1);
 
   const approve = await call("POST", `/api/admin/applications/${cnName.data.id}/approve`,
-    { gatherings: ["001"] }, { "x-admin-token": TOKEN });
-  check("审批生成通行码", /^[A-Z2-9]{8}$/.test(approve.data.passcode || ""),
-    `${approve.data.handle} / ${approve.data.passcode}`);
+    { gatherings: ["001"] }, cookieHeader(jar), jar);
+  check("审批生成通行码", /^[A-Z2-9]{8}$/.test(approve.data.passcode || ""));
 
   const reApprove = await call("POST", `/api/admin/applications/${cnName.data.id}/approve`,
-    { gatherings: ["001"] }, { "x-admin-token": TOKEN });
+    { gatherings: ["001"] }, cookieHeader(jar), jar);
   check("重复审批被拒", reApprove.status === 400);
 
   const badLogin = await call("POST", "/api/auth/login",
@@ -68,14 +94,21 @@ function check(label, ok, extra = "") {
     { handle: approve.data.handle, passcode: approve.data.passcode });
   check("新账号可登录", login.status === 200 && login.data.ok, JSON.stringify(login.data.user || {}));
 
+  const memberJar = new Map();
+  await call("POST", "/api/auth/login",
+    { handle: approve.data.handle, passcode: approve.data.passcode }, {}, memberJar);
+  const g2as001 = await call("GET", "/api/gatherings/002", undefined, cookieHeader(memberJar), memberJar);
+  check("仅有第一期权限也可读已发布的第二期",
+    g2as001.status === 200 && g2as001.data.unlocked,
+    g2as001.data && g2as001.data.unlocked ? "unlocked" : String(g2as001.status));
+
   const caseLogin = await call("POST", "/api/auth/login",
     { handle: (approve.data.handle || "").toUpperCase(), passcode: approve.data.passcode });
   check("登录名大小写不敏感", caseLogin.status === 200);
 
-  const reissue = await call("POST", `/api/admin/applications/${cnName.data.id}/reissue`, {},
-    { "x-admin-token": TOKEN });
-  check("重发通行码", reissue.status === 200 && reissue.data.passcode !== approve.data.passcode,
-    reissue.data.passcode);
+  const reissue = await call("POST", `/api/admin/applications/${cnName.data.id}/reissue`,
+    {}, cookieHeader(jar), jar);
+  check("重发通行码", reissue.status === 200 && reissue.data.passcode !== approve.data.passcode);
 
   const oldCode = await call("POST", "/api/auth/login",
     { handle: approve.data.handle, passcode: approve.data.passcode });
@@ -86,7 +119,7 @@ function check(label, ok, extra = "") {
   check("新通行码可用", newCode.status === 200);
 
   const reject = await call("POST", `/api/admin/applications/${enName.data.id}/reject`,
-    { reason: "本期名额已满" }, { "x-admin-token": TOKEN });
+    { reason: "本期名额已满" }, cookieHeader(jar), jar);
   check("驳回申请", reject.status === 200 && reject.data.application.status === "rejected");
 
   const inject = await call("POST", "/api/apply", {
@@ -94,8 +127,9 @@ function check(label, ok, extra = "") {
   });
   check("公式注入样本已录入", inject.status === 200);
 
-  const csv = await fetch(BASE + "/api/admin/applications.csv", { headers: { "x-admin-token": TOKEN } });
-  /* fetch 的 text() 会吞掉 BOM，要看原始字节 */
+  const csv = await fetch(BASE + "/api/admin/applications.csv", {
+    headers: cookieHeader(jar)
+  });
   const bytes = new Uint8Array(await csv.arrayBuffer());
   const csvText = Buffer.from(bytes).toString("utf8");
   const hasBom = bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf;
@@ -105,12 +139,56 @@ function check(label, ok, extra = "") {
   check("CSV 转义公式注入",
     csvText.includes(`"'=1+1"`) && csvText.includes(`"'@SUM(A1)"`));
 
-  const demo = await call("POST", "/api/auth/login", { handle: "demo_caster", passcode: "CAST-DEMO" });
-  check("演示账号仍可登录", demo.status === 200);
+  const gList = await call("GET", "/api/gatherings");
+  const g2 = (gList.data.gatherings || []).find(g => g.id === "002");
+  check("第二期公开为往期", !!(g2 && g2.status === "past" && (g2.topics || []).length >= 10),
+    g2 ? `topics=${(g2.topics || []).length}` : "missing");
+
+  const demoJar = new Map();
+  const demo = await call("POST", "/api/auth/login", { handle: "demo_caster", passcode: "CAST-DEMO" }, {}, demoJar);
+  check("演示登录名被拒绝", demo.status === 401);
+
+  const currentJar = new Map();
+  await call("POST", "/api/auth/login",
+    { handle: reissue.data.handle, passcode: reissue.data.passcode }, {}, currentJar);
+  const locked = await call("GET", "/api/gatherings/002");
+  check("未登录看不到纪要正文", locked.status === 200 && locked.data.unlocked === false && locked.data.bodyHtml == null);
+  const opened = await call("GET", "/api/gatherings/002", undefined, cookieHeader(currentJar), currentJar);
+  check("成员看到的是占位纪要",
+    opened.status === 200 && opened.data.unlocked === true && /尚未配置/.test(opened.data.bodyHtml || ""));
+  const openedEn = await call("GET", "/api/gatherings/002?lang=en", undefined, cookieHeader(currentJar), currentJar);
+  check("英文纪要接口可切换且仍是占位",
+    openedEn.status === 200 && openedEn.data.contentLang === "en" && /尚未配置/.test(openedEn.data.bodyHtml || ""));
+
+  const commentDenied = await call("GET", "/api/gatherings/002/comments");
+  check("未登录不能看留言", commentDenied.status === 401);
+  const comment = await call("POST", "/api/gatherings/002/comments",
+    { body: "本地校验留言" }, cookieHeader(currentJar), currentJar);
+  check("成员可以留言", comment.status === 200 && comment.data.comment && comment.data.comment.body === "本地校验留言");
+  const commentList = await call("GET", "/api/gatherings/002/comments", undefined, cookieHeader(currentJar), currentJar);
+  check("成员可以读到自己的留言",
+    commentList.status === 200 && (commentList.data.comments || []).some((item) => item.body === "本地校验留言"));
+
+  const cleared = await call("POST", `/api/admin/applications/${cnName.data.id}/permissions`,
+    { gatherings: [] }, cookieHeader(jar), jar);
+  check("可以收回全部期次", cleared.status === 200 && Array.isArray(cleared.data.gatherings) && cleared.data.gatherings.length === 0);
+  const afterClear = await call("POST", "/api/auth/login",
+    { handle: reissue.data.handle, passcode: reissue.data.passcode });
+  const clearJar = new Map();
+  await call("POST", "/api/auth/login",
+    { handle: reissue.data.handle, passcode: reissue.data.passcode }, {}, clearJar);
+  const isolated = await call("GET", "/api/gatherings/002", undefined, cookieHeader(clearJar), clearJar);
+  check("没有期次资格时正文锁定",
+    afterClear.status === 200 && isolated.status === 200 && isolated.data.unlocked === false);
+  const isolatedComment = await call("GET", "/api/gatherings/002/comments", undefined, cookieHeader(clearJar), clearJar);
+  check("没有期次资格时不能看留言", isolatedComment.status === 403);
 
   let limited = 0;
   for (let i = 0; i < 8; i++) {
-    const r = await call("POST", "/api/apply", { name: "刷屏" + i + stamp, intentDates: "x" });
+    const r = await call("POST", "/api/apply", {
+      name: "刷屏" + i + stamp, intentDates: "x",
+      message: "想交流的方向、拟分享的技巧以及遇到的困难与挑战。"
+    });
     if (r.status === 429) limited++;
   }
   check("报名限流生效", limited > 0, `被拦 ${limited} 次`);

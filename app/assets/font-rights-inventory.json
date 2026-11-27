@@ -1,0 +1,50 @@
+{
+  "checkedAt": "2026-10-28",
+  "method": "CSS local font stacks only; no font files, @font-face declarations, external font CSS or font data URLs in app.",
+  "systemFonts": {
+    "families": [
+      "Iowan Old Style",
+      "Baskerville",
+      "Songti SC",
+      "STSong",
+      "PingFang SC",
+      "Hiragino Sans GB",
+      "Microsoft YaHei UI",
+      "Microsoft YaHei",
+      "Menlo",
+      "Consolas"
+    ],
+    "conclusion": "Retain local references. These names do not grant redistribution or web embedding rights; the installed version and its license govern. Apple bundled display permission is license-specific; Windows CSS-name permission is explicit.",
+    "sources": [
+      "https://learn.microsoft.com/en-us/typography/fonts/font-faq",
+      "https://www.apple.com/legal/sla/docs/macOSTahoe.pdf"
+    ]
+  },
+  "openFonts": {
+    "families": [
+      "Noto Sans SC",
+      "JetBrains Mono",
+      "Cascadia Mono"
+    ],
+    "license": "SIL Open Font License 1.1",
+    "commercialUse": "Allowed subject to OFL conditions; preserve notices if distributing and respect reserved names. No font binaries currently distributed.",
+    "sources": [
+      "https://notofonts.github.io/noto-docs/website/use/",
+      "https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt",
+      "https://github.com/microsoft/cascadia-code/blob/main/LICENSE"
+    ]
+  },
+  "brandGraphics": "Existing wordmarks are graphic assets, separately confirmed self-created or authorized by the operator. Their typeface provenance is not established by CSS inspection.",
+  "excludedCandidates": [
+    {
+      "family": "SF Mono",
+      "reason": "The standalone Apple download license sections 2A and 2B restrict use to specified Apple-platform interface mockups and restrict website content. Removed the explicit family-name candidate; it is not covered by a blanket free commercial-use conclusion. This does not determine whether any earlier operating-system-provided rendering infringed.",
+      "source": "https://developer.apple.com/fonts/",
+      "officialPackage": "https://devimages-cdn.apple.com/design/resources/download/SF-Mono.dmg",
+      "officialPackageSha256": "6d4a0b78e3aacd06f913f642cead1c7db4af34ed48856d7171a2e0b55d9a7945",
+      "licenseLocation": "Resources/English.lproj/License.rtf, sections 2A and 2B",
+      "action": "Removed explicit SF Mono from CSS font stack. No font was installed or executed."
+    }
+  ],
+  "commercialAssessment": "For live website text: Windows local font-name references are explicitly permitted; rendering lawfully supplied macOS fonts is supported by macOS license section 2E, subject to applicable versions and font-specific terms. OFL families allow commercial use under OFL conditions. No proprietary font binaries are embedded or redistributed. This assessment does not license graphic wordmarks or fonts sourced separately under different terms."
+}
