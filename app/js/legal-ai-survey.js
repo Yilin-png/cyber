@@ -6,7 +6,7 @@
   else root.CCSurvey = factory();
 })(typeof self !== "undefined" ? self : this, function () {
   const SURVEY_ID = "legal-ai-2026";
-  const SURVEY_VERSION = 2;
+  const SURVEY_VERSION = 3;
   const MAX_RESPONSES = 1500;
 
   const o = (id, label) => ({ id, label });
@@ -29,10 +29,15 @@
           options: [
             o("chatgpt", "ChatGPT"), o("claude", "Claude"), o("gemini", "Gemini"),
             o("deepseek", "DeepSeek"), o("kimi", "Kimi"), o("doubao", "豆包"),
-            o("qwen", "通义 · 元宝"), o("legal", "法律类 AI"),
-            o("coding", "Cursor 等编程工具"), o("builder", "Coze · Dify 等"),
-            o("none", "暂时没有")
+            o("qwen", "通义千问"), o("yuanbao", "腾讯元宝"), o("ernie", "文心一言"),
+            o("zhipu", "智谱清言"), o("metaso", "秘塔 AI 搜索"), o("minimax", "MiniMax · 海螺"),
+            o("legal", "垂直类"), o("coding", "Cursor 等编程工具"),
+            o("builder", "Coze · Dify 等"), o("other", "其他"), o("none", "暂时没有")
           ]
+        },
+        {
+          id: "toolsOther", type: "text", max: 80, title: "其他工具",
+          placeholder: "填写工具名称", showIf: { q: "tools", in: ["other"] }
         },
         {
           id: "prompt", type: "single", title: "向 AI 提问时，你一般会",
@@ -46,13 +51,6 @@
           options: [
             o("none", "还没接触"), o("used", "用过现成的"),
             o("built", "自己搭过"), o("team", "团队在用")
-          ]
-        },
-        {
-          id: "dev", type: "single", title: "写代码方面",
-          options: [
-            o("none", "不写代码"), o("read", "能看懂一些"),
-            o("script", "用 AI 写过小工具"), o("ship", "做过完整应用")
           ]
         }
       ]
@@ -88,15 +86,6 @@
             o("tooling", "工具测评与选型"), o("network", "同行交流与对接"),
             o("build", "项目共创 · 黑客松")
           ]
-        },
-        {
-          id: "concerns", type: "multi", title: "对数据和保密有哪些顾虑", hint: "可多选",
-          options: [
-            o("client", "客户信息泄露"), o("training", "数据被用于训练"),
-            o("crossborder", "跨境数据传输"), o("accuracy", "准确性 · 幻觉"),
-            o("ethics", "职业伦理与规范"), o("policy", "单位政策限制"),
-            o("none", "暂无顾虑")
-          ]
         }
       ]
     },
@@ -104,20 +93,6 @@
       id: "events",
       title: "活动怎么办",
       questions: [
-        {
-          id: "format", type: "multi", required: true, title: "方便参加的形式与地点", hint: "可多选",
-          options: [
-            o("online", "线上"), o("shenzhen", "深圳线下"), o("hongkong", "香港线下"),
-            o("guangzhou", "广州线下"), o("elsewhere", "其他城市线下")
-          ]
-        },
-        {
-          id: "time", type: "multi", required: true, title: "方便的时间", hint: "可多选",
-          options: [
-            o("weeknight", "工作日晚上"), o("lunch", "工作日午间"),
-            o("weekendDay", "周末白天"), o("weekendNight", "周末晚上")
-          ]
-        },
         {
           id: "topics", type: "multi", max: 3, title: "想听的主题", hint: "最多选 3 项",
           options: [

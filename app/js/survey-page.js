@@ -74,8 +74,8 @@
     }
   }
 
-  /* 「还没用过」「暂无顾虑」这类选项与其他选项互斥。 */
-  const EXCLUSIVE = { tools: "none", concerns: "none" };
+  /* 「暂时没有」与其他选项互斥。 */
+  const EXCLUSIVE = { tools: "none" };
 
   function enforce(changed) {
     const qid = changed && changed.name;
