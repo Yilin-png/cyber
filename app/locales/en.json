@@ -923,8 +923,13 @@
   "赛法调研 ↗": "Cyber Casters Survey ↗",
   "很少用": "Rarely",
   "扣子空间": "Coze Space",
-  "想到什么就问什么": "Just ask as it comes",
-  "先交代一下背景": "Give some background first",
-  "用几段顺手的提示词": "Reuse prompts that work",
-  "多聊几轮慢慢调": "Refine over a few rounds"
+  "直接提出问题": "Ask the question directly",
+  "说明背景与目的": "State background and purpose",
+  "附上文件或资料": "Attach files or materials",
+  "指定输出格式": "Specify the output format",
+  "分步骤提问": "Break it into steps",
+  "多轮追问与修正": "Follow up and refine",
+  "要求注明依据出处": "Ask for sources and authority",
+  "使用固定提示词模板": "Use a saved prompt template",
+  "对比不同模型结果": "Compare answers across models"
 }

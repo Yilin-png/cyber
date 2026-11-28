@@ -38,8 +38,11 @@
         {
           id: "prompt", type: "multi", title: "向 AI 提问时，你一般会", hint: "可多选",
           options: [
-            o("casual", "想到什么就问什么"), o("context", "先交代一下背景"),
-            o("saved", "用几段顺手的提示词"), o("iterate", "多聊几轮慢慢调")
+            o("direct", "直接提出问题"), o("context", "说明背景与目的"),
+            o("material", "附上文件或资料"), o("format", "指定输出格式"),
+            o("steps", "分步骤提问"), o("iterate", "多轮追问与修正"),
+            o("source", "要求注明依据出处"), o("template", "使用固定提示词模板"),
+            o("compare", "对比不同模型结果")
           ]
         }
       ]
