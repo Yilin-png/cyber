@@ -113,7 +113,11 @@
       ),
     ];
     for (const element of elements) {
-      if (skip(element) || element.matches("[data-language]")) continue;
+      if (
+        skip(element.matches("textarea") ? element.parentElement : element) ||
+        element.matches("[data-language]")
+      )
+        continue;
       if (element.matches("a[href]")) {
         const href = element.getAttribute("href");
         if (href && !href.startsWith("#")) {

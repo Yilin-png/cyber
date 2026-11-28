@@ -6,7 +6,7 @@
   else root.CCSurvey = factory();
 })(typeof self !== "undefined" ? self : this, function () {
   const SURVEY_ID = "legal-ai-2026";
-  const SURVEY_VERSION = 4;
+  const SURVEY_VERSION = 5;
   const MAX_RESPONSES = 1500;
 
   const o = (id, label) => ({ id, label });
@@ -38,11 +38,9 @@
         {
           id: "prompt", type: "multi", title: "向 AI 提问时，你一般会", hint: "可多选",
           options: [
-            o("direct", "直接提出问题"), o("context", "说明背景与目的"),
-            o("material", "附上文件或资料"), o("format", "指定输出格式"),
-            o("steps", "分步骤提问"), o("iterate", "多轮追问与修正"),
-            o("source", "要求注明依据出处"), o("template", "使用固定提示词模板"),
-            o("compare", "对比不同模型结果")
+            o("direct", "直接提出问题"), o("context", "提供背景与材料"),
+            o("format", "明确格式与要求"), o("iterate", "分步骤、多轮追问"),
+            o("verify", "要求依据并交叉核对"), o("template", "使用固定模板")
           ]
         }
       ]
@@ -55,12 +53,12 @@
           id: "tasks", type: "multi", required: true, max: 5,
           title: "最想用 AI 解决的工作问题", hint: "最多选 5 项",
           options: [
-            o("research", "法律检索与类案"), o("contract", "合同起草与审查"),
-            o("drafting", "文书与法律意见"), o("review", "尽调与文件审阅"),
-            o("evidence", "证据与案件时间线"), o("translate", "翻译与跨境沟通"),
-            o("minutes", "会议纪要整理"), o("knowledge", "知识管理"),
-            o("marketing", "客户沟通与内容"), o("regwatch", "法规与监管追踪"),
-            o("workflow", "流程自动化"), o("other", "其他")
+            o("research", "信息检索与研究"), o("drafting", "文稿起草与写作"),
+            o("review", "文件审阅与比对"), o("summary", "资料整理与摘要"),
+            o("translate", "翻译与跨语言沟通"), o("minutes", "会议纪要整理"),
+            o("data", "数据与表格处理"), o("knowledge", "知识管理"),
+            o("marketing", "对外沟通与内容"), o("workflow", "流程自动化"),
+            o("other", "其他")
           ]
         },
         {
@@ -76,8 +74,12 @@
             o("cases", "实战案例拆解"), o("agents", "智能体与自动化"),
             o("coding", "AI 编程入门"), o("safety", "合规与数据安全"),
             o("tooling", "工具测评与选型"), o("network", "同行交流与对接"),
-            o("build", "项目共创 · 黑客松")
+            o("build", "项目共创 · 黑客松"), o("other", "其他")
           ]
+        },
+        {
+          id: "wantsOther", type: "text", max: 80, title: "其他希望",
+          placeholder: "填写你希望社群提供的内容", showIf: { q: "wants", in: ["other"] }
         }
       ]
     },
