@@ -13,6 +13,7 @@ const {
   load, save, uid, hashPass, verifyPass, genPasscode, genHandle, handleOf, DATA_DIR
 } = require("./db");
 const { limiter, hit, reset } = require("./ratelimit");
+const survey = require("../app/js/legal-ai-survey.js");
 const GATHERINGS = require("./gatherings");
 const GATHERINGS_EN = require("./gatherings.en.json");
 const localizedGathering = (g, lang) => lang === "en" ? (GATHERINGS_EN.find(x => x.id === g.id) || g) : g;
@@ -282,6 +283,54 @@ app.post("/api/apply", applyLimiter, (req, res) => {
     handle,
     message: `报名已提交。你的登录名是「${handle}」，请先记下；审核通过后组织者会私下发通行码，两者搭配即可查阅纪要。`
   });
+});
+
+/* ── 法律 AI 社群问卷：单独存 DATA_DIR/legal-ai-survey.json，不写成员库 db.json ── */
+const SURVEY_PATH = path.join(DATA_DIR, `${survey.SURVEY_ID}.json`);
+
+function loadSurveys() {
+  if (!fs.existsSync(SURVEY_PATH)) return [];
+  const data = JSON.parse(fs.readFileSync(SURVEY_PATH, "utf8"));
+  return Array.isArray(data.surveys) ? data.surveys : [];
+}
+
+function saveSurveys(list) {
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  const tmp = SURVEY_PATH + ".tmp";
+  fs.writeFileSync(tmp, JSON.stringify({ surveys: list }, null, 2), "utf8");
+  fs.renameSync(tmp, SURVEY_PATH);
+}
+
+const surveyLimiter = limiter({
+  scope: "survey",
+  windowMs: 60 * 60 * 1000,
+  max: 30,
+  message: "提交太频繁了，请稍后再试。"
+});
+
+app.post("/api/survey", surveyLimiter, (req, res) => {
+  if (safeText(req.body.website, 100)) {
+    return res.status(400).json({ error: "提交未通过校验" });
+  }
+  const { answers, missing } = survey.normalize(req.body.answers);
+  if (missing) {
+    return res.status(400).json({ error: `请回答：${missing.title}`, field: missing.id });
+  }
+  const list = loadSurveys();
+  if (list.length >= survey.MAX_RESPONSES) {
+    return res.status(409).json({ error: "问卷已收满，感谢关注" });
+  }
+  const row = {
+    id: uid("svy_"),
+    survey: survey.SURVEY_ID,
+    version: survey.SURVEY_VERSION,
+    answers,
+    createdAt: new Date().toISOString(),
+    meta: { ua: safeText(req.get("user-agent"), 200) }
+  };
+  list.push(row);
+  saveSurveys(list);
+  res.json({ ok: true, id: row.id });
 });
 
 /* ── 登录：登录名 + 通行码 ── */
@@ -732,6 +781,27 @@ app.post("/api/admin/users/:id/gatherings", (req, res) => {
   user.gatherings = gatherings;
   save(db);
   res.json({ ok: true, user: { id: user.id, handle: handleOf(user), gatherings: user.gatherings } });
+});
+
+app.get("/api/admin/surveys", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const list = loadSurveys();
+  const counts = { all: list.length };
+  res.json({
+    responses: list.slice().reverse().map(r => ({
+      id: r.id,
+      createdAt: r.createdAt,
+      answers: r.answers || {}
+    })),
+    counts
+  });
+});
+
+app.get("/api/admin/surveys.csv", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename="legal-ai-survey-${Date.now()}.csv"`);
+  res.send(survey.csv(loadSurveys(), formatChinaTime));
 });
 
 /* 静态前端 */

@@ -1,0 +1,93 @@
+/* 法律 AI 社群问卷：沿用申请页表单，只补选项网格与进度条。 */
+.survey-page .survey-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 44px;
+  gap: 6px;
+}
+.survey-page .survey-options .choice {
+  flex: none;
+  height: 100%;
+}
+.survey-page .survey-options .choice-face {
+  justify-content: center;
+  text-align: center;
+  height: 100%;
+  min-height: 0;
+  padding: 0 8px;
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: normal;
+  overflow: hidden;
+}
+.survey-page .choice.is-disabled {
+  cursor: not-allowed;
+}
+.survey-page .choice.is-disabled .choice-face {
+  opacity: 0.45;
+}
+.survey-page .survey-q .hint {
+  margin: -4px 0 10px;
+}
+.survey-page .survey-q .hint.after {
+  margin: 6px 0 0;
+}
+.survey-page .survey-q.is-missing .field-label {
+  color: var(--accent-red, #c0563f);
+}
+.survey-page .survey-q.is-missing .survey-options .choice-face {
+  border-color: color-mix(in srgb, var(--accent-red, #c0563f) 55%, var(--line));
+}
+.survey-page .survey-q textarea {
+  min-height: 96px;
+  resize: vertical;
+  line-height: 1.7;
+  padding: 11px 13px;
+}
+.survey-page .survey-lead {
+  margin: -6px 0 12px;
+}
+
+.survey-page .survey-progress {
+  position: sticky;
+  top: 86px;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 10px 0;
+  font: 11px/1.4 var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--ash);
+  background: var(--panel-glass);
+}
+.survey-page .survey-progress-count {
+  color: var(--paper);
+}
+.survey-page .survey-progress-bar {
+  height: 3px;
+  background: var(--line);
+  overflow: hidden;
+}
+.survey-page .survey-progress-bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--cyan);
+  transition: width 0.25s ease;
+}
+
+@media (max-width: 600px) {
+  .survey-page .survey-progress {
+    top: 72px;
+  }
+  .survey-page .survey-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .survey-page .survey-q input,
+  .survey-page .survey-q textarea {
+    font-size: 16px;
+  }
+}
