@@ -685,7 +685,6 @@ function renderSurveys() {
             <td data-label="称呼">${a.name ? `<strong data-no-i18n style="color:var(--paper)">${esc(a.name)}</strong>` : `<span class="muted">未留称呼</span>`}</td>
             <td data-label="AI 使用"><div class="sv-block">
               ${svLine("频率", "freq", a)}${svLine("提问方式", "prompt", a)}
-              ${svLine("智能体", "automation", a)}
               ${svLine("工具", "tools", a)}${svLine("其他工具", "toolsOther", a, true)}
             </div></td>
             <td data-label="需求"><div class="sv-block">

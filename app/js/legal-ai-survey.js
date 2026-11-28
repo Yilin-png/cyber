@@ -6,7 +6,7 @@
   else root.CCSurvey = factory();
 })(typeof self !== "undefined" ? self : this, function () {
   const SURVEY_ID = "legal-ai-2026";
-  const SURVEY_VERSION = 3;
+  const SURVEY_VERSION = 4;
   const MAX_RESPONSES = 1500;
 
   const o = (id, label) => ({ id, label });
@@ -19,20 +19,16 @@
         { id: "name", type: "text", max: 40, title: "怎么称呼你", placeholder: "昵称即可" },
         {
           id: "freq", type: "single", required: true, title: "平时多久用一次 AI",
-          options: [
-            o("never", "还很少用"), o("tried", "偶尔试试"), o("monthly", "每月几次"),
-            o("weekly", "每周几次"), o("daily", "几乎每天")
-          ]
+          options: [o("rare", "很少用"), o("weekly", "每周几次"), o("daily", "几乎每天")]
         },
         {
           id: "tools", type: "multi", title: "常用的工具", hint: "可多选",
           options: [
-            o("chatgpt", "ChatGPT"), o("claude", "Claude"), o("gemini", "Gemini"),
-            o("deepseek", "DeepSeek"), o("kimi", "Kimi"), o("doubao", "豆包"),
-            o("qwen", "通义千问"), o("yuanbao", "腾讯元宝"), o("ernie", "文心一言"),
-            o("zhipu", "智谱清言"), o("metaso", "秘塔 AI 搜索"), o("minimax", "MiniMax · 海螺"),
-            o("legal", "垂直类"), o("coding", "Cursor 等编程工具"),
-            o("builder", "Coze · Dify 等"), o("other", "其他"), o("none", "暂时没有")
+            o("deepseek", "DeepSeek"), o("doubao", "豆包"), o("kimi", "Kimi"),
+            o("qwen", "通义千问"), o("yuanbao", "腾讯元宝"), o("workbuddy", "WorkBuddy"),
+            o("cozespace", "扣子空间"), o("manus", "Manus"), o("chatgpt", "ChatGPT"),
+            o("claude", "Claude"), o("gemini", "Gemini"), o("legal", "垂直类"),
+            o("other", "其他")
           ]
         },
         {
@@ -40,17 +36,10 @@
           placeholder: "填写工具名称", showIf: { q: "tools", in: ["other"] }
         },
         {
-          id: "prompt", type: "single", title: "向 AI 提问时，你一般会",
+          id: "prompt", type: "multi", title: "向 AI 提问时，你一般会", hint: "可多选",
           options: [
-            o("ask", "直接说需求"), o("context", "补充背景和格式"),
-            o("template", "用固定的模板"), o("advanced", "分步问或对比模型")
-          ]
-        },
-        {
-          id: "automation", type: "single", title: "智能体或自动化流程",
-          options: [
-            o("none", "还没接触"), o("used", "用过现成的"),
-            o("built", "自己搭过"), o("team", "团队在用")
+            o("casual", "想到什么就问什么"), o("context", "先交代一下背景"),
+            o("saved", "用几段顺手的提示词"), o("iterate", "多聊几轮慢慢调")
           ]
         }
       ]

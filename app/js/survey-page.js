@@ -74,17 +74,7 @@
     }
   }
 
-  /* 「暂时没有」与其他选项互斥。 */
-  const EXCLUSIVE = { tools: "none" };
-
-  function enforce(changed) {
-    const qid = changed && changed.name;
-    const q = S.QUESTIONS.find((x) => x.id === qid);
-    if (q && q.type === "multi" && EXCLUSIVE[qid] && changed.checked) {
-      form.querySelectorAll(`input[name="${qid}"]`).forEach((el) => {
-        if (changed.value === EXCLUSIVE[qid] ? el !== changed : el.value === EXCLUSIVE[qid]) el.checked = false;
-      });
-    }
+  function enforce() {
     for (const mq of S.QUESTIONS) {
       if (mq.type !== "multi" || !mq.max) continue;
       const inputs = [...form.querySelectorAll(`input[name="${mq.id}"]`)];
@@ -129,14 +119,14 @@
     const draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
     if (draft) restore(draft);
   } catch (_) {}
-  enforce(null);
+  enforce();
   sync();
   try {
     if (localStorage.getItem(DONE_KEY)) setMsg("你已经提交过这份问卷。如有变化，可以修改后再提交一次。");
   } catch (_) {}
 
   form.addEventListener("change", (e) => {
-    enforce(e.target);
+    enforce();
     sync();
     if (msg.classList.contains("err") && !S.normalize(collect()).missing) setMsg("");
   });
